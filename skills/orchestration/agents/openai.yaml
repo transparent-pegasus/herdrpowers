@@ -1,0 +1,7 @@
+interface:
+  display_name: "Orchestrate Herdr Tasks"
+  short_description: "Route tasks through herdr agents and reviews"
+  default_prompt: "Use $orchestration to route this task through the appropriate herdr agents."
+
+policy:
+  allow_implicit_invocation: true

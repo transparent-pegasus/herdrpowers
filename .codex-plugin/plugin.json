@@ -1,0 +1,46 @@
+{
+  "name": "herdrpowers",
+  "version": "1.0.0",
+  "description": "Multi-pane development framework for herdr: structured skills and multi-phase workflows that delegate implementation, testing, and review to idle sibling agent panes instead of in-process subagents.",
+  "author": {
+    "name": "transparent-pegasus",
+    "url": "https://github.com/transparent-pegasus"
+  },
+  "homepage": "https://github.com/transparent-pegasus/herdrpowers",
+  "repository": "https://github.com/transparent-pegasus/herdrpowers",
+  "license": "Apache-2.0",
+  "keywords": [
+    "herdr",
+    "orchestration",
+    "delegation",
+    "multi-agent",
+    "skills",
+    "workflows",
+    "tdd",
+    "code-review",
+    "planning",
+    "debugging",
+    "codegraph"
+  ],
+  "skills": "./skills/",
+  "commands": "./commands/",
+  "hooks": {},
+  "interface": {
+    "displayName": "Herdrpowers",
+    "shortDescription": "Herdr multi-pane orchestration for the whole development cycle",
+    "longDescription": "Route every task that arrives from the user through the pane that received it, plan and double-review before touching code, then delegate implementation, test authoring, and code review to idle sibling agent panes in herdr. Covers brainstorming, planning, TDD, systematic debugging, parallel execution across worktrees, review, and finishing a branch — with no in-process subagents and a fallback agent when one is exhausted.",
+    "developerName": "transparent-pegasus",
+    "category": "Developer Tools",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "I've got an idea for something I'd like to build.",
+      "Route this task through the appropriate herdr panes.",
+      "Let's add a feature to this project."
+    ],
+    "websiteURL": "https://github.com/transparent-pegasus/herdrpowers"
+  }
+}

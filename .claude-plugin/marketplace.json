@@ -1,0 +1,21 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "herdrpowers",
+  "description": "Marketplace for the herdrpowers pack",
+  "owner": {
+    "name": "transparent-pegasus",
+    "url": "https://github.com/transparent-pegasus"
+  },
+  "plugins": [
+    {
+      "name": "herdrpowers",
+      "description": "Multi-pane development framework for herdr: structured skills and multi-phase workflows that delegate implementation, testing, and review to idle sibling agent panes instead of in-process subagents.",
+      "version": "1.0.0",
+      "source": "./",
+      "author": {
+        "name": "transparent-pegasus"
+      },
+      "category": "productivity"
+    }
+  ]
+}

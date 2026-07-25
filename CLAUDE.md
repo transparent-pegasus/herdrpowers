@@ -1,0 +1,24 @@
+# Claude Code Guide
+
+This repository IS the herdrpowers plugin: the payload lives directly at the repo root in `skills/` and `commands/`, discovered by the Claude Code, Codex, and Cursor plugin conventions (manifests in `.claude-plugin/`, `.codex-plugin/`, `.cursor-plugin/`, plus the Codex marketplace file at `.agents/plugins/marketplace.json`).
+
+When editing pack behavior, edit `skills/` or `commands/` directly. `docs/` holds the human-facing framework docs. This file and `AGENTS.md` are maintainer instructions only — they are not part of the payload.
+
+## Pack Invariants
+
+- **No in-process subagents in the payload.** Every dispatch in a skill or command goes through `orchestration` → `using-herdr-sibling-panes`. If a payload file tells an agent to use the Agent tool or a named subagent type for development work, that is a bug. The one exception is `writing-skills`, where a fresh-context sample may come from a raw API call — and it says so explicitly.
+- **Roles, not tool names.** Skills speak in roles (Orchestrator, Reviewer, Coder, Generalist). The mapping to agent types lives only in `skills/orchestration/roles.yaml`.
+- **Independence is structural.** The pane that writes code never reviews it; the reviewing pane audits the test code, because the implementing pane wrote it. Do not weaken either half without replacing the other.
+- **`<KEY>` placeholders are intentional.** They resolve at runtime from each target repo's `Herdrpowers Configuration` section (written by the `init` workflow). When adding a new placeholder, add it to the key table in `commands/init.md`.
+- Keep skill cross-references as bare skill names (`writing-plans`, not `herdrpowers:writing-plans`); Claude Code namespaces them automatically at install time (`herdrpowers:<name>`).
+
+## Licensing
+
+The pack is Apache-2.0 because `skills/herdr/` is vendored from [ogulcancelik/herdr](https://github.com/ogulcancelik/herdr) under that license. Third-party attribution lives in `NOTICE` — update it whenever vendored material is added, removed, or modified. Do not relicense to MIT: Apache-2.0 material cannot be redistributed under it.
+
+`skills/herdr/SKILL.md` is upstream's file, kept unmodified so it can be refreshed cleanly. Its README carries a provenance header and absolute upstream link targets.
+
+## Maintenance
+
+- Every upstream refresh from `obra/superpowers` MUST add a self-contained entry under `changelogs/` (YAML frontmatter with `upstream_repo`, `upstream_version`, `upstream_sha`, `previous_upstream_sha`, `ours_from_sha`, `ours_to_sha`; summary; upstream coverage; reconciliation decisions; full unified diff in a ```diff block) and update `changelogs/UPSTREAM_SHA`. Structural pack-native changes get a summary entry (no diff required). A refresh that reintroduces subagent dispatch must be reconciled to pane delegation before it lands.
+- Validate after edits: `claude plugin validate .claude-plugin/plugin.json` and `claude plugin validate .` (marketplace), plus `rg -n 'subagent_type|test-engineer|code-reviewer|Agent tool|superpowers-extended' skills commands docs` to catch resurrected pre-merge references (expect no hits outside `changelogs/` and the merge notes in `README.md`).

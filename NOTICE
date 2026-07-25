@@ -1,0 +1,56 @@
+herdrpowers
+Copyright 2026 transparent-pegasus
+
+This product includes software developed by third parties, redistributed here
+under the Apache License, Version 2.0 (see LICENSE).
+
+--------------------------------------------------------------------------------
+skills/herdr/
+--------------------------------------------------------------------------------
+Vendored from the herdr project (https://github.com/ogulcancelik/herdr),
+Copyright the herdr authors, licensed under the Apache License, Version 2.0.
+
+  skills/herdr/SKILL.md   — the project's official agent skill, unmodified
+  skills/herdr/README.md  — the project's README, with link targets rewritten to
+                            absolute upstream URLs and a provenance header added
+
+--------------------------------------------------------------------------------
+skills/orchestration/, skills/using-herdr-sibling-panes/
+--------------------------------------------------------------------------------
+From herdr-orchestration (https://github.com/transparent-pegasus/herdr-orchestration),
+Copyright transparent-pegasus, originally licensed under the MIT License and
+redistributed here under the Apache License, Version 2.0. Modified: task routing
+for the development cycle, review independence rules, and the file-report and
+absolute-worktree-path clauses in the task contract.
+
+--------------------------------------------------------------------------------
+skills/ (remaining), commands/, docs/
+--------------------------------------------------------------------------------
+Derived from superpowers-extended
+(https://github.com/transparent-pegasus/superpowers-extended), Copyright
+transparent-pegasus, which tracks Superpowers (https://github.com/obra/superpowers),
+Copyright Jesse Vincent and contributors. Both are licensed under the MIT License
+and are redistributed here under the Apache License, Version 2.0. Modified:
+in-process subagent dispatch replaced with herdr pane delegation; the
+test-engineer and code-reviewer agent personas and their request/receive skills
+removed; workflow commands restructured around the orchestration skill.
+
+The MIT License text covering those upstream works:
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in all
+  copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.

@@ -1,0 +1,36 @@
+# Role assignments for the orchestration skill.
+# Single source of truth for who does what — to change an assignment,
+# edit ONLY this file. SKILL.md refers to roles, never to agent names.
+#
+# Roles bind to agent types, not reserved panes: at delegation time,
+# any idle pane of the matching agent type can take the task.
+
+roles:
+  planning-design:
+    description: Planning and design work
+    agent: orchestrator # runs in the orchestrator pane itself
+  reviewer:
+    description: Independent double review of plans and designs
+    agents: # one review each, independent
+      - codex
+      - cursor
+  coder:
+    description: >-
+      Complex coding (see "Complex coding boundary" in SKILL.md), plus test
+      authoring and code review of implemented changes. The pane that writes
+      tests owns RED-GREEN-REFACTOR; review always goes to a different pane
+      than the one that implemented the change.
+    agent: codex
+  generalist:
+    description: Everything else — simple coding, search, file inspection, tests, lint, routine operations
+    agent: cursor
+
+# Substitutes for an agent that cannot take work right now — usage/rate limit
+# reached, no pane of that type in the session, or every pane of that type
+# crashed and would not restart. See "Exhaustion and fallback" in SKILL.md for
+# what counts as exhausted and how a substitute is chosen.
+#
+# Tried left to right; the first substitute with a usable idle pane wins.
+# An agent with no entry here has no substitute.
+fallbacks:
+  cursor: [grok]

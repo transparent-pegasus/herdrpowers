@@ -1,0 +1,107 @@
+# Development Cycle Guide
+
+This guide describes the 7-phase herdrpowers development cycle. The full cycle is driven by the `/full_cycle` workflow; `/plan`, `/execute`, `/execute_parallel`, and `/quick` run structured subsets.
+
+Every phase that delegates work does so through the `orchestration` skill to a **herdr sibling agent pane**. Nothing here uses in-process subagents. Outside herdr, each phase degrades to inline execution and the final report says which independence was lost.
+
+## 7 Phases of Development
+
+### Phase 1: Brainstorming (Design & Requirements)
+
+The agent asks what you want to build and engages in a design and requirements discussion. No implementation code is written at this stage.
+
+- **Purpose**: Define the feature's purpose, constraints, and success criteria.
+- **Outcome**: An approved architectural design saved to `<DESIGN_DOC_PATH_PATTERN>` (not committed).
+- **Skill**: `brainstorming`. **Role**: orchestrator.
+
+---
+
+### Phase 2: Plan Creation and Double Review
+
+The orchestrator breaks the approved design into small, achievable tasks — then sends the plan out for **independent double review** before anyone touches code. Two different agent types review the same self-contained request in separate panes, with no shared draft opinion. The orchestrator resolves the findings and presents the resolved plan for approval.
+
+- **Purpose**: Create a clear, actionable roadmap, and catch its defects while they are still cheap.
+- **Outcome**: A reviewed, resolved, approved plan at `<PLAN_PATH_PATTERN>` (not committed).
+- **Skill**: `writing-plans`. **Roles**: orchestrator (drafts), Reviewer ×2 (review).
+
+A plan is not complete when it is written. It is complete when it is reviewed, resolved, and approved.
+
+---
+
+### Phase 3: Workspace Isolation (Safe Development)
+
+Once the plan is approved, a new branch and isolated git worktree (e.g., `feature/xxx`) are created from `<BASE_BRANCH>`.
+
+- **Purpose**: Keep the base branch untouched and prevent context pollution between features.
+- **Skill**: `using-git-worktrees`.
+
+Panes do not inherit the orchestrator's working directory: the worktree's **absolute path** goes into every delegation brief from here on.
+
+---
+
+### Phase 4: Documentation Impact Review
+
+Before implementation, list every non-code file the change will invalidate: instruction files, affected files under `docs/`, agent-instruction directories, example env/config files, and CI/deploy definitions.
+
+- **Purpose**: Make the documentation debt explicit before it accrues.
+- **Outcome**: A written update-target list, revised if implementation turns out to affect something else.
+
+---
+
+### Phase 5: Implementation (TDD across panes)
+
+The active coding phase. Each task in the plan is delegated to a fresh pane.
+
+- **The per-task cycle**:
+    1. Extract the task brief to a file; delegate it to a Coder pane with the worktree path, report path, and completion marker.
+    2. The pane writes the failing test first (**RED**), implements the minimum to pass (**GREEN**), refactors, commits, and self-reviews.
+    3. The pane writes its full report to a file and replies with status + marker.
+    4. The orchestrator builds the review package and delegates the task review to a **different, freshly reset pane**: one pass, two verdicts — **Spec Compliance** and **Task Quality**.
+    5. Critical/Important findings go back as one fix delegation; then re-review.
+- **Skills**: `pane-driven-development`, `test-driven-development`, `systematic-debugging`.
+- **Roles**: Coder (implementation, tests, review), Generalist (chores).
+
+Independent tracks can run concurrently — one pane per worktree, never two implementers in one working tree. See `/execute_parallel`.
+
+---
+
+### Phase 6: Verification and Final Code Review
+
+Repository verification runs inside the worktree, then a final review of the entire changeset runs in a fresh pane.
+
+- **Purpose**: Evidence before assertions, then a merge-level judgment on the whole branch.
+- **Outcome**: Verification output quoted from the report file (or re-run), plus a report with Critical / Important / Minor issues.
+- **Skills**: `verification-before-completion`, `requesting-code-review`, `receiving-code-review`.
+
+A pane reporting "tests pass" is a claim, not evidence. Read the quoted output, or re-run the decisive command.
+
+---
+
+### Phase 7: Integration (Candidates & Cleanup)
+
+Work stops and waits for the owner's instruction. On that instruction, the options are **presented, not assumed**: merge locally into `<BASE_BRANCH>`, push and open a pull request, keep the branch as-is, or discard. The owner picks; only that option runs, and the worktree and branch are cleaned up only as far as it requires.
+
+- **Purpose**: Hand the finished branch back with its integration choices open.
+- **Skill**: `finishing-a-development-branch`.
+
+A workflow that merges on its own has taken a decision that belongs to the owner.
+
+---
+
+## Supporting Rules
+
+Throughout the cycle, these skills are always in play:
+
+- **`verification-before-completion`** — Before claiming anything works, run the verification command and read the output.
+- **`systematic-debugging`** — When something fails, find the root cause before proposing fixes. No speculative fixes, in a pane or in the orchestrator.
+- **`update-docs`** — When code or config changes alter behavior covered in `docs/`, update the affected root docs.
+
+## Your Role as a User
+
+The agent is autonomous within a phase but not independent across phases. You:
+
+- **Review and approve**: Approve the design, the resolved plan, and the integration choice.
+- **Provide context**: Answer clarifying questions before the agent proceeds.
+- **Confirm success**: Validate that the implementation meets your expectations before merging.
+
+Every workflow (`/full_cycle`, `/plan`, `/execute`, `/execute_parallel`, `/quick`) blocks for user confirmation between phases. That is by design.

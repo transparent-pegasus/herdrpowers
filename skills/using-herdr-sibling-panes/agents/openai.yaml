@@ -1,0 +1,7 @@
+interface:
+  display_name: "Delegate to Herdr Panes"
+  short_description: "Submit work to idle sibling agent panes"
+  default_prompt: "Use $using-herdr-sibling-panes to delegate this to an idle sibling pane and report back."
+
+policy:
+  allow_implicit_invocation: true
