@@ -19,38 +19,47 @@ Customize the repo file, not `roles.yaml` — plugin installs are read-only, and
 
 `assignments:` is the routing table: every unit of work the pack hands out has an entry, so nothing is hard-coded to a role. Each entry takes the same knobs — `role` (from the role list), `mode` (`delegate` = a fresh pane of that role, `orchestrator` = the orchestrator pane itself, `implementer` = the pane that already owns the task), and for reviews `enabled`.
 
+**The YAML is the source of truth for who does what.** These tables say what each task covers; for the shipped role and mode, read [`roles.yaml`](../skills/orchestration/roles.yaml) — it changes across releases, and no prose copy of it is authoritative.
+
 Work tasks — these always happen; the assignment decides who and where:
 
-| Task | Default role / mode | Covers |
-|---|---|---|
-| `plan-and-design` | planning-design / orchestrator | Brainstorming, design docs, implementation plans |
-| `complex-coding` | coder / delegate | Implementation over the complex-coding boundary |
-| `simple-coding` | generalist / delegate | Localized, pattern-following edits under that boundary |
-| `chores` | generalist / delegate | Lookups, file moves, log gathering, mechanical edits, lint/format runs |
-| `test-authoring` | coder / implementer | Writing a task's tests |
-| `review-fixes` | coder / implementer | Fixing review findings |
-| `verification` | generalist / delegate | Running the repo's baseline and supplemental verification commands |
+| Task | Covers |
+|---|---|
+| `plan-and-design` | Brainstorming, design docs, implementation plans |
+| `complex-coding` | Implementation over the complex-coding boundary |
+| `simple-coding` | Localized, pattern-following edits under that boundary |
+| `chores` | Lookups, file moves, log gathering, mechanical edits, lint/format runs |
+| `test-authoring` | A task's tests for the implementation round |
+| `fix-round-test-authoring` | The covering tests for one fix round |
+| `review-fixes` | Fixing review findings |
+| `verification` | Running the repo's baseline and supplemental verification commands |
 
 Review tasks — same knobs plus `enabled`, which removes the gate:
 
-| Task | Default role / mode | Runs in | Off means |
-|---|---|---|---|
-| `plan-double-review` | reviewer / delegate | `/plan`, `/full_cycle` | Plans reach the user for approval unreviewed |
-| `documentation-impact-review` | planning-design / orchestrator | `/execute`, `/full_cycle`, `/quick` | No pre-implementation sweep for non-code files |
-| `task-review` | coder / delegate | `pane-driven-development` | A task completes on the implementing pane's own report |
-| `fix-round-re-review` | coder / delegate | the fix loop | Fix rounds close on the fixing pane's word; the five-round cap still applies |
-| `final-branch-review` | coder / delegate | `/execute`, `/execute_parallel`, `/full_cycle`, `/quick` | The branch reaches the integration decision unreviewed |
+| Task | Runs in | Off means |
+|---|---|---|
+| `plan-double-review` | `/plan`, `/full_cycle` | Plans reach the user for approval unreviewed |
+| `documentation-impact-review` | `/execute`, `/full_cycle`, `/quick` | No pre-implementation sweep for non-code files |
+| `task-review` | `pane-driven-development` | A task completes on the implementing pane's own report |
+| `fix-round-re-review` | the fix loop | Fix rounds close on the fixing pane's word; the five-round cap still applies |
+| `final-branch-review` | `/execute`, `/execute_parallel`, `/full_cycle`, `/quick` | The branch reaches the integration decision unreviewed |
 
 Work tasks are never disabled — `mode: orchestrator` is how one stops being delegated. A repo may also define a role beyond the shipped four and assign tasks to it.
+
+### One delegation per listed agent type
+
+A role declared with `agents:` (a list) rather than `agent:` runs **one delegation per entry**. That is where a double review comes from — the role, not the task — so assigning a review task to a list role multiplies its pane usage by the list length, and assigning it to a single-agent role makes it a single review. A one-entry list is a deliberate single delegation; an empty list is the same as disabling the task.
+
+Wherever a list role is used: the delegations come from different agent types, an unavailable type degrades the set rather than blocking the run, and the report names whether the full set, a degraded set, or a single delegation ran.
 
 ### What no assignment changes
 
 - **A pane never reviews work it wrote.** Disabling a review removes it; it never converts one into a self-review.
-- **The plan reviews that do run come from two different agent types.**
+- **Reviews from a list role come from different agent types.**
 - **`review-fixes` escalates at fix-loop rounds 4-5** to a fresh pane of an escalated agent type, whatever its mode says.
-- **`test-authoring: delegate` is allowed, and moves where independence comes from.** By default the implementing pane writes its own tests and the reviewer audits test code its author also implemented. Split them and that pairing is gone — the report must then name which pane wrote the tests.
+- **The report names which pane wrote the tests**, whatever `test-authoring` and `fix-round-test-authoring` resolve to.
 
-**Every non-default assignment or mode, and every disabled review, is named in the final report**, alongside any role that fell back and any review that degraded for lack of panes — so nobody later mistakes an unreviewed branch for a reviewed one. Configuration is input: it is read once before the first delegation and never written from inside a run.
+**Every assignment the repo config changed away from the shipped default, and every disabled review, is named in the final report**, alongside any role that fell back and any review that degraded for lack of panes — so nobody later mistakes an unreviewed branch for a reviewed one. Configuration is input: it is read once before the first delegation and never written from inside a run.
 
 ## The Roles
 
@@ -62,15 +71,15 @@ Its judgment is final: reviewers advise, the orchestrator decides.
 
 ### Reviewer
 
-Independent double review of **plans and designs**, before any code is touched. Two different agent types review the same self-contained request in separate panes, with no shared draft opinion. The orchestrator compares findings, resolves disagreements, and only then asks the user to approve.
+Independent review — of plans and designs before any code is touched, and of implemented code where a review task is assigned to it. It binds to a **list** of agent types, so each review task assigned to it runs once per entry: different agent types review the same self-contained request in separate panes, with no shared draft opinion. The orchestrator compares findings, resolves disagreements, and only then acts.
 
-If applying a fallback would put the same agent type in both Reviewer slots, the slot stays empty and the workflow degrades to a single review instead — two reviews from the same agent type are one review with extra steps.
+If applying a fallback would put the same agent type in two Reviewer slots, the slot stays empty and the workflow degrades to fewer reviews instead — two reviews from the same agent type are one review with extra steps.
 
 ### Coder
 
-Complex coding, **test authoring**, and **code review of implemented changes** — by default; every one of those is a reassignable delegation task. The boundary between `complex-coding` and `simple-coding` is spelled out in the orchestration skill: cross-cutting changes, design freedom, stateful/concurrent logic, non-obvious debugging, risky refactors, and algorithmic work are complex. When in doubt, treat it as complex.
+The heavier-judgment role: complex coding, **test authoring**, and the whole-branch **final review** — every one of those a reassignable delegation task. The boundary between `complex-coding` and `simple-coding` is spelled out in the orchestration skill: cross-cutting changes, design freedom, stateful/concurrent logic, non-obvious debugging, risky refactors, and algorithmic work are complex. When in doubt, treat it as complex.
 
-By default (`test-authoring: {role: coder, mode: implementer}`) the Coder pane that implements a task also writes its tests and owns RED-GREEN-REFACTOR for it. A repo may reassign `test-authoring` to a separate pane; see "What no assignment changes" above for what that costs.
+Test authoring is its own task (`test-authoring`, and `fix-round-test-authoring` for a fix round), so whether a Coder pane writes tests for code it also wrote, or a second Coder pane writes them blind, is a `mode` — see "Where Independence Comes From" below.
 
 ### Generalist
 
@@ -82,8 +91,15 @@ The older design separated a `test-engineer` from a `code-reviewer` so nobody gr
 
 - Every delegation resets the target session, so a reviewing pane never sees the implementing pane's reasoning.
 - A change is never sent back for review to the pane that wrote it; where an idle pane of a different agent type exists, it is preferred for review.
-- Because the implementing pane writes its own tests, the reviewing pane **reviews the test code** — does the test assert the requirement or just mirror the implementation, and would it fail if the behavior regressed? That review is the compensating control, and it is not optional.
-- RED evidence is a report artifact: the failing run before implementation, quoted, with the reason the failure was expected. Missing or reconstructed RED evidence is a finding.
+- RED evidence is a report artifact: the failing run before the code exists, quoted, with the reason the failure was expected. Missing or reconstructed RED evidence is a finding.
+
+Test independence is a `mode`, and each setting pays for it differently:
+
+- **`test-authoring: {mode: delegate}`** — a second pane writes the tests from the same task brief, in its own worktree at the commit before the implementation, and is never shown the code. Its RED is structural: the implementation is genuinely absent, so a test that *passes* there is a defect to report. The cost is an extra pane and a throwaway worktree per task, and a brief that has to pin exact names and signatures — both panes are working to it, and an unpinned interface fails as a test failure.
+- **`test-authoring: {mode: implementer}`** — the implementing pane writes its own tests under RED-GREEN-REFACTOR. Cheaper, and the reviewing panes then **review the test code** as the compensating control: does the test assert the requirement or just mirror the implementation, and would it fail if the behavior regressed? That review is not optional under this mode.
+- **`fix-round-test-authoring`** answers the same question for a fix round. Delegated, the round's covering tests come from a pane that is neither the fixing pane nor the original test author — tests written by whoever just changed the behavior prove only that the behavior changed.
+
+Whichever runs, the report names the pane that wrote the tests.
 
 ## Exhaustion and Fallback
 

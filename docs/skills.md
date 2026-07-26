@@ -25,7 +25,7 @@ Skills live in a single tree at `skills/<name>/SKILL.md`. Claude Code, Codex, an
 
 ## Quality & Verification
 
-- **`test-driven-development`** — RED-GREEN-REFACTOR reference. The pane implementing a task writes that task's tests: assertions come from the requirements, never from the code, and the RED run is evidence the report must carry.
+- **`test-driven-development`** — RED-GREEN-REFACTOR reference. The resolved `test-authoring` assignment says which pane writes a task's tests — a pane that never sees the implementation, or the implementing pane itself. Either way assertions come from the requirements, never from the code, and the RED run is evidence the report must carry.
 - **`verification-before-completion`** — Mandatory evidence check before claiming a task is done. Run the verification command, read the output, THEN make the claim.
 - **`systematic-debugging`** — Four-phase root-cause process (Investigation → Pattern → Hypothesis → Implementation) so bugs don't get patched with symptom fixes.
 

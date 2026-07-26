@@ -7,8 +7,8 @@ It is the merge of two packs: the orchestration and delegation transport from [h
 ## Core Principles
 
 - **One orchestrator, many panes.** Whichever pane the user types into owns the task: it plans, delegates, integrates, and reports. A pane that receives a delegated instruction executes it in place and never re-delegates.
-- **Independence from fresh context.** Every delegation resets the target session. The pane that writes code never reviews it; plans get two independent reviews from two agent types before approval. There are no named `test-engineer` / `code-reviewer` personas — the property comes from the reset, not from the label.
-- **TDD, owned by the implementer.** By default the pane implementing a task writes that task's tests and owns RED-GREEN-REFACTOR (the `test-authoring` assignment; reassignable per repo). Assertions come from the requirements, never from the code, and the RED run is quoted in the report — which the reviewing pane audits as the only independent check.
+- **Independence from fresh context.** Every delegation resets the target session. The pane that writes code never reviews it, and a role that binds to a list of agent types runs one review per entry — so plans and tasks get independent reviews from different agent types. There are no named `test-engineer` / `code-reviewer` personas — the property comes from the reset, not from the label.
+- **TDD, and who owns it is a setting.** The `test-authoring` assignment decides: `delegate` puts a task's tests in a pane that works from the same brief in a worktree at the pre-implementation commit and never sees the code — RED is structural there; `implementer` gives RED-GREEN-REFACTOR to the implementing pane, and the reviewers audit that test code as the only independent check. `fix-round-test-authoring` answers the same for a fix round. Assertions come from the requirements, never from the code, the RED run is quoted in the report, and the report names which pane wrote the tests.
 - **Composer-safe delegation.** Agent CLIs take input through a stateful composer that swallows keys and retains stale text. Submission goes through the bundled `composer-submit.sh`, completion is detected with a unique marker, and results are handed over as **files** — never reconstructed from pane scrollback.
 - **Isolated workspaces.** Feature work happens in a git worktree off `<BASE_BRANCH>`, one implementation pane per worktree.
 - **Degrade honestly.** Outside herdr, or with no idle pane, the work runs inline — and the report says which steps were not delegated and which independence was lost.
@@ -74,15 +74,15 @@ Plugin files are read-only, so repo-specific values are never written into the p
 roles:                                        # role -> agent type(s)
   coder:      { agent: codex }
   generalist: { agent: cursor }
-  reviewer:   { agents: [codex, cursor] }     # one plan review per entry
+  reviewer:   { agents: [codex, cursor] }     # a list role: one delegation per entry
 
 assignments:                                  # task -> role + where it runs
   complex-coding:      { role: coder,      mode: delegate }
   chores:              { role: generalist, mode: delegate }
-  test-authoring:      { role: coder,      mode: implementer }  # implementer writes its own tests
+  test-authoring:      { role: coder,      mode: delegate }     # a pane that never sees the code
   verification:        { role: generalist, mode: delegate }
-  task-review:         { role: coder,      mode: delegate, enabled: true }
-  fix-round-re-review: { role: coder,      mode: delegate, enabled: false }  # off: named in the report
+  task-review:         { role: reviewer,   mode: delegate, enabled: true }   # two reviews, one per agent type
+  fix-round-re-review: { role: reviewer,   mode: delegate, enabled: false }  # off: named in the report
 ```
 
 `mode` is `delegate` (a fresh pane of that role), `orchestrator` (this pane, nothing delegated), or `implementer` (the pane that already owns the task). Reviews also take `enabled`; work tasks are never disabled — `mode: orchestrator` is how one stops being delegated.
@@ -139,11 +139,11 @@ NOTICE           # Third-party attribution (required by Apache-2.0)
 Cut from superpowers-extended:
 
 - `agents/` (`code-reviewer`, `test-engineer`) — roles now bind to agent types via `roles.yaml`
-- `requesting-test-creation` / `receiving-test-creation` — the implementing pane writes its own tests
+- `requesting-test-creation` / `receiving-test-creation` — test authorship is the `test-authoring` assignment
 - `dispatching-parallel-agents` — parallel work goes to sibling panes, not in-process subagents
 - `subagent-driven-development` → rewritten as `pane-driven-development`
 
-Added in its place: pane delegation as the transport for every dispatch, plan double review before approval, reviewer audit of test code as the compensating control for the removed test-engineer, and honest degradation when panes are unavailable.
+Added in its place: pane delegation as the transport for every dispatch, double review from a list role, a delegated test author that never sees the implementation (with reviewer audit of test code as the compensating control when tests stay with the implementer), and honest degradation when panes are unavailable.
 
 ## Contributing
 

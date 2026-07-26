@@ -1,7 +1,11 @@
 #!/usr/bin/env bash
-# Extract one task's full text from an implementation plan into a file the
-# implementer reads in one call, so the task text never has to be pasted
+# Extract one task's full text from an implementation plan into a file every
+# pane on the task reads in one call, so the task text never has to be pasted
 # through the controller's context.
+#
+# The output is REQUIREMENTS ONLY. Role contracts (implementer, test author)
+# go in their own files beside it — appending one here would hand every other
+# pane on the task someone else's instructions.
 #
 # Usage: task-brief PLAN_FILE TASK_NUMBER [OUTFILE]
 # Default OUTFILE: <repo-root>/.herdrpowers/pdd/<plan-basename>/task-<N>-brief.md
