@@ -53,13 +53,13 @@ Before implementation, list every non-code file the change will invalidate: inst
 The active coding phase. Each task in the plan is delegated to a fresh pane.
 
 - **The per-task cycle**:
-    1. Extract the task brief to a file; delegate it to a Coder pane with the worktree path, report path, and completion marker.
-    2. The pane writes the failing test first (**RED**), implements the minimum to pass (**GREEN**), refactors, commits, and self-reviews.
-    3. The pane writes its full report to a file and replies with status + marker.
-    4. The orchestrator builds the review package and delegates the task review to a **different, freshly reset pane**: one pass, two verdicts — **Spec Compliance** and **Task Quality**.
-    5. Critical/Important findings enter the fix loop: rounds 1-3 go back to the same implementing pane, rounds 4-5 to a fresh pane of an escalated agent type, each round closed by a **scoped re-review** of the fix diff only. Five rounds is the cap — then the orchestrator adjudicates each open finding into the ledger, or stops on a load-bearing one.
+    1. Extract the task brief to a file; delegate it with the worktree path, report path, and completion marker.
+    2. The task's tests follow the resolved `test-authoring` assignment: a separate pane writing them from the same brief in its own worktree at the pre-implementation commit — where **RED** is structural, because the code genuinely is not there — or the implementing pane writing them itself under RED-GREEN-REFACTOR.
+    3. Each pane writes its full report to a file and replies with status + marker. A delegated test author's commit is cherry-picked into the task worktree and run: passing is **GREEN**, failing is a finding.
+    4. The orchestrator builds the review package and delegates the task review to **freshly reset panes that did not write the code** — one per agent type the review's role binds to: one pass each, two verdicts — **Spec Compliance** and **Task Quality**.
+    5. Critical/Important findings from all reviews merge into one list and enter the fix loop: rounds 1-3 go back to the same implementing pane, rounds 4-5 to a fresh pane of an escalated agent type, the round's covering tests written per `fix-round-test-authoring`, each round closed by a **scoped re-review** of the fix diff only. Five rounds is the cap — then the orchestrator adjudicates each open finding into the ledger, or stops on a load-bearing one.
 - **Skills**: `pane-driven-development`, `test-driven-development`, `systematic-debugging`.
-- **Roles**: Coder (implementation, tests, review), Generalist (chores).
+- **Roles**: as assigned in [`roles.yaml`](../skills/orchestration/roles.yaml) — the pack ships implementation and test authoring on Coder, per-task review on Reviewer, chores on Generalist.
 
 Independent tracks can run concurrently — one pane per worktree, never two implementers in one working tree. See `/execute_parallel`.
 

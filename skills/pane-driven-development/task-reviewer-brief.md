@@ -76,8 +76,23 @@ downgrades a finding's severity.
 
 ### Tests
 
-The implementer wrote its own tests, so you are the only independent check on
-them. Review the test code in the diff:
+Your instruction says who wrote these tests. Review the test code in the diff
+either way — but the evidence you are checking for, and how load-bearing your
+audit is, differ:
+
+- **The implementer wrote them** (one report file): you are the only
+  independent check on them. RED and GREEN both belong in that report — a
+  failing run *before* the implementation with a reason that matches the
+  missing behavior, and a passing run after.
+- **A separate pane wrote them** (a second report file, named in your
+  instruction): the tests were written against the requirements by a pane that
+  never saw this code, so RED lives in *that* report and GREEN lives in the
+  implementer's report under a merged-test-run heading. Do not report missing
+  evidence because one report does not carry both halves — that is the expected
+  shape. Do report it if either half is absent, reconstructed, or if the merged
+  run is not quoted.
+
+In both cases:
 
 - Does each test assert the **requirement**, or does it assert what the
   implementation happens to do? A test written after the code, to match the
@@ -85,10 +100,6 @@ them. Review the test code in the diff:
 - Would the test actually fail if the behavior regressed? Tautologies,
   over-mocked paths that never reach the code under test, and assertions on
   call counts instead of outcomes are findings.
-- Does the report contain real RED evidence — a failing run *before* the
-  implementation, with a failure reason that matches the missing behavior —
-  and GREEN evidence after? Missing or reconstructed RED/GREEN evidence is a
-  finding.
 - Do the tests cover the edge cases the requirements name?
 
 Do not re-run the suite to confirm the report. Run a focused test only when
@@ -182,6 +193,7 @@ obvious).
 - `[BRIEF_FILE]` — REQUIRED: the same task brief the implementer worked from (`scripts/task-brief PLAN N`)
 - `[GLOBAL_CONSTRAINTS]` — binding requirements copied verbatim from the plan's Global Constraints section or the spec: exact values, formats, and stated relationships between components (not process rules — those are in the contract already)
 - `[REPORT_FILE]` — REQUIRED: the file the implementer wrote its detailed report to
+- `[TEST_REPORT_FILE]` — REQUIRED when a separate pane wrote the tests: its report, carrying the RED evidence. Say in the instruction which pane wrote the tests; omit this path only when the implementer wrote them
 - `[BASE_SHA]` / `[HEAD_SHA]` — the recorded task base and the current commit
 - `[DIFF_FILE]` — REQUIRED: the path printed by `scripts/review-package PLAN_FILE BASE HEAD` (the package never enters the orchestrator's context)
 - **review output file + marker** — REQUIRED
