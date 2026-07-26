@@ -57,7 +57,7 @@ The active coding phase. Each task in the plan is delegated to a fresh pane.
     2. The pane writes the failing test first (**RED**), implements the minimum to pass (**GREEN**), refactors, commits, and self-reviews.
     3. The pane writes its full report to a file and replies with status + marker.
     4. The orchestrator builds the review package and delegates the task review to a **different, freshly reset pane**: one pass, two verdicts — **Spec Compliance** and **Task Quality**.
-    5. Critical/Important findings go back as one fix delegation; then re-review.
+    5. Critical/Important findings enter the fix loop: rounds 1-3 go back to the same implementing pane, rounds 4-5 to a fresh pane of an escalated agent type, each round closed by a **scoped re-review** of the fix diff only. Five rounds is the cap — then the orchestrator adjudicates each open finding into the ledger, or stops on a load-bearing one.
 - **Skills**: `pane-driven-development`, `test-driven-development`, `systematic-debugging`.
 - **Roles**: Coder (implementation, tests, review), Generalist (chores).
 
@@ -79,7 +79,7 @@ A pane reporting "tests pass" is a claim, not evidence. Read the quoted output, 
 
 ### Phase 7: Integration (Candidates & Cleanup)
 
-Work stops and waits for the owner's instruction. On that instruction, the options are **presented, not assumed**: merge locally into `<BASE_BRANCH>`, push and open a pull request, keep the branch as-is, or discard. The owner picks; only that option runs, and the worktree and branch are cleaned up only as far as it requires.
+Work stops and waits for the owner's instruction. On that instruction, the options are **presented, not assumed**: merge locally into `<BASE_BRANCH>`, push and open a pull request, push only, or keep the branch as-is (discarding happens only on an explicit request). The owner picks; only that option runs, and the worktree and branch are cleaned up only as far as it requires.
 
 - **Purpose**: Hand the finished branch back with its integration choices open.
 - **Skill**: `finishing-a-development-branch`.

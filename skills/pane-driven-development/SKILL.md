@@ -65,40 +65,97 @@ digraph process {
         "Answer questions, re-delegate" [shape=box];
         "Pane writes failing test, implements, commits, self-reviews" [shape=box];
         "Write review package, delegate task reviewer pane (./task-reviewer-brief.md)" [shape=box];
-        "Task reviewer reports spec OK and quality approved?" [shape=diamond];
-        "Delegate fix pane for Critical/Important findings" [shape=box];
-        "Mark task complete in todo list and progress ledger" [shape=box];
+        "Spec OK and quality approved?" [shape=diamond];
+        "Finding conflicts with plan text?" [shape=diamond];
+        "Ask human partner which governs" [shape=box];
+        "Fix round R of 5: R<=3 same pane; R>=4 fresh pane, escalated agent type" [shape=box];
+        "Delegate scoped re-review (./re-review-brief.md)" [shape=box];
+        "All findings addressed?" [shape=diamond];
+        "R = 5?" [shape=diamond];
+        "Adjudicate each open finding" [shape=box];
+        "Any load-bearing finding?" [shape=diamond];
+        "STOP: report BLOCKED to human partner" [shape=box];
+        "Park findings in ledger with rulings" [shape=box];
+        "Append completion to ledger, mark todo complete" [shape=box];
     }
 
-    "Read plan, note context and global constraints, create todos" [shape=box];
+    "Setup: worktree, plan workspace, ledger check, read plan, pre-flight review" [shape=box];
     "More tasks remain?" [shape=diamond];
     "Delegate final code review (../requesting-code-review/review-brief.md)" [shape=box];
+    "Final findings? ONE fix delegation, one scoped re-review, adjudicate residuals" [shape=box];
+    "Final review clean: delete this plan's workspace" [shape=box];
     "Use finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
 
-    "Read plan, note context and global constraints, create todos" -> "Delegate implementer pane (./implementer-brief.md)";
+    "Setup: worktree, plan workspace, ledger check, read plan, pre-flight review" -> "Delegate implementer pane (./implementer-brief.md)";
     "Delegate implementer pane (./implementer-brief.md)" -> "Implementer pane asks questions?";
     "Implementer pane asks questions?" -> "Answer questions, re-delegate" [label="yes"];
-    "Answer questions, re-delegate" -> "Delegate implementer pane (./implementer-brief.md)";
+    "Answer questions, re-delegate" -> "Pane writes failing test, implements, commits, self-reviews";
     "Implementer pane asks questions?" -> "Pane writes failing test, implements, commits, self-reviews" [label="no"];
     "Pane writes failing test, implements, commits, self-reviews" -> "Write review package, delegate task reviewer pane (./task-reviewer-brief.md)";
-    "Write review package, delegate task reviewer pane (./task-reviewer-brief.md)" -> "Task reviewer reports spec OK and quality approved?";
-    "Task reviewer reports spec OK and quality approved?" -> "Delegate fix pane for Critical/Important findings" [label="no"];
-    "Delegate fix pane for Critical/Important findings" -> "Write review package, delegate task reviewer pane (./task-reviewer-brief.md)" [label="re-review"];
-    "Task reviewer reports spec OK and quality approved?" -> "Mark task complete in todo list and progress ledger" [label="yes"];
-    "Mark task complete in todo list and progress ledger" -> "More tasks remain?";
+    "Write review package, delegate task reviewer pane (./task-reviewer-brief.md)" -> "Spec OK and quality approved?";
+    "Spec OK and quality approved?" -> "Append completion to ledger, mark todo complete" [label="yes"];
+    "Spec OK and quality approved?" -> "Finding conflicts with plan text?" [label="no"];
+    "Finding conflicts with plan text?" -> "Ask human partner which governs" [label="yes"];
+    "Ask human partner which governs" -> "Fix round R of 5: R<=3 same pane; R>=4 fresh pane, escalated agent type";
+    "Finding conflicts with plan text?" -> "Fix round R of 5: R<=3 same pane; R>=4 fresh pane, escalated agent type" [label="no"];
+    "Fix round R of 5: R<=3 same pane; R>=4 fresh pane, escalated agent type" -> "Delegate scoped re-review (./re-review-brief.md)";
+    "Delegate scoped re-review (./re-review-brief.md)" -> "All findings addressed?";
+    "All findings addressed?" -> "Append completion to ledger, mark todo complete" [label="yes"];
+    "All findings addressed?" -> "R = 5?" [label="no"];
+    "R = 5?" -> "Fix round R of 5: R<=3 same pane; R>=4 fresh pane, escalated agent type" [label="no - next round"];
+    "R = 5?" -> "Adjudicate each open finding" [label="yes - breaker trips"];
+    "Adjudicate each open finding" -> "Any load-bearing finding?";
+    "Any load-bearing finding?" -> "STOP: report BLOCKED to human partner" [label="yes"];
+    "Any load-bearing finding?" -> "Park findings in ledger with rulings" [label="no"];
+    "Park findings in ledger with rulings" -> "Append completion to ledger, mark todo complete";
+    "Append completion to ledger, mark todo complete" -> "More tasks remain?";
     "More tasks remain?" -> "Delegate implementer pane (./implementer-brief.md)" [label="yes"];
     "More tasks remain?" -> "Delegate final code review (../requesting-code-review/review-brief.md)" [label="no"];
-    "Delegate final code review (../requesting-code-review/review-brief.md)" -> "Use finishing-a-development-branch";
+    "Delegate final code review (../requesting-code-review/review-brief.md)" -> "Final findings? ONE fix delegation, one scoped re-review, adjudicate residuals";
+    "Final findings? ONE fix delegation, one scoped re-review, adjudicate residuals" -> "Final review clean: delete this plan's workspace";
+    "Final review clean: delete this plan's workspace" -> "Use finishing-a-development-branch";
 }
 ```
 
-## Pre-Flight Plan Review
+## Setup
+
+Ensure the work happens in an isolated workspace: use `using-git-worktrees` to
+create one or verify the existing one. Never start implementation on
+`<BASE_BRANCH>` (or main/master) without your human partner's explicit consent.
+
+Conversation memory does not survive compaction. In real sessions,
+orchestrators that lost their place have re-delegated entire completed task
+sequences — the single most expensive failure observed. Track progress in
+a ledger file, not only in todos.
+
+- Each plan owns a workspace: at skill start, run this skill's
+  `scripts/pdd-workspace PLAN_FILE` — it prints the plan's git-ignored
+  directory (`<repo-root>/.herdrpowers/pdd/<plan-basename>/`), home to
+  every artifact for THIS plan: ledger, briefs, reports, review packages.
+  Another plan's directory is never yours to read or write.
+- Check for this plan's ledger at `<workspace>/progress.md`. If its first
+  line names your plan file, tasks with a `Task <N>: complete` line are DONE
+  — do not re-delegate them; resume at the first task without one. A task
+  whose last line is a fix round is mid-loop: resume the loop at the next
+  round. A ledger whose first line names a different plan file — or a stray
+  ledger at the old flat path `.herdrpowers/pdd/progress.md` — is another
+  plan's progress: leave it in place and start your own, fresh.
+- Create the ledger with its identity as the first line:
+  `# PDD ledger — plan: <plan file path>`.
+- The ledger is your recovery map: the commits it names exist in git even
+  when your context no longer remembers creating them. After compaction,
+  trust the ledger and `git log` over your own recollection.
+- `git clean -fdx` will destroy the workspace (it's git-ignored scratch); if
+  that happens, recover from `git log`.
+
+Read the plan once, note its context and Global Constraints, and create a
+todo per task.
 
 Before delegating Task 1, scan the plan once for conflicts:
 
 - tasks that contradict each other or the plan's Global Constraints
 - anything the plan explicitly mandates that the review rubric treats as a
-  defect (meaningless test requirements, verbatim duplication of a logic block)
+  defect (a test that asserts nothing, verbatim duplication of a logic block)
 
 Present everything you find to your human partner as one batched question —
 each finding beside the plan text that mandates it, asking which governs —
@@ -116,21 +173,46 @@ Routing is `orchestration`'s job, not this skill's. Resolve it from that skill's
 
 Panes are not reserved per role — pick any idle pane of the matching agent type at delegation time. When no pane of the right type is idle, wait; do not interrupt a working pane. When an agent type is exhausted (usage limit, or two markerless delegations on two panes of that type), take its substitute from `roles.yaml`'s `fallbacks:` map and name the fallback in your final report.
 
+**Escalation is a type swap.** Panes have no model dial you control, so "try something stronger" means a different agent type: a fresh pane of another Coder-eligible type, or the substitute in `fallbacks:`. Use it when a pane reports BLOCKED for lack of reasoning, and at fix-loop rounds 4-5. Name the swap in the ledger line.
+
 **Never delegate two implementation tasks into the same worktree at once.** One writer per working tree; that is the constraint parallelism has to respect, not the pane count.
 
-## Handling Implementer Status
+## The Task Loop
+
+Everything you paste into a delegation — and everything a pane prints back —
+stays resident in your context for the rest of the session and is re-read on
+every later turn. Hand artifacts over as files (see File Handoffs).
+
+### 1. Delegate the implementer
+
+Record BASE (`git rev-parse HEAD`) before delegating — the review package
+and fix-round diffs need it.
+
+Run `scripts/task-brief PLAN_FILE N` to extract the task's full text into the
+plan workspace, then compose the delegation per
+[implementer-brief.md](implementer-brief.md). Never make a pane read the whole
+plan file. Exact values (numbers, magic strings, signatures, test cases)
+appear only in the brief.
+
+- If an earlier task parked a finding in the area this task touches, carry
+  a pointer to that ledger entry in the delegation.
+- Record the pane ID you delegated to — fix rounds 1-3 go back to that pane.
+
+### 2. Handle the report
 
 Implementer panes report one of four statuses. Handle each appropriately:
 
-**DONE:** Generate the review package (`scripts/review-package BASE HEAD`, from this skill's directory — it prints the unique file path it wrote; BASE is the commit you recorded before delegating the task — never `HEAD~1`, which silently drops all but the last commit of a multi-commit task), then delegate the task review with the printed path.
+**DONE:** Generate the review package (`scripts/review-package PLAN_FILE BASE HEAD`, from this skill's directory — it prints the unique file path it wrote; BASE is the commit you recorded before delegating the task — never `HEAD~1`, which silently drops all but the last commit of a multi-commit task), then delegate the task review with the printed path.
 
 **DONE_WITH_CONCERNS:** The pane completed the work but flagged doubts. Read the concerns before proceeding. If they are about correctness or scope, address them before review. If they are observations (e.g., "this file is getting large"), note them and proceed to review.
 
 **NEEDS_CONTEXT:** The pane needs information that was not provided. Provide the missing context and re-delegate.
 
-**BLOCKED:** The pane cannot complete the task. Assess the blocker:
-1. If it is a context problem, provide more context and re-delegate
-2. If the task needs more reasoning, re-delegate to a Coder pane (or its fallback) rather than a Generalist
+**BLOCKED:** The pane cannot complete the task. Assess the blocker with
+`systematic-debugging` — root cause before fix, in the pane and in the
+orchestrator:
+1. If it is a context problem, provide more context and re-delegate to the same pane
+2. If the task needs more reasoning, escalate the agent type (see Role Selection)
 3. If the task is too large, break it into smaller pieces
 4. If the plan itself is wrong, escalate to the human
 
@@ -138,23 +220,44 @@ Implementer panes report one of four statuses. Handle each appropriately:
 
 **Never** ignore an escalation or re-delegate the same task unchanged. If the pane said it is stuck, something needs to change.
 
-## Handling Reviewer ⚠️ Items
+If the pane asks questions — before starting or mid-task — answer clearly and
+completely, provide additional context if needed, and don't rush it into
+implementation.
 
-The task reviewer may report "⚠️ Cannot verify from diff" items — requirements
-that live in unchanged code or span tasks. These do not block the rest of the
-review, but you must resolve each one yourself before marking the task
-complete: you hold the plan and cross-task context the reviewer
-lacks. If you confirm an item is a real gap, treat it as a failed spec
-review — send it back and re-review.
-
-## Constructing Reviewer Briefs
+### 3. Review the task
 
 Per-task reviews are task-scoped gates. The broad review happens once, at the
-final whole-branch review. When you fill a reviewer template:
+final whole-branch review. Never skip the task review, and never accept a
+report missing either verdict — spec compliance AND task quality are both
+required. A pane's self-review never replaces the task review; both are needed.
 
 - Send the review to a **fresh pane**, and prefer an idle pane of a different
   agent type than the one that implemented the change. Never send a change
   back for review to the pane that wrote it.
+- Hand the reviewer its diff as a file: run this skill's
+  `scripts/review-package PLAN_FILE BASE HEAD` and pass the reviewer the file
+  path it prints (or, without bash: `git log --oneline`, `git diff --stat`,
+  and `git diff -U10` for the range, redirected to one uniquely named
+  file). The output never enters your own context, and the reviewer sees
+  the commit list, stat summary, and full diff with context in one Read
+  call. Use the BASE you recorded before delegating the task —
+  never `HEAD~1`, which silently truncates multi-commit tasks. Never
+  delegate a task review without a diff file.
+- **Reviewer inputs:** the task reviewer gets three paths — the same brief
+  file, the report file, and the review package — plus the global
+  constraints that bind the task.
+- The global-constraints block you hand the reviewer is its attention
+  lens. Copy the binding requirements verbatim from the plan's Global
+  Constraints section or the spec: exact values, exact formats, and the
+  stated relationships between components ("same layout as X", "matches
+  Y"). The reviewer's template already carries the process rules (YAGNI,
+  verification hygiene, review method) — the constraints block is for what THIS
+  project's spec demands.
+- A brief describes one task, not the session's history. Do not
+  paste accumulated prior-task summaries ("state after Tasks 1-3") into
+  later delegations — a real session's dispatch hit 42k chars of which 99%
+  was pasted history. A fresh pane needs its task, the interfaces it
+  touches, and the global constraints. Nothing else.
 - Do not add open-ended directives like "check all uses" or "run race tests
   if useful" without a concrete, task-specific reason
 - Do not ask a reviewer to re-run tests the implementer already ran on the
@@ -165,50 +268,141 @@ final whole-branch review. When you fill a reviewer template:
   loop. If the brief you are writing contains "do not flag," "don't treat X
   as a defect," "at most Minor," or "the plan chose" — stop: you are
   pre-judging, usually to spare yourself a review loop.
-- The global-constraints block you hand the reviewer is its attention
-  lens. Copy the binding requirements verbatim from the plan's Global
-  Constraints section or the spec: exact values, exact formats, and the
-  stated relationships between components ("same layout as X", "matches
-  Y"). The reviewer's template already carries the process rules (YAGNI,
-  verification hygiene, review method) — the constraints block is for what THIS
-  project's spec demands.
-- Hand the reviewer its diff as a file: run this skill's
-  `scripts/review-package BASE HEAD` and pass the reviewer the file path
-  it prints (or, without bash: `git log --oneline`, `git diff --stat`,
-  and `git diff -U10` for the range, redirected to one uniquely named
-  file). The output never enters your own context, and the reviewer sees
-  the commit list, stat summary, and full diff with context in one Read
-  call. Use the BASE you recorded before delegating the task —
-  never `HEAD~1`, which silently truncates multi-commit tasks.
-- A brief describes one task, not the session's history. Do not
-  paste accumulated prior-task summaries ("state after Tasks 1-3") into
-  later delegations — a real session's dispatch hit 42k chars of which 99%
-  was pasted history. A fresh pane needs its task, the interfaces it
-  touches, and the global constraints. Nothing else.
-- Delegate fixes for Critical and Important findings. Record Minor
-  findings in the progress ledger as you go, and point the final
+
+The task reviewer may report "⚠️ Cannot verify from diff" items — requirements
+that live in unchanged code or span tasks. These do not block the rest of the
+review, but you must resolve each one yourself before marking the task
+complete: you hold the plan and cross-task context the reviewer
+lacks. If you confirm an item is a real gap, treat it as a failed spec
+review — it enters the fix loop with the other findings.
+
+Template: [task-reviewer-brief.md](task-reviewer-brief.md)
+
+### 4. The fix loop
+
+The loop triggers when the review reports spec ❌, any Critical or Important
+finding, or a ⚠️ item you confirmed as a real gap.
+
+Before the loop starts, two routes leave it immediately:
+
+- Record Minor findings in the progress ledger as you go
+  (`Task <N>: minor (deferred): <one-liner>`), and point the final
   whole-branch review at that list so it can triage which must be fixed
-  before merge. A roll-up nobody reads is a silent discard.
+  before merge. A roll-up nobody reads is a silent discard. Minor findings
+  never enter the loop.
 - A finding labeled plan-mandated — or any finding that conflicts with
   what the plan's text requires — is the human's decision, like any plan
   contradiction: present the finding and the plan text, ask which governs.
   Do not dismiss the finding because the plan mandates it, and do not
   delegate a fix that contradicts the plan without asking.
-- The final whole-branch review gets a package too: run
-  `scripts/review-package MERGE_BASE HEAD` (MERGE_BASE = the commit the
-  branch started from, e.g. `git merge-base <BASE_BRANCH> HEAD`) and include the
-  printed path in the final review brief, so the final reviewer reads
-  one file instead of re-deriving the branch diff with git commands.
-- Every fix delegation carries the implementer contract: the fix pane
-  re-runs the verification covering its change, writes new or changed tests
-  itself under RED-GREEN-REFACTOR, and reports the results. Name the
-  covering test files or commands in the brief — a one-line fix does not
-  need the whole suite. Before re-delegating the review, confirm the fix
-  report contains the covering commands and output.
-- If the final whole-branch review returns findings, delegate ONE fix
-  with the complete findings list — not one pane per finding.
-  Per-finding fixers each rebuild context and re-run suites; a real
-  session's final-review fix wave cost more than all its tasks combined.
+
+Everything else enters the loop. A fix round is one fix delegation plus one
+scoped re-review. Five rounds maximum per task:
+
+**Rounds 1-3 — go back to the same implementing pane.** Send it the open
+findings verbatim through `composer-submit.sh`, with a fresh completion
+marker. Its session is intact: it knows the task, the code, and its own
+choices. If that pane has been reset, crashed, or is no longer idle,
+delegate to a fresh pane of the same agent type carrying the brief path, the
+report-file path, and the findings — the report file is the persistent memory
+either way.
+
+**Rounds 4-5 — delegate to a fresh pane of an escalated agent type** (see
+Role Selection), with the brief path, the report-file path, the open findings,
+and this framing: "A prior pane attempted this task [N] times; you own it now.
+Read the report file for what was tried." A loop that survives three rounds in
+one session usually means that pane cannot see its own problem — fresh eyes and
+a capability swap in one move.
+
+**Every round, either way:** the pane fixes, writes or amends the covering
+tests itself under RED-GREEN-REFACTOR, re-runs the verification covering the
+amended code, appends its fix report to the same report file, and replies with
+the short contract. Before delegating the re-review, confirm the fix report
+contains the covering tests, the command run, and the output; delegate the
+re-review once all three are present. Name the covering test files in the fix
+message — a one-line fix does not need the whole suite.
+
+**The re-review is scoped.** Run `scripts/review-package PLAN_FILE FIX_BASE HEAD`
+where FIX_BASE is the head the previous review saw, and delegate
+[re-review-brief.md](re-review-brief.md) to a fresh pane with the findings
+list, the brief, the report file, and the printed diff path. The re-reviewer
+verdicts each finding ADDRESSED or NOT ADDRESSED and flags new breakage in the
+fix diff only. New Critical/Important breakage in the fix diff joins the open
+findings list. Out-of-scope observations go to the ledger as deferred
+minors — they never extend the loop.
+
+**After each round,** append to the ledger:
+`Task <N>: fix round <R>/5 (<X> addressed, <Y> open — <finding one-liners>; commits <a7>..<b7>)`
+
+Never fix findings yourself in the orchestrator pane — your context stays
+clean for coordination, and orchestrator fixes skip review.
+
+**The breaker.** When round 5's re-review still leaves findings open, stop
+delegating. Adjudicate each open finding yourself — you hold the plan and
+the cross-task context the reviewer lacks:
+
+- **The reviewer is wrong, or the point is contestable:** park it —
+  `Task <N>: parked — <finding> — ruling: <why the code stands>`. The final
+  review sees both sides.
+- **Real, but nothing downstream builds on it:** park it the same way, with
+  a ruling that says it's real and deferred.
+- **Real and load-bearing** — a later task builds on it, or it reveals a
+  plan defect: STOP. Append `Task <N>: BLOCKED — <reason>` and report to
+  your human partner with the finding, the plan text it collides with, and
+  the fix history. Parking a structural failure lets every dependent task
+  build on it and hands the final review a problem it cannot fix either.
+
+Adjudicate only at the cap. Adjudicating earlier to end a loop is
+pre-judging with a different name. Every adjudication is a ledger entry —
+a silent discard is forbidden.
+
+### 5. Complete the task
+
+When the review comes back clean — or every open finding is parked with a
+ruling at the cap — append the completion line to the ledger in the same
+message as your other bookkeeping:
+
+- `Task <N>: complete (commits <base7>..<head7>, review clean)`
+- `Task <N>: complete (commits <base7>..<head7>, <K> parked)` after a
+  tripped breaker
+
+Then mark the todo complete and move on. Never move to the next task while
+the review has open Critical/Important issues that are neither fixed nor
+parked-with-ruling at the cap.
+
+## Final Review
+
+The final whole-branch review gets a package too: run
+`scripts/review-package PLAN_FILE MERGE_BASE HEAD` (MERGE_BASE = the commit the
+branch started from, e.g. `git merge-base <BASE_BRANCH> HEAD`) and include the
+printed path in the final review brief, so the final reviewer reads
+one file instead of re-deriving the branch diff with git commands. Delegate it
+to a fresh pane — prefer an agent type that implemented none of the tasks —
+using `requesting-code-review`'s
+[review-brief.md](../requesting-code-review/review-brief.md). Point it at
+the ledger's deferred-minor and parked lines so it can triage which must be
+fixed before merge.
+
+If the final whole-branch review returns findings, delegate ONE fix pane
+with the complete findings list — not one pane per finding.
+Per-finding fixers each rebuild context and re-run suites; a real
+session's final-review fix wave cost more than all its tasks combined.
+Then run exactly one scoped re-review of the fix wave
+(`scripts/review-package PLAN_FILE FIX_BASE HEAD`,
+[re-review-brief.md](re-review-brief.md)).
+Adjudicate any residual findings as in the task loop's breaker: park with
+rulings, or stop on load-bearing ones. There is no second fix wave —
+residual load-bearing findings surface to your human partner when
+finishing-a-development-branch presents the options.
+
+## Finish
+
+When the final whole-branch review is clean and its fixes are merged,
+delete this plan's workspace (`rm -rf <workspace>`) — the git history is
+the record now. Sibling directories belong to other plans; leave them
+alone.
+
+Use `finishing-a-development-branch`.
 
 ## File Handoffs
 
@@ -217,9 +411,8 @@ that `pane read` can never recover, and everything you paste into a brief
 stays resident in your own context for the rest of the session. Hand
 artifacts over as files, in both directions:
 
-- **Task brief:** before delegating an implementer, run this skill's
-  `scripts/task-brief PLAN_FILE N` — it extracts the task's full text to a
-  uniquely named file and prints the path. Compose the delegation so the
+- **Task brief:** `scripts/task-brief PLAN_FILE N` writes the task's full text
+  into the plan workspace and prints the path. Compose the delegation so the
   brief stays the single source of requirements. Your instruction should
   contain: (1) the absolute worktree path, and the requirement to confirm
   the pane is in it before doing anything else; (2) one line on where this
@@ -236,43 +429,42 @@ artifacts over as files, in both directions:
 - **Reviewer inputs:** the task reviewer gets three paths — the same brief
   file, the report file, and the review package — plus the global
   constraints that bind the task.
-- Fix delegations append their fix report (with test results) to the same
+- Fix rounds append their fix report (with test results) to the same
   report file and reply with a short summary; re-reviews read the updated file.
 - Keep the instruction itself on a single line: `composer-submit.sh`
   rejects embedded newlines. Detail belongs in the files it points at.
-
-## Durable Progress
-
-Conversation memory does not survive compaction. In real sessions,
-orchestrators that lost their place have re-delegated entire completed task
-sequences — the single most expensive failure observed. Track progress in
-a ledger file, not only in todos.
-
-- At skill start, check for a ledger:
-  `cat "$(git rev-parse --show-toplevel)/.herdrpowers/pdd/progress.md"`. Tasks listed there
-  as complete are DONE — do not re-delegate them; resume at the first task
-  not marked complete.
-- When a task's review comes back clean, append one line to the ledger in
-  the same message as your other bookkeeping:
-  `Task N: complete (commits <base7>..<head7>, review clean)`.
-- The ledger is your recovery map: the commits it names exist in git even
-  when your context no longer remembers creating them. After compaction,
-  trust the ledger and `git log` over your own recollection.
-- `git clean -fdx` will destroy the ledger (it's git-ignored scratch); if
-  that happens, recover from `git log`.
 
 ## Brief Templates
 
 - [implementer-brief.md](implementer-brief.md) - Implementer pane brief
 - [task-reviewer-brief.md](task-reviewer-brief.md) - Task reviewer pane brief (spec compliance + code quality)
+- [re-review-brief.md](re-review-brief.md) - Scoped re-review pane brief, one per fix round
 - Final whole-branch review: use requesting-code-review's [review-brief.md](../requesting-code-review/review-brief.md)
+
+## Common Rationalizations
+
+| Excuse | Reality |
+|--------|---------|
+| "Close enough on spec compliance" | Reviewer found spec gaps = not done. Fix or hit the cap and adjudicate — those are the only exits. |
+| "I'll fix it myself, delegating is overhead" | Orchestrator fixes pollute your context and skip review. Send the findings back to the implementing pane. |
+| "One more round will converge" | Past the cap, rounds don't converge — the failure is structural. Adjudicate and route. |
+| "The reviewer will just find something new anyway" | Scoped re-reviews verify fixes; they cannot wander. New findings on untouched code go to the ledger, not the loop. |
+| "This finding is obviously wrong, I'll drop it" | You adjudicate only at the cap, and every ruling is a ledger entry. Silent discards are forbidden. |
+| "The fix was small, skip the re-review" | Unreviewed fixes are how regressions land. Every round ends with a scoped re-review. |
+| "Reviews slow the loop down" | The loop without reviews is just unverified churn. Reviews are the loop's brakes and steering. |
+| "Ledger bookkeeping is overhead" | The ledger is what survives compaction. Orchestrators without one have re-delegated entire completed task sequences. |
+| "The implementing pane is idle — it can review its own work" | That is a self-review with extra steps. Review goes to a pane that did not write the code, or the report says the review was not independent. |
+| "The plan mandates it, so the finding is invalid" | Plan-vs-review conflicts are your human partner's call. Present both and ask which governs. |
 
 ## Example Workflow
 
 ```
 You: I'm using Pane-Driven Development to execute this plan.
 
+[Setup: worktree verified]
 [Read plan file once: docs/herdrpowers/plans/feature-plan.md]
+[Resolve workspace: scripts/pdd-workspace docs/herdrpowers/plans/feature-plan.md
+ → /repo/.herdrpowers/pdd/feature-plan/ — no ledger inside, fresh start]
 [Read orchestration/roles.yaml; herdr pane list -> w2:p18 (codex, idle), w2:p19 (cursor, idle)]
 [Create todos for all tasks]
 
@@ -290,129 +482,71 @@ You: [re-delegate with the answer: user level]
   - Self-review: Found I missed --force flag, added it
   - Committed
 
-[Run review-package; delegate the task review to w2:p19 - different agent type, fresh session]
-Task reviewer: Spec OK - all requirements met, nothing extra.
+[Run review-package PLAN_FILE BASE HEAD; delegate the task review to w2:p19 - different agent type, fresh session]
+Task reviewer: Spec ✅ - all requirements met, nothing extra.
   Strengths: Clear verification evidence, clean implementation. Issues: None. Task quality: Approved.
 
-[Append to ledger; mark Task 1 complete]
+[Ledger: Task 1: complete (commits a1b2c3d..d4e5f6a, review clean)]
 
 Task 2: Recovery modes
 
-[Run task-brief for Task 2; delegate to an idle Coder pane]
+[Run task-brief for Task 2; delegate to an idle Coder pane (w2:p18)]
 
 Implementer pane:
   - Added verify/repair modes, 8/8 tests passing, RED/GREEN evidence in report
   - Committed
 
-[Run review-package; delegate the task review to a fresh pane]
-Task reviewer: Spec FAILED:
+[Run review-package PLAN_FILE BASE HEAD; delegate the task review to a fresh pane]
+Task reviewer: Spec ❌:
   - Missing: Progress reporting (spec says "report every 100 items")
-  - Extra: Added --json flag (not requested)
   Issues (Important): Magic number (100)
 
-[Delegate ONE fix with all findings]
-Fix pane: Removed --json flag, added progress reporting, extracted PROGRESS_INTERVAL constant
+[Fix round 1: back to w2:p18 with both findings, fresh marker]
+Implementer pane: Added progress reporting, extracted PROGRESS_INTERVAL constant.
+  Re-ran test/recovery.test.js — 10/10 passing. Fix report appended.
 
-[Re-review]
-Task reviewer: Spec OK. Task quality: Approved.
+[Run review-package PLAN_FILE FIX_BASE HEAD; delegate scoped re-review to a fresh pane]
+Re-reviewer: Missing progress reporting — ADDRESSED (src/recovery.js:41).
+  Magic number — ADDRESSED (src/recovery.js:7). New breakage: none.
+  Verdict: all findings addressed.
 
-[Append to ledger; mark Task 2 complete]
+[Ledger: Task 2: fix round 1/5 (2 addressed, 0 open; commits d4e5f6a..b7c8d9e)]
+[Ledger: Task 2: complete (commits d4e5f6a..b7c8d9e, review clean)]
 
 ...
 
-[After all tasks: final whole-branch review package -> fresh pane]
-Final reviewer: All requirements met, ready to merge
+[After all tasks]
+[Run review-package PLAN_FILE MERGE_BASE HEAD; delegate the final review to a fresh pane]
+Final reviewer: All requirements met. Deferred minors triaged: none block merge.
 
-Done!
+[Delete this plan's workspace — the record now lives in git]
+
+Done! Using finishing-a-development-branch.
 ```
-
-## Advantages
-
-**vs. Manual execution:**
-- Panes follow TDD naturally
-- Fresh context per task (no confusion)
-- A pane can ask questions (before AND during work)
-- The orchestrator's context stays free for coordination
-
-**vs. Executing Plans:**
-- Continuous progress (no human-in-loop between tasks)
-- Review checkpoints automatic
-- Independent panes can carry independent tracks concurrently
-
-**Efficiency gains:**
-- Orchestrator curates exactly what context is needed; bulk artifacts move
-  as files, not pasted text
-- Pane gets complete information upfront
-- Questions surfaced before work begins (not after)
-
-**Quality gates:**
-- Self-review catches issues before handoff
-- Task review carries two verdicts: spec compliance and code quality
-- Review loops ensure fixes actually work
-- Spec compliance prevents over/under-building
-
-**Cost:**
-- More delegations (implementer + reviewer per task)
-- Orchestrator does more prep work (extracting all tasks upfront)
-- Review loops add iterations
-- But catches issues early (cheaper than debugging later)
 
 ## Red Flags
 
 **Never:**
-- Start implementation on the base branch without explicit user consent
+- Start implementation on `<BASE_BRANCH>` without explicit user consent
 - Use `pane run` to submit work to an agent pane — use `composer-submit.sh`
 - Send a delegation without a completion marker, a report-file path, and the absolute worktree path
 - Let a delegated pane re-delegate: every brief carries the no-re-delegation clause
-- Skip task review, or accept a report missing either verdict (spec compliance AND task quality are both required)
-- Proceed with unfixed issues
 - Run two implementation panes against the same worktree
 - Make a pane read the whole plan file (hand it its task brief —
   `scripts/task-brief` — instead)
 - Skip scene-setting context (the pane needs to understand where the task fits)
 - Ignore a pane's questions (answer before letting it proceed)
-- Accept "close enough" on spec compliance (reviewer found spec issues = not done)
-- Skip review loops (reviewer found issues = fix = review again)
-- Let a pane's self-review replace actual review (both are needed)
 - Tell a reviewer what not to flag, or pre-rate a finding's severity in the
   brief ("treat it as Minor at most") — the plan's example code is
   a starting point, not evidence that its weaknesses were chosen
-- Delegate a task review without a diff file — generate it first
-  (`scripts/review-package BASE HEAD`) and name the printed path in the
-  brief
+- Delegate a task review or re-review without a diff file — generate it first
+  (`scripts/review-package PLAN_FILE BASE HEAD`) and name the printed path in
+  the brief
 - Trust "tests pass" without reading the quoted output in the report file
-- Move to the next task while the review has open Critical/Important issues
 - Re-delegate a task the progress ledger already marks complete — check
   the ledger (and `git log`) after any compaction or resume
-
-**If a pane asks questions:**
-- Answer clearly and completely
-- Provide additional context if needed
-- Don't rush it into implementation
-
-**If the reviewer finds issues:**
-- Delegate the fix (to the implementing pane if it is still idle and holds the context, otherwise to a fresh one)
-- Review again
-- Repeat until approved
-- Don't skip the re-review
+- Read or write another plan's workspace directory
 
 **If a pane fails the task:**
 - Diagnose with `using-herdr-sibling-panes`' failure table first
 - Then re-delegate with what changed — don't fix it yourself (context pollution)
-
-## Integration
-
-**Required workflow skills:**
-- **orchestration** - Decides which role takes each delegation and how fallbacks resolve
-- **using-herdr-sibling-panes** - The delegation transport: composer-safe submission, markers, failure handling
-- **using-git-worktrees** - Ensures isolated workspace (creates one or verifies existing)
-- **writing-plans** - Creates the plan this skill executes
-- **requesting-code-review** - Review brief for the final whole-branch review
-- **finishing-a-development-branch** - Complete development after all tasks
-
-**Delegated panes should use:**
-- **test-driven-development** - The implementing pane owns RED-GREEN-REFACTOR for its task
-- **systematic-debugging** - Root cause before fix, in the pane and in the orchestrator
-
-**Alternative workflow:**
-- **executing-plans** - Use when herdr panes are unavailable (`HERDR_ENV` unset, or no idle agent panes)

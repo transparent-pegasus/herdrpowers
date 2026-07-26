@@ -29,8 +29,9 @@ Delegate the review to a **fresh herdr sibling pane** to catch issues before the
 ```bash
 BASE_SHA=$(git merge-base <BASE_BRANCH> HEAD)   # or the commit recorded before the task
 HEAD_SHA=$(git rev-parse HEAD)
-../pane-driven-development/scripts/review-package "$BASE_SHA" "$HEAD_SHA"   # prints the path
+../pane-driven-development/scripts/review-package "$PLAN_FILE" "$BASE_SHA" "$HEAD_SHA"   # prints the path
 ```
+`PLAN_FILE` scopes the package to that plan's workspace. In plan-less flows (`/quick`, ad-hoc reviews) pass `-`.
 The package never enters your own context — you pass the path, the pane reads the file.
 
 **2. Pick the pane:**
@@ -61,11 +62,11 @@ You: Delegating the review before proceeding.
 
 BASE_SHA=a7981ec   # recorded before Task 2's implementer was delegated
 HEAD_SHA=3df7661
-[review-package a7981ec 3df7661 → /repo/.herdrpowers/pdd/review-a7981ec..3df7661.diff]
-[Write the review contract to /repo/.herdrpowers/pdd/task-2-review-brief.md]
+[review-package docs/plans/feature.md a7981ec 3df7661 → /repo/.herdrpowers/pdd/feature/review-a7981ec..3df7661.diff]
+[Write the review contract to /repo/.herdrpowers/pdd/feature/task-2-review-brief.md]
 [composer-submit.sh w2:p19 "<one-line instruction>"; wait output REVIEW_OK_9C4A]
 
-[Read /repo/.herdrpowers/pdd/task-2-review.md]:
+[Read /repo/.herdrpowers/pdd/feature/task-2-review.md]:
   Strengths: Clean architecture, tests assert the requirement
   Issues:
     Important: Missing progress indicators
@@ -76,20 +77,13 @@ You: [Delegate one fix with both findings]
 [Continue to Task 3]
 ```
 
-## Integration with Workflows
+## Common Rationalizations
 
-**Pane-Driven Development:**
-- Review after EACH task
-- Catch issues before they compound
-- Fix before moving to the next task
-
-**Executing Plans:**
-- Review at natural checkpoints
-- Get feedback, apply, continue
-
-**Ad-Hoc Development:**
-- Review before merge
-- Review when stuck
+| Excuse | Reality |
+|--------|---------|
+| "I'll just review the diff myself instead of delegating" | You're the orchestrator — reviewing the diff inline burns the context window you need to keep driving the work, and it is not an independent review. Delegate to a fresh pane: the diff and the evaluation live in its session, and only the findings come back to you. |
+| "The reviewing pane needs my whole session history to understand the change" | Hand it precisely crafted context, never your session's history. That keeps the review on the work product, not your thought process. |
+| "The only idle pane is the one that wrote the code" | Wait for another, or say plainly in the final report that the review was not independent. A pane reviewing its own work is a self-review with extra steps. |
 
 ## Red Flags
 

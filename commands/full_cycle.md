@@ -94,7 +94,7 @@ Proceed to Step 9 only when the review assesses it as Ready to merge.
 9. Integration and Cleanup
 Inform the user that the implementation is complete and ready for integration.
 Stop and wait for the user's instruction. Additional implementation happens only on an explicit instruction.
-When the user instructs cleanup, read and use the finishing-a-development-branch skill: present its options — merge locally into `<BASE_BRANCH>`, push and open a pull request, keep the branch as-is, or discard — and wait for the user to pick one.
+When the user instructs cleanup, read and use the finishing-a-development-branch skill: present its options — merge locally into `<BASE_BRANCH>`, push and open a pull request, push only, or keep the branch as-is — and wait for the user to pick one. Discarding the work is not on the menu; it happens only if the user explicitly asks for it.
 Do not assume merge. Execute only the chosen option, and delete the worktree only as that option requires.
 
 ## Execution Requirements

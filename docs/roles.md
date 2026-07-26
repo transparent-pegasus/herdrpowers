@@ -45,6 +45,8 @@ The orchestrator then takes the first substitute from the `fallbacks:` map in `r
 
 If no substitute is available, the work runs in the orchestrator pane when that is safe, and the report says which independence was lost.
 
+**Escalation is the same mechanism, different trigger.** Exhaustion routes around an agent type that *cannot* work; escalation routes around one that *is not getting there* — a pane reporting BLOCKED for lack of reasoning, or a fix loop still open at round 4. Panes expose no model dial to the orchestrator, so "try something stronger" means a fresh pane of a different agent type: another type eligible for the role, or the substitute in `fallbacks:`. The swap is named in the ledger, same as a fallback is named in the report.
+
 ## Delegating
 
 | Platform | How |

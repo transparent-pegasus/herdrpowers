@@ -107,10 +107,14 @@ Fix what you find before reporting.
 
 ### After Review Findings
 
-If a review finds issues and you fix them, re-run the verification that covers
-the amended code, write or amend the covering tests yourself under
-RED-GREEN-REFACTOR, and append the results to your report file. Reviewers will
-not re-run tests for you — your report is the test evidence.
+If the task review finds issues, the orchestrator sends the findings back to
+this same pane — your context is intact, so pick up where you left off. Fix
+them, write or amend the covering tests yourself under RED-GREEN-REFACTOR,
+re-run the verification that covers the amended code, and append a fix report
+to your report file: what you changed, the covering tests you ran, the command,
+and the output. Reviewers will not re-run tests for you — your report is the
+test evidence. Then reply with the same short status contract as your first
+report, under a fresh completion marker.
 
 ### Report Format
 
@@ -143,6 +147,6 @@ unsure about.
 ## Placeholders
 
 - **worktree path** — REQUIRED, absolute; the pane does not inherit the orchestrator's cwd
-- **brief file** — REQUIRED: `scripts/task-brief PLAN N` prints the path; append the contract above to it
+- **brief file** — REQUIRED: `scripts/task-brief PLAN_FILE N` prints the path (inside the plan's workspace); append the contract above to it
 - **report file** — REQUIRED: name it after the brief (`task-N-brief.md` → `task-N-report.md`)
 - **marker** — REQUIRED, unique per delegation, ≤16 chars, split into fragments in the instruction

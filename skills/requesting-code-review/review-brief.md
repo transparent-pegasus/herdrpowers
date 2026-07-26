@@ -174,7 +174,7 @@ rtk herdr wait output "$PANE" --match "REVIEW_OK_<4-hex>" --timeout 900000
 - `[PLAN_OR_REQUIREMENTS]` — what it should do (plan file path, task text, or requirements)
 - `[BASE_SHA]` — starting commit
 - `[HEAD_SHA]` — ending commit
-- `[DIFF_FILE]` — the path printed by `pane-driven-development/scripts/review-package BASE HEAD`
+- `[DIFF_FILE]` — the path printed by `pane-driven-development/scripts/review-package PLAN_FILE BASE HEAD` (`-` for PLAN_FILE in plan-less flows)
 - **review output file + completion marker** — REQUIRED
 
 **Reviewer returns:** Strengths, Issues (Critical / Important / Minor), Recommendations, Assessment

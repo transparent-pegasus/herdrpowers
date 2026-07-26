@@ -183,11 +183,8 @@ obvious).
 - `[GLOBAL_CONSTRAINTS]` — binding requirements copied verbatim from the plan's Global Constraints section or the spec: exact values, formats, and stated relationships between components (not process rules — those are in the contract already)
 - `[REPORT_FILE]` — REQUIRED: the file the implementer wrote its detailed report to
 - `[BASE_SHA]` / `[HEAD_SHA]` — the recorded task base and the current commit
-- `[DIFF_FILE]` — REQUIRED: the path printed by `scripts/review-package BASE HEAD` (the package never enters the orchestrator's context)
+- `[DIFF_FILE]` — REQUIRED: the path printed by `scripts/review-package PLAN_FILE BASE HEAD` (the package never enters the orchestrator's context)
 - **review output file + marker** — REQUIRED
 
 **Reviewer returns:** Spec Compliance verdict (✅/❌/⚠️), Strengths, Issues
 (Critical/Important/Minor), Task quality verdict.
-
-A single fix delegation can address spec gaps and quality findings together;
-the re-review covers both verdicts.

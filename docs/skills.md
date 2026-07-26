@@ -19,9 +19,9 @@ Skills live in a single tree at `skills/<name>/SKILL.md`. Claude Code, Codex, an
 
 ## Operational & Execution
 
-- **`pane-driven-development`** — Primary implementation engine. Delegates a fresh pane per task, hands task briefs and review packages over as files, runs one task review with separate spec-compliance and code-quality verdicts, and finishes with a broad whole-branch review. Implementer status protocol: `DONE / DONE_WITH_CONCERNS / BLOCKED / NEEDS_CONTEXT`. Includes role selection, pre-flight plan review, and a durable progress ledger that survives compaction.
+- **`pane-driven-development`** — Primary implementation engine. Delegates a fresh pane per task, hands task briefs and review packages over as files, runs one task review with separate spec-compliance and code-quality verdicts, and finishes with a broad whole-branch review. Implementer status protocol: `DONE / DONE_WITH_CONCERNS / BLOCKED / NEEDS_CONTEXT`. Includes role selection, pre-flight plan review, a bounded five-round fix loop with scoped re-reviews and an adjudication breaker, and a plan-scoped workspace whose durable progress ledger survives compaction.
 - **`executing-plans`** — Inline fallback for single-session sequential execution with checkpoints. Use when `HERDR_ENV` is unset or no idle agent pane exists.
-- **`finishing-a-development-branch`** — Verify tests, then present five integration candidates (merge locally / push + PR / push only / keep / discard) and execute only the chosen one. Never merges on its own; cleans up the worktree only as the choice requires.
+- **`finishing-a-development-branch`** — Verify tests, then present four integration candidates (merge locally / push + PR / push only / keep) and execute only the chosen one; discarding is off-menu and happens only on an explicit request. Never merges on its own; cleans up the worktree only as the choice requires.
 
 ## Quality & Verification
 
