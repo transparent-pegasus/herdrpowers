@@ -14,9 +14,9 @@ Every task in this skill is delegated to a **herdr sibling agent pane**, never t
 Two boundaries override anything below:
 
 - **No in-process subagents.** Wherever this document says "dispatch," read "delegate to an idle sibling pane through `using-herdr-sibling-panes`." The Agent tool and named subagent types are not used by this pack.
-- **The pane that writes tests owns RED-GREEN-REFACTOR.** By default (`test-authoring: {role: coder, mode: implementer}`) that is the implementing pane: it writes the failing test first per `test-driven-development` and reports RED/GREEN evidence, and independence comes from the reviewing pane auditing test code its author also implemented. A repo may reassign `test-authoring` to a separate pane — then the report must name which pane wrote the tests, because that pairing no longer holds. Review independence itself comes from the *fresh pane context* of the reviewing delegation, not from a named role, and is never configurable.
+- **The pane that writes tests owns RED-GREEN-REFACTOR**, and the resolved `test-authoring` / `fix-round-test-authoring` assignments say which pane that is. With `mode: delegate` a separate pane writes them from the task brief alone (see "Parallel test authoring" below); with `mode: implementer` the implementing or fixing pane writes its own per `test-driven-development`. Either way the pane that writes a test produces its RED evidence, and your report names which pane wrote the tests. Review independence itself comes from the *fresh pane context* of the reviewing delegation, not from a named role, and is never configurable.
 
-Execute the plan by delegating a fresh implementer pane per task, a task review (spec compliance + code quality) after each, and a broad whole-branch review at the end.
+Execute the plan by delegating a fresh implementer pane per task, the task's tests per `test-authoring`, a task review (spec compliance + code quality) after each, and a broad whole-branch review at the end.
 
 **Why panes:** a delegated pane starts from a reset session — it never inherits your context or history, so you construct exactly what it needs. That keeps it focused and preserves your own context for coordination work.
 
@@ -60,16 +60,17 @@ digraph process {
 
     subgraph cluster_per_task {
         label="Per Task";
-        "Delegate implementer pane (./implementer-brief.md)" [shape=box];
+        "Delegate implementer pane (./implementer-brief.md) + test author pane off BASE (./test-author-brief.md)" [shape=box];
         "Implementer pane asks questions?" [shape=diamond];
+        "Cherry-pick tests into task worktree, run them (GREEN or findings)" [shape=box];
         "Answer questions, re-delegate" [shape=box];
-        "Pane writes failing test, implements, commits, self-reviews" [shape=box];
-        "Write review package, delegate task reviewer pane (./task-reviewer-brief.md)" [shape=box];
+        "Implementer commits and self-reviews; test author commits RED tests off BASE" [shape=box];
+        "Write review package, delegate task reviewer panes, one per reviewer agent type (./task-reviewer-brief.md)" [shape=box];
         "Spec OK and quality approved?" [shape=diamond];
         "Finding conflicts with plan text?" [shape=diamond];
         "Ask human partner which governs" [shape=box];
-        "Fix round R of 5: R<=3 same pane; R>=4 fresh pane, escalated agent type" [shape=box];
-        "Delegate scoped re-review (./re-review-brief.md)" [shape=box];
+        "Fix round R of 5: R<=3 same pane; R>=4 fresh pane, escalated agent type; covering tests from a separate fix-round test author" [shape=box];
+        "Delegate scoped re-review, one per reviewer agent type (./re-review-brief.md)" [shape=box];
         "All findings addressed?" [shape=diamond];
         "R = 5?" [shape=diamond];
         "Adjudicate each open finding" [shape=box];
@@ -86,30 +87,31 @@ digraph process {
     "Final review clean: delete this plan's workspace" [shape=box];
     "Use finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
 
-    "Setup: worktree, plan workspace, ledger check, read plan, pre-flight review" -> "Delegate implementer pane (./implementer-brief.md)";
-    "Delegate implementer pane (./implementer-brief.md)" -> "Implementer pane asks questions?";
+    "Setup: worktree, plan workspace, ledger check, read plan, pre-flight review" -> "Delegate implementer pane (./implementer-brief.md) + test author pane off BASE (./test-author-brief.md)";
+    "Delegate implementer pane (./implementer-brief.md) + test author pane off BASE (./test-author-brief.md)" -> "Implementer pane asks questions?";
     "Implementer pane asks questions?" -> "Answer questions, re-delegate" [label="yes"];
-    "Answer questions, re-delegate" -> "Pane writes failing test, implements, commits, self-reviews";
-    "Implementer pane asks questions?" -> "Pane writes failing test, implements, commits, self-reviews" [label="no"];
-    "Pane writes failing test, implements, commits, self-reviews" -> "Write review package, delegate task reviewer pane (./task-reviewer-brief.md)";
-    "Write review package, delegate task reviewer pane (./task-reviewer-brief.md)" -> "Spec OK and quality approved?";
+    "Answer questions, re-delegate" -> "Implementer commits and self-reviews; test author commits RED tests off BASE";
+    "Implementer pane asks questions?" -> "Implementer commits and self-reviews; test author commits RED tests off BASE" [label="no"];
+    "Implementer commits and self-reviews; test author commits RED tests off BASE" -> "Cherry-pick tests into task worktree, run them (GREEN or findings)";
+    "Cherry-pick tests into task worktree, run them (GREEN or findings)" -> "Write review package, delegate task reviewer panes, one per reviewer agent type (./task-reviewer-brief.md)";
+    "Write review package, delegate task reviewer panes, one per reviewer agent type (./task-reviewer-brief.md)" -> "Spec OK and quality approved?";
     "Spec OK and quality approved?" -> "Append completion to ledger, mark todo complete" [label="yes"];
     "Spec OK and quality approved?" -> "Finding conflicts with plan text?" [label="no"];
     "Finding conflicts with plan text?" -> "Ask human partner which governs" [label="yes"];
-    "Ask human partner which governs" -> "Fix round R of 5: R<=3 same pane; R>=4 fresh pane, escalated agent type";
-    "Finding conflicts with plan text?" -> "Fix round R of 5: R<=3 same pane; R>=4 fresh pane, escalated agent type" [label="no"];
-    "Fix round R of 5: R<=3 same pane; R>=4 fresh pane, escalated agent type" -> "Delegate scoped re-review (./re-review-brief.md)";
-    "Delegate scoped re-review (./re-review-brief.md)" -> "All findings addressed?";
+    "Ask human partner which governs" -> "Fix round R of 5: R<=3 same pane; R>=4 fresh pane, escalated agent type; covering tests from a separate fix-round test author";
+    "Finding conflicts with plan text?" -> "Fix round R of 5: R<=3 same pane; R>=4 fresh pane, escalated agent type; covering tests from a separate fix-round test author" [label="no"];
+    "Fix round R of 5: R<=3 same pane; R>=4 fresh pane, escalated agent type; covering tests from a separate fix-round test author" -> "Delegate scoped re-review, one per reviewer agent type (./re-review-brief.md)";
+    "Delegate scoped re-review, one per reviewer agent type (./re-review-brief.md)" -> "All findings addressed?";
     "All findings addressed?" -> "Append completion to ledger, mark todo complete" [label="yes"];
     "All findings addressed?" -> "R = 5?" [label="no"];
-    "R = 5?" -> "Fix round R of 5: R<=3 same pane; R>=4 fresh pane, escalated agent type" [label="no - next round"];
+    "R = 5?" -> "Fix round R of 5: R<=3 same pane; R>=4 fresh pane, escalated agent type; covering tests from a separate fix-round test author" [label="no - next round"];
     "R = 5?" -> "Adjudicate each open finding" [label="yes - breaker trips"];
     "Adjudicate each open finding" -> "Any load-bearing finding?";
     "Any load-bearing finding?" -> "STOP: report BLOCKED to human partner" [label="yes"];
     "Any load-bearing finding?" -> "Park findings in ledger with rulings" [label="no"];
     "Park findings in ledger with rulings" -> "Append completion to ledger, mark todo complete";
     "Append completion to ledger, mark todo complete" -> "More tasks remain?";
-    "More tasks remain?" -> "Delegate implementer pane (./implementer-brief.md)" [label="yes"];
+    "More tasks remain?" -> "Delegate implementer pane (./implementer-brief.md) + test author pane off BASE (./test-author-brief.md)" [label="yes"];
     "More tasks remain?" -> "Delegate final code review (../requesting-code-review/review-brief.md)" [label="no"];
     "Delegate final code review (../requesting-code-review/review-brief.md)" -> "Final findings? ONE fix delegation, one scoped re-review, adjudicate residuals";
     "Final findings? ONE fix delegation, one scoped re-review, adjudicate residuals" -> "Final review clean: delete this plan's workspace";
@@ -171,21 +173,22 @@ describes — `<repo-root>/.herdrpowers/config.yaml` first, then the pack's
 `orchestration/roles.yaml` for anything the repo file omits. Resolve once, up
 front; do not re-read per task.
 
-Six tasks in that table drive this loop. The default column is what the pack
-ships; the repo file may change any of it:
+Seven tasks in that table drive this loop. Read each one's `role` and `mode`
+from the resolved configuration — this table only says where each lands:
 
-| Task | Default | Where it lands in this skill |
-|---|---|---|
-| `complex-coding` / `simple-coding` | coder / delegate | §1, the implementer delegation |
-| `test-authoring` | coder / implementer | The implementing pane writes its own tests (`test-driven-development`) |
-| `task-review` | coder / delegate | §3 |
-| `review-fixes` | coder / implementer | §4 rounds 1-3 go back to the implementing pane |
-| `fix-round-re-review` | coder / delegate | §4's scoped re-review |
-| `chores` | generalist / delegate | Lookups, file moves, log gathering, mechanical edits found mid-plan |
+| Task | Where it lands in this skill |
+|---|---|
+| `complex-coding` / `simple-coding` | §1, the implementer delegation |
+| `test-authoring` | §1, the test-author delegation |
+| `task-review` | §3 |
+| `review-fixes` | §4's fix delegation |
+| `fix-round-test-authoring` | §4's covering tests for the round |
+| `fix-round-re-review` | §4's scoped re-review |
+| `chores` | Lookups, file moves, log gathering, mechanical edits found mid-plan |
 
 Plan revisions stay with you, the orchestrator (`plan-and-design`).
 
-Three configurations change the loop's shape:
+Four resolved values change the loop's shape:
 
 - **`task-review` disabled** — skip §3 entirely. A task then completes on
   the implementing pane's own report: read it, resolve any concerns, and record
@@ -196,11 +199,21 @@ Three configurations change the loop's shape:
   counts against the five-round cap, and the breaker still trips at five with
   whatever findings the fixing pane did not claim as fixed. Name the disabled
   gate in your final report.
-- **`test-authoring: {mode: delegate}`** — tests go to a separate pane of that
-  role instead of the implementing one. The implementer's brief then stops
-  carrying RED-GREEN-REFACTOR ownership, and your report must name which pane
-  wrote the tests, because the reviewer is no longer auditing test code its
-  author also implemented.
+- **`test-authoring: {mode: implementer}`** — no test-author delegation in §1.
+  The implementer's brief carries RED-GREEN-REFACTOR ownership instead, and the
+  reviewers become the only independent check on test code its author also
+  implemented.
+- **`fix-round-test-authoring: {mode: implementer}`** — the fixing pane writes
+  or amends the round's covering tests itself, instead of a separate pane
+  doing it in §4.
+
+**A review task assigned to a role that binds to a list of agent types runs
+once per entry** — see "Roles that bind to a list" in `orchestration`. With the
+shipped `reviewer` role, §3 and §4's re-review are each two independent reviews
+in separate panes: wait for all of them, merge their findings into one open
+list (a finding raised by either counts), and deduplicate before delegating the
+fix. Degrade per that section when a listed agent type has no pane, and name
+the degradation in your report.
 
 The `final-branch-review` gate belongs to the calling workflow, not to this
 skill: when it is disabled, skip the Final Review section below.
@@ -221,20 +234,75 @@ Everything you paste into a delegation — and everything a pane prints back —
 stays resident in your context for the rest of the session and is re-read on
 every later turn. Hand artifacts over as files (see File Handoffs).
 
-### 1. Delegate the implementer
+### 1. Delegate the implementer and the test author
 
-Record BASE (`git rev-parse HEAD`) before delegating — the review package
-and fix-round diffs need it.
+Record BASE (`git rev-parse HEAD`) before delegating — the review package,
+the test author's worktree, and fix-round diffs all need it.
 
 Run `scripts/task-brief PLAN_FILE N` to extract the task's full text into the
-plan workspace, then compose the delegation per
-[implementer-brief.md](implementer-brief.md). Never make a pane read the whole
-plan file. Exact values (numbers, magic strings, signatures, test cases)
-appear only in the brief.
+plan workspace. Never make a pane read the whole plan file. Exact values
+(numbers, magic strings, signatures, test cases) appear only in the brief.
+
+**The requirements file stays requirements — never append a role contract to
+it.** Two panes may read it for the same task, and a file carrying both
+"implement this" and "write tests only, never production code" hands each of
+them the other's instructions. Each contract goes in its own file beside it,
+pointing back at the requirements:
+
+| File | Content | Template |
+|---|---|---|
+| `task-N-brief.md` | The task's requirements. Written once, read by every pane, appended to by none. | `scripts/task-brief` |
+| `task-N-implementer.md` | The implementer contract, pointing at the requirements file. | [implementer-brief.md](implementer-brief.md) |
+| `task-N-tests.md` | The test author contract, same pointer. Only when `test-authoring` is delegated. | [test-author-brief.md](test-author-brief.md) |
 
 - If an earlier task parked a finding in the area this task touches, carry
   a pointer to that ledger entry in the delegation.
 - Record the pane ID you delegated to — fix rounds 1-3 go back to that pane.
+
+#### Parallel test authoring
+
+When `test-authoring` resolves to `mode: delegate`, the task's tests come from
+a pane that never sees the implementation. Delegate it per
+`task-N-tests.md`, from the same requirements file, at the same time as the
+implementer.
+
+- **Its own worktree, detached at BASE.** One writer per working tree still
+  binds, so the test author does not share the task worktree:
+  `git worktree add --detach <plan-workspace>/tests-task-N BASE`. Detached, not
+  `-b`: a named branch outlives `git worktree remove`, and a fixed name would
+  then collide with the next fix round, a parallel track at the same task
+  number, and the next plan. Starting at BASE is also where its RED comes
+  from — the implementation does not exist there, so the new tests fail for
+  the stated reason with no stashing or checkout games.
+- **Its scope is `<TEST_FILE_LOCATIONS>` only.** It writes tests, runs
+  `<TARGETED_TEST_COMMAND>`, quotes the failing output as RED evidence, and
+  commits in its own worktree. It never writes production code, and it is
+  never shown the implementation. Its report goes to
+  `task-N-tests-report.md` — a separate file from the implementer's, because
+  the two panes write concurrently.
+- **The brief must pin the interface.** Both panes work from the same text, so
+  exact names, signatures, and values have to be in it; if they are not, the
+  tests fail on cosmetics rather than behavior. Pin them before delegating —
+  and if the task genuinely cannot pin its interface up front, delegate the
+  test author *after* the implementer reports, handing it the resulting
+  interface, never the diff. Same requirements, same detached worktree at
+  BASE, same RED; only the timing changes.
+- **Merge, then run — this step produces the task's GREEN evidence.** When both
+  panes report DONE, cherry-pick the test commit (the SHA the test author
+  reported) into the task worktree and run `<TARGETED_TEST_COMMAND>` yourself.
+  Append the result to the implementer's report file under a `Merged test run`
+  heading — the command, its output, and the test author's pane and commit —
+  so the report the reviewers read carries RED (from the test author) and GREEN
+  (from this run) even though no single pane produced both. A task whose merged
+  run fails has findings, not GREEN: they enter §4's fix loop like any other.
+  Remove the test worktree once the commit is in
+  (`git worktree remove <path>`).
+- A cherry-pick conflict means both panes edited the same test file. Resolve it
+  in favor of the test author's assertions, or re-delegate serialized as above.
+
+When `test-authoring` resolves to `mode: implementer`, skip all of this: the
+implementer's contract carries RED-GREEN-REFACTOR and its report carries both
+RED and GREEN. Either way, your final report names which pane wrote the tests.
 
 ### 2. Handle the report
 
@@ -256,6 +324,29 @@ orchestrator:
 
 **No marker, no report:** that is not a status — it is a failed delegation. Diagnose it with `using-herdr-sibling-panes`' "Failure handling" table (crashed / blocked / interrupted / errored / exhausted) before re-delegating anything.
 
+**A delegated test author reports the same four statuses, and they resolve
+before the merge step, not after it.** Both panes' statuses gate the task:
+
+- **DONE / DONE_WITH_CONCERNS from both** — proceed to the merge-then-run step
+  in §1.
+- **NEEDS_CONTEXT from the test author** — it could not pin an assertion from
+  the requirements. That is the brief's gap, and it is usually the
+  implementer's gap too: answer it, amend `task-N-brief.md`, and re-delegate
+  the test author; if the answer changes an interface the implementer is
+  already building to, send it the correction as well.
+- **BLOCKED from the test author** — the requirement cannot be observed, or the
+  repo lacks the harness to observe it. Resolve it the way §5 resolves a
+  "⚠️ Cannot verify" item: decide yourself whether the requirement is testable
+  as written, and either amend the brief or record in the ledger that this
+  requirement carries no test and why. Never let a task proceed with the gap
+  unrecorded.
+- **A test author that reports its tests passing at BASE** — that is the defect
+  its contract tells it to report, not a shortcut past RED. Treat it as a
+  finding against the test, not against the implementation.
+
+While the test author is still working, do not delegate the review: the review
+package must contain the merged tests.
+
 **Never** ignore an escalation or re-delegate the same task unchanged. If the pane said it is stuck, something needs to change.
 
 If the pane asks questions — before starting or mid-task — answer clearly and
@@ -272,9 +363,13 @@ final whole-branch review. Never skip the task review, and never accept a
 report missing either verdict — spec compliance AND task quality are both
 required. A pane's self-review never replaces the task review; both are needed.
 
-- Send the review to a **fresh pane**, and prefer an idle pane of a different
-  agent type than the one that implemented the change. Never send a change
-  back for review to the pane that wrote it.
+- Send the review to a **fresh pane** — one per agent type in the resolved
+  role, in separate panes, all from the same review package. Never send a
+  change back for review to the pane that wrote it, and prefer a different
+  agent type than the one that implemented it for any slot that has a choice.
+  Wait for every review to return before acting on any of them; merge the
+  findings into one open list and deduplicate. Reviews that disagree are
+  yours to adjudicate, not to average.
 - Hand the reviewer its diff as a file: run this skill's
   `scripts/review-package PLAN_FILE BASE HEAD` and pass the reviewer the file
   path it prints (or, without bash: `git log --oneline`, `git diff --stat`,
@@ -284,9 +379,14 @@ required. A pane's self-review never replaces the task review; both are needed.
   call. Use the BASE you recorded before delegating the task —
   never `HEAD~1`, which silently truncates multi-commit tasks. Never
   delegate a task review without a diff file.
-- **Reviewer inputs:** the task reviewer gets three paths — the same brief
-  file, the report file, and the review package — plus the global
-  constraints that bind the task.
+- **Reviewer inputs:** the task reviewer gets three paths — the requirements
+  file `task-N-brief.md`, the implementer's report file, and the review
+  package — plus the global constraints that bind the task. When a separate
+  pane wrote the tests, add its report file as a fourth path and say so: the
+  RED evidence lives there, the GREEN evidence lives in the merged-test-run
+  section of the implementer's report, and a reviewer told to expect both in
+  one report will otherwise raise missing RED/GREEN as a finding on a
+  perfectly healthy task.
 - The global-constraints block you hand the reviewer is its attention
   lens. Copy the binding requirements verbatim from the plan's Global
   Constraints section or the spec: exact values, exact formats, and the
@@ -355,25 +455,55 @@ Read the report file for what was tried." A loop that survives three rounds in
 one session usually means that pane cannot see its own problem — fresh eyes and
 a capability swap in one move.
 
-**Every round, either way:** the pane fixes, writes or amends the covering
-tests itself under RED-GREEN-REFACTOR, re-runs the verification covering the
-amended code, appends its fix report to the same report file, and replies with
-the short contract. Before delegating the re-review, confirm the fix report
-contains the covering tests, the command run, and the output; delegate the
-re-review once all three are present. Name the covering test files in the fix
+**Every round, either way:** the fixing pane fixes, re-runs the verification
+covering the amended code, appends its fix report to the same report file, and
+replies with the short contract. Name the covering test files in the fix
 message — a one-line fix does not need the whole suite.
+
+**The round's covering tests come from `fix-round-test-authoring`.** When it
+resolves to `mode: implementer`, the fixing pane writes or amends them itself
+under RED-GREEN-REFACTOR and its fix report carries RED and GREEN, exactly as
+before. When it resolves to `mode: delegate`, the round runs in four ordered
+steps and **the evidence is assembled by you, not by any one pane** — no pane
+sees both halves:
+
+1. **Delegate both, from the findings.** The fixing pane changes source only.
+   The test author is a pane that is neither the fixing pane nor the
+   implementation round's test author — a fix's tests written by whoever just
+   changed the behavior prove only that the behavior changed. Write its
+   contract to `task-N-fix-R-tests.md` per
+   [test-author-brief.md](test-author-brief.md), using that template's fix-round
+   variant, and give it the open findings — not the fix diff.
+2. **Its worktree is detached at FIX_BASE**, the head the previous review saw:
+   `git worktree add --detach <plan-workspace>/tests-task-N-fix-R FIX_BASE`.
+   The buggy implementation *is* present there — that is the point. Its RED is
+   the finding reproducing: a new test must fail because the finding is still
+   unfixed, and a test that passes at FIX_BASE does not cover the finding.
+3. **Cherry-pick, then run.** Once both report, cherry-pick the test commit onto
+   the fix head and run the covering tests yourself. That run is the round's
+   GREEN.
+4. **Consolidate before the re-review.** Append to the fix report: the covering
+   tests, the command, its output, and which pane wrote them. Only then
+   delegate the re-review. A re-reviewer handed a fix report with no test
+   evidence returns NOT ADDRESSED on a fix that is fine, and burns a round of
+   the five-round cap doing it.
+
+Either mode: confirm the fix report contains the covering tests, the command
+run, and the output before delegating the re-review. Remove the round's test
+worktree once its commit is in.
 
 **The re-review is scoped.** Skipped when `assignments.fix-round-re-review` is
 disabled — the round then closes on the fix report's covering tests, command,
 and output, and the cap still counts it. Otherwise: run
 `scripts/review-package PLAN_FILE FIX_BASE HEAD`
 where FIX_BASE is the head the previous review saw, and delegate
-[re-review-brief.md](re-review-brief.md) to a fresh pane with the findings
-list, the brief, the report file, and the printed diff path. The re-reviewer
-verdicts each finding ADDRESSED or NOT ADDRESSED and flags new breakage in the
-fix diff only. New Critical/Important breakage in the fix diff joins the open
-findings list. Out-of-scope observations go to the ledger as deferred
-minors — they never extend the loop.
+[re-review-brief.md](re-review-brief.md) to a fresh pane — one per agent type
+in the resolved role — with the findings list, the brief, the report file, and
+the printed diff path. Each re-reviewer verdicts each finding ADDRESSED or NOT
+ADDRESSED and flags new breakage in the fix diff only; a finding is closed only
+when every re-reviewer that ran calls it ADDRESSED. New Critical/Important
+breakage in the fix diff joins the open findings list. Out-of-scope
+observations go to the ledger as deferred minors — they never extend the loop.
 
 **After each round,** append to the ledger:
 `Task <N>: fix round <R>/5 (<X> addressed, <Y> open — <finding one-liners>; commits <a7>..<b7>)`
@@ -458,34 +588,42 @@ that `pane read` can never recover, and everything you paste into a brief
 stays resident in your own context for the rest of the session. Hand
 artifacts over as files, in both directions:
 
-- **Task brief:** `scripts/task-brief PLAN_FILE N` writes the task's full text
-  into the plan workspace and prints the path. Compose the delegation so the
-  brief stays the single source of requirements. Your instruction should
-  contain: (1) the absolute worktree path, and the requirement to confirm
-  the pane is in it before doing anything else; (2) one line on where this
-  task fits in the project; (3) the brief path, introduced as "read this
-  first — it is your requirements, with the exact values to use verbatim";
-  (4) interfaces and decisions from earlier tasks that the brief cannot
-  know; (5) your resolution of any ambiguity you noticed in the brief;
-  (6) the report-file path and report contract; (7) the split completion
+- **Requirements file:** `scripts/task-brief PLAN_FILE N` writes the task's
+  full text into the plan workspace and prints the path. It stays the single
+  source of requirements, read by every pane on the task and edited by none —
+  role contracts go in their own files beside it (`task-N-implementer.md`,
+  `task-N-tests.md`, `task-N-fix-R-tests.md`), each naming this one. Your
+  instruction should contain: (1) the absolute worktree path, and the
+  requirement to confirm the pane is in it before doing anything else; (2) one
+  line on where this task fits in the project; (3) the contract path,
+  introduced as "read this first — it is your contract, and it names your
+  requirements file"; (4) interfaces and decisions from earlier tasks that the
+  requirements cannot know; (5) your resolution of any ambiguity you noticed in
+  them; (6) the report-file path and report contract; (7) the split completion
   marker; (8) the no-re-delegation clause.
-- **Report file:** name the implementer's report file after the brief
-  (brief `…/task-N-brief.md` → report `…/task-N-report.md`) and put it in
-  the instruction. The pane writes the full report there and replies with
-  only status, commits, a one-line test summary, concerns, and the marker.
-- **Reviewer inputs:** the task reviewer gets three paths — the same brief
-  file, the report file, and the review package — plus the global
-  constraints that bind the task.
-- Fix rounds append their fix report (with test results) to the same
+- **Report files, one per pane:** name each after the requirements file
+  (`…/task-N-brief.md` → `…/task-N-report.md` for the implementer,
+  `…/task-N-tests-report.md` for a delegated test author). Never share one
+  report file between concurrent panes. Each pane writes its full report there
+  and replies with only status, commits, a one-line test summary, concerns, and
+  the marker.
+- **Reviewer inputs:** the task reviewer gets three paths — the requirements
+  file, the implementer's report file, and the review package — plus the global
+  constraints that bind the task, plus the test author's report file when a
+  separate pane wrote the tests.
+- Fix rounds append their fix report (with test results) to the implementer's
   report file and reply with a short summary; re-reviews read the updated file.
+  A delegated fix-round test author writes its own report, and you fold its
+  evidence into the fix report before the re-review.
 - Keep the instruction itself on a single line: `composer-submit.sh`
   rejects embedded newlines. Detail belongs in the files it points at.
 
 ## Brief Templates
 
 - [implementer-brief.md](implementer-brief.md) - Implementer pane brief
-- [task-reviewer-brief.md](task-reviewer-brief.md) - Task reviewer pane brief (spec compliance + code quality)
-- [re-review-brief.md](re-review-brief.md) - Scoped re-review pane brief, one per fix round
+- [test-author-brief.md](test-author-brief.md) - Test author pane brief, for `test-authoring` / `fix-round-test-authoring` in `mode: delegate`
+- [task-reviewer-brief.md](task-reviewer-brief.md) - Task reviewer pane brief (spec compliance + code quality), one per reviewer agent type
+- [re-review-brief.md](re-review-brief.md) - Scoped re-review pane brief, one per reviewer agent type per fix round
 - Final whole-branch review: use requesting-code-review's [review-brief.md](../requesting-code-review/review-brief.md)
 
 ## Common Rationalizations

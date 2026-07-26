@@ -12,20 +12,29 @@
 # Role list. Roles bind to agent types, not to reserved panes: at delegation
 # time, any idle pane of the matching agent type can take the task.
 # `orchestrator` is not an agent type — it means the pane the user typed into.
+#
+# `agent:` (singular) binds one agent type: one task, one delegation.
+# `agents:` (a list) binds several, and means ONE DELEGATION PER ENTRY — the
+# task runs once per listed agent type, in separate panes. That is what makes
+# a review a double review; it is a property of the role, not of any one task.
+# See "Roles that bind to a list" in SKILL.md.
 # ---------------------------------------------------------------------------
 roles:
   planning-design:
     description: Planning and design work
     agent: orchestrator
   reviewer:
-    description: Independent review of plans and designs — one review per entry
+    description: >-
+      Independent review — plans, designs, and implemented code. Bound to a
+      list, so every task assigned to this role runs once per listed agent
+      type.
     agents:
       - codex
       - cursor
   coder:
     description: >-
-      Complex coding (see "Complex coding boundary" in SKILL.md), plus test
-      authoring and code review of implemented changes.
+      Complex coding (see "Complex coding boundary" in SKILL.md), test
+      authoring, and the whole-branch final review.
     agent: codex
   generalist:
     description: Simple coding, search, file inspection, tests, lint, routine operations
@@ -80,22 +89,39 @@ assignments:
     mode: delegate
   test-authoring:
     description: >-
-      Writing a task's tests. `mode: implementer` means the pane implementing
-      the task writes them and owns RED-GREEN-REFACTOR. Setting `delegate`
-      restores a separate test author: independence then no longer comes from
-      the reviewer auditing test code the implementer wrote, so the workflow
-      must name which pane wrote the tests in its report.
+      Writing a task's tests for the implementation round. `mode: delegate`
+      puts them in a pane that never sees the implementation: it works from the
+      task brief alone, in parallel with the implementer, and its RED run comes
+      free because it starts from BASE. See "Parallel test authoring" in
+      pane-driven-development. `mode: implementer` collapses it back onto the
+      implementing pane, which owns RED-GREEN-REFACTOR itself; independence
+      then rests entirely on the reviewers auditing test code its author also
+      implemented. Either way the report names which pane wrote the tests.
     role: coder
-    mode: implementer
+    mode: delegate
+  fix-round-test-authoring:
+    description: >-
+      Writing or amending the covering tests for one fix round. A different
+      pane from both the implementation-round test author and the pane that
+      fixed the code — otherwise a fix's tests are written by whoever just
+      changed the behavior. `mode: implementer` collapses it onto the fixing
+      pane and gives that up.
+    role: coder
+    mode: delegate
   review-fixes:
     description: >-
       Fixing review findings. `mode: implementer` sends them back to the pane
       that wrote the code (fix-loop rounds 1-3); rounds 4-5 escalate to a fresh
-      pane regardless, per "Escalation is a type swap" in SKILL.md.
+      pane regardless, per "Escalation is a type swap" in SKILL.md. The fixing
+      pane changes source only — its covering tests come from
+      `fix-round-test-authoring`.
     role: coder
     mode: implementer
   verification:
-    description: Running the repo's baseline and supplemental verification commands
+    description: >-
+      Running the repo's baseline and supplemental verification commands. A
+      delegated run is a claim: the orchestrator accepts it on the quoted
+      output in the report file, or re-runs the decisive command itself.
     role: generalist
     mode: delegate
 
@@ -108,17 +134,17 @@ assignments:
     enabled: true
   documentation-impact-review:
     description: Pre-implementation sweep for non-code files the change will invalidate
-    role: planning-design
-    mode: orchestrator
+    role: generalist
+    mode: delegate
     enabled: true
   task-review:
     description: Per-task gate in pane-driven-development — spec compliance + code quality
-    role: coder
+    role: reviewer
     mode: delegate
     enabled: true
   fix-round-re-review:
     description: Scoped verification of one fix round's diff (re-review-brief.md)
-    role: coder
+    role: reviewer
     mode: delegate
     enabled: true
   final-branch-review:

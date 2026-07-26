@@ -65,13 +65,19 @@ whole-branch review happens after all tasks are complete.
 
 ## Tests
 
-The implementing pane re-ran the tests covering the amended code and appended
-the results to the report file. Treat the report as unverified claims:
-confirm the fix report names the covering tests and shows their output,
-and verify the claims against the diff. Do not re-run the suite to
-confirm their report. Run a test only when reading the code raises a
-specific doubt that no existing run answers — and then a focused test,
-never a package-wide suite.
+The fix report names the covering tests for this round and shows their output.
+Who wrote those tests is in your instruction: the fixing pane wrote them
+itself, or a separate pane wrote them from the open findings — in which case
+the report's test section was assembled by the orchestrator from that pane's
+run and its own merged run, and naming a different author than the fixer is
+expected, not a discrepancy.
+
+Treat the report as unverified claims: confirm it names the covering tests and
+shows their output, and verify the claims against the diff. A round whose
+report shows no covering test for a finding it claims ADDRESSED is NOT
+ADDRESSED. Do not re-run the suite to confirm their report. Run a test only
+when reading the code raises a specific doubt that no existing run answers —
+and then a focused test, never a package-wide suite.
 
 ## Output Format
 

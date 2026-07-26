@@ -56,8 +56,8 @@ Present each role and the agent type(s) it binds to, with the shipped default be
 | Role | Binds to | Meaning |
 |---|---|---|
 | `planning-design` | one agent type, or `orchestrator` | Who plans and designs; `orchestrator` means the pane the user typed into |
-| `reviewer` | a **list** of agent types | Plan reviewers — one independent review per entry, so the list length sets how many plan reviews run |
-| `coder` | one agent type | The heavier-judgment role: complex coding, and code review of implemented changes |
+| `reviewer` | a **list** of agent types | Independent review. A list role runs **one delegation per entry**, so its length sets how many reviews each review task assigned to it runs |
+| `coder` | one agent type | The heavier-judgment role: complex coding, test authoring, whole-branch review |
 | `generalist` | one agent type | Simple coding, search, file inspection, tests, lint, routine operations |
 | `fallbacks.<agent>` | a list of agent types | Ordered substitutes for an agent that hits a usage limit or has no usable pane |
 
@@ -66,33 +66,37 @@ A repo may add a role beyond these four and assign tasks to it. Say so if the us
 4. Assign a Role to Each Delegation Task
 Present every delegation task with its assigned role and mode. This is the routing table — the pack reads it instead of assuming implementation goes to the Coder. Each task takes `role` (from the list above) and `mode` (`delegate` = a fresh pane of that role, `orchestrator` = the orchestrator pane itself, `implementer` = the pane that already owns the task).
 
+**Read the shipped defaults out of `skills/orchestration/roles.yaml` and propose those values** — that file is the source of truth for what the pack ships, and it changes across releases. Do not propose defaults from memory or from this file; the tables below say only what each task covers.
+
 Work tasks — always happen; the assignment decides who and where:
 
-| Delegation task | Default role / mode | Covers |
-|---|---|---|
-| `plan-and-design` | planning-design / orchestrator | Brainstorming, design docs, implementation plans |
-| `complex-coding` | coder / delegate | Implementation over the complex-coding boundary |
-| `simple-coding` | generalist / delegate | Localized, pattern-following edits under that boundary |
-| `chores` | generalist / delegate | Lookups, file moves, log gathering, mechanical edits, lint/format runs |
-| `test-authoring` | coder / implementer | Writing a task's tests |
-| `review-fixes` | coder / implementer | Fixing review findings |
-| `verification` | generalist / delegate | Running `<BASELINE_VERIFICATION_COMMAND>` and `<SUPPLEMENTAL_VERIFICATION_COMMANDS>` |
+| Delegation task | Covers |
+|---|---|
+| `plan-and-design` | Brainstorming, design docs, implementation plans |
+| `complex-coding` | Implementation over the complex-coding boundary |
+| `simple-coding` | Localized, pattern-following edits under that boundary |
+| `chores` | Lookups, file moves, log gathering, mechanical edits, lint/format runs |
+| `test-authoring` | A task's tests for the implementation round |
+| `fix-round-test-authoring` | The covering tests for one fix round |
+| `review-fixes` | Fixing review findings |
+| `verification` | Running `<BASELINE_VERIFICATION_COMMAND>` and `<SUPPLEMENTAL_VERIFICATION_COMMANDS>` |
 
 Review tasks — same two knobs plus `enabled`, which turns the gate off entirely:
 
-| Delegation task | Default role / mode | Turning it off means |
-|---|---|---|
-| `plan-double-review` | reviewer / delegate | Plans go to the user for approval unreviewed (`/plan`, `/full_cycle`) |
-| `documentation-impact-review` | planning-design / orchestrator | No pre-implementation sweep for non-code files the change invalidates |
-| `task-review` | coder / delegate | Each task completes on the implementing pane's own report (`pane-driven-development`) |
-| `fix-round-re-review` | coder / delegate | Fix rounds are taken on the fixing pane's word; the five-round cap still applies |
-| `final-branch-review` | coder / delegate | The branch reaches the integration decision unreviewed |
+| Delegation task | Turning it off means |
+|---|---|
+| `plan-double-review` | Plans go to the user for approval unreviewed (`/plan`, `/full_cycle`) |
+| `documentation-impact-review` | No pre-implementation sweep for non-code files the change invalidates |
+| `task-review` | Each task completes on the implementing pane's own report (`pane-driven-development`) |
+| `fix-round-re-review` | Fix rounds are taken on the fixing pane's word; the five-round cap still applies |
+| `final-branch-review` | The branch reaches the integration decision unreviewed |
 
 Rules to state while proposing:
 - Say plainly what each `enabled: false` costs before the user confirms it. Disabling a gate is the user's call; presenting it as free is not.
 - Work tasks are never disabled. To stop delegating one, set `mode: orchestrator`.
-- `test-authoring: {mode: delegate}` is allowed but moves where independence comes from: by default the reviewer audits test code its author also implemented. Split them and that pairing is gone, and the workflow must name which pane wrote the tests. Say this before the user chooses it.
-- Two pack invariants are not configurable — state them if the user asks for either: a pane never reviews work it wrote, and the plan reviews that do run come from two different agent types.
+- **A review task assigned to a role that binds to a list of agent types runs once per entry.** Assigning `task-review` or `fix-round-re-review` to such a role multiplies pane usage per task by the list length. Say the arithmetic out loud before the user confirms it.
+- `test-authoring` and `fix-round-test-authoring` decide who writes tests. `mode: delegate` puts them in a pane that never sees the implementation, which costs an extra pane and a throwaway worktree per task; `mode: implementer` collapses them onto the pane whose behavior they cover, leaving the reviewers as the only check on that test code. Either is legitimate; state the trade before the user chooses, because the workflow reports which one ran.
+- Two pack invariants are not configurable — state them if the user asks for either: a pane never reviews work it wrote, and reviews from a list role come from different agent types.
 - `review-fixes` escalates to a fresh pane at fix-loop rounds 4-5 whatever its mode says.
 
 5. Write Configuration
@@ -162,7 +166,10 @@ assignments:
     mode: <delegate|orchestrator>
   test-authoring:
     role: <role>
-    mode: <implementer|delegate|orchestrator>
+    mode: <delegate|implementer>
+  fix-round-test-authoring:
+    role: <role>
+    mode: <delegate|implementer>
   review-fixes:
     role: <role>
     mode: <implementer|delegate|orchestrator>
@@ -199,7 +206,7 @@ If the repository already had a `.herdrpowers/config.yaml`, rewrite it in full f
 Re-read every written file and confirm:
 - the `Herdrpowers Configuration` section exists, every key has a value, and no value is still an angle-bracket placeholder;
 - `.herdrpowers/config.yaml` parses as YAML, has no angle-bracket placeholders left, carries a `fallbacks:` key, and defines every role that any assignment references;
-- every one of the twelve delegation tasks appears under `assignments:` with a `role` that exists in `roles:` and a valid `mode`, and each of the five review tasks also has `enabled`;
+- every delegation task named in `skills/orchestration/roles.yaml` appears under `assignments:` with a `role` that exists in `roles:` and a valid `mode`, and every review task there also has `enabled` — count them from that file rather than from a number written here, which goes stale;
 - no work task carries `enabled: false` — that is the wrong knob; `mode: orchestrator` is how a work task stops being delegated;
 - `.herdrpowers/config.yaml` is not git-ignored (`git check-ignore -v .herdrpowers/config.yaml` must find no matching rule).
 

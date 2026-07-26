@@ -53,8 +53,8 @@ All development workflows share the same guardrails:
 
 - **Safety**: Never write to `<BASE_BRANCH>` without explicit user consent; work happens on a feature branch (and, for most workflows, in a dedicated worktree).
 - **Integration is offered, not assumed**: a finished branch ends with the candidates presented — merge locally, push and open a PR, push only, or keep as-is (discarding happens only on an explicit request). The workflow executes the chosen one and cleans up only as far as that choice requires. No workflow merges on its own.
-- **Independence**: The pane that writes code never reviews it. Plans are reviewed by two agent types that never saw each other's draft. No configuration relaxes either rule.
-- **Quality**: No task is marked complete without RED-GREEN evidence and a task review that returns both spec-compliance and code-quality verdicts.
+- **Independence**: The pane that writes code never reviews it. A review task assigned to a role that binds to a list of agent types runs once per entry, from types that never saw each other's draft. No configuration relaxes either rule.
+- **Quality**: No task is marked complete without RED-GREEN evidence, a named test author, and a task review that returns both spec-compliance and code-quality verdicts.
 - **Transparency**: Each step blocks for user confirmation. Agents do not proceed autonomously through the whole cycle.
 - **Evidence**: `verification-before-completion` runs before any "done" claim, and a delegated pane's claim is verified against its report file — not taken on trust.
 - **Root cause over symptoms**: When tests fail, `systematic-debugging` drives the investigation.

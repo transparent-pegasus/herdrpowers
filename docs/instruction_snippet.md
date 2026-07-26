@@ -14,11 +14,13 @@ Rules:
    delegated from another pane is executed in place and never re-delegated.
    In-process subagents are not used.
 2. Independence comes from fresh pane context: the pane that writes code never
-   reviews it, and plans get two independent reviews from two agent types
-   before approval. No configuration relaxes this.
-3. The pane implementing a task writes that task's tests and owns
-   RED-GREEN-REFACTOR. Assertions come from the requirements, never from the
-   code, and the RED run is quoted in the report.
+   reviews it, and a review task assigned to a role that binds to a list of
+   agent types runs once per entry, from different types. No configuration
+   relaxes this.
+3. The resolved `test-authoring` assignment says which pane writes a task's
+   tests — a pane that never sees the implementation, or the implementing pane
+   itself. Assertions come from the requirements, never from the code, the RED
+   run is quoted in the report, and the report names the test author.
 4. Feature work happens on a branch off `<BASE_BRANCH>`, normally in a git
    worktree (`using-git-worktrees` skill) — never directly on the base branch.
 5. Follow the workflows: `/init` (one-time setup), `/full_cycle`, `/plan`,

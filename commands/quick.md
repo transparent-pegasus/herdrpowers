@@ -24,7 +24,7 @@ Do not edit workflow files unless the user's current request explicitly asks to 
 
 Resolve the repository's assignments and review gates as `orchestration` describes before the first delegation: `.herdrpowers/config.yaml` first, then `orchestration/roles.yaml` for anything it omits. A gate set to `enabled: false` is skipped and named in the final report.
 
-Routing comes from `assignments:`, not from this file. The scoped implementation may run in the orchestrator pane — the change is small by definition — or go to the pane its `complex-coding` / `simple-coding` assignment names. With the default `test-authoring: implementer` the implementer writes its own tests and owns RED-GREEN-REFACTOR. `chores` and `verification` follow their assignments. The `final-branch-review` assignment always resolves to a fresh pane that did not write the code, preferably a different agent type.
+Routing comes from `assignments:`, not from this file, and the resolved YAML is the source of truth for every default. The scoped implementation may run in the orchestrator pane — the change is small by definition — or go to the pane its `complex-coding` / `simple-coding` assignment names. `test-authoring`, `chores`, and `verification` follow their assignments. The `final-branch-review` assignment always resolves to a fresh pane that did not write the code, preferably a different agent type — once per entry when its role binds to a list of agent types.
 - In-process subagents are not used. Do not dispatch the Agent tool for workflow work.
 
 **Degrade, don't block.** If `HERDR_ENV` is unset or no idle sibling agent pane exists, review the change yourself against `requesting-code-review`'s brief and state plainly in the final report that the review was not independent.
@@ -38,17 +38,17 @@ Engage in a design and requirement gathering discussion without writing implemen
 Proceed to Step 2 only after the design is explicit and the user confirms.
 
 2. Documentation Impact Review
-Gate: `assignments.documentation-impact-review`. When it is disabled, skip this step and name the skipped gate in the final report.
-Inform the user that you will identify every file that must be updated if the implementation changes behavior, contracts, prompts, schema, or workflow instructions.
+Gate: `assignments.documentation-impact-review`. When it is disabled, skip this step and name the skipped gate in the final report. Route it by its resolved role and mode: `delegate` runs the sweep in a fresh pane that reports back, `orchestrator` runs it in this pane.
+Inform the user that the sweep will identify every file that must be updated if the implementation changes behavior, contracts, prompts, schema, or workflow instructions.
 List the expected non-code follow-up targets before implementation begins, including `<REPO_INSTRUCTION_FILES>`, any affected files under `docs/`, any agent-instruction directories present (such as `.claude/`, `.agents/`, `commands/`), example env/config files, and CI/deploy definitions.
 Proceed to Step 3 only after the update target list is explicit and the user confirms.
 
 3. Implementation and Testing
 Inform the user that implementation and testing will begin.
 Read the specific `SKILL.md` for `test-driven-development`, then execute the scoped work without a separate plan-creation or workspace-isolation phase.
-Write the failing test first; the implementer owns RED-GREEN-REFACTOR for the change.
+Route the tests by the resolved `test-authoring` assignment. With `mode: implementer` the implementer writes the failing test first and owns RED-GREEN-REFACTOR. With `mode: delegate`, record the pre-change commit and give the test author its own throwaway worktree detached at it (`git worktree add --detach`, never `-b` — a named branch outlives `git worktree remove` and collides on the next run), removed after its commit is cherry-picked back. Skipping the branch-isolation phase does not license two panes writing one working tree. Run the merged tests yourself after the cherry-pick: that run is the GREEN evidence, because neither pane produced both halves. Name in the report which pane wrote the tests.
 If the touched package has no automated test harness, state that gap explicitly and use the strongest available validation instead of inventing a fake test step.
-On any test failure, unexpected behavior, or bug, use the `systematic-debugging` skill before proposing or applying a fix.
+On any test failure, unexpected behavior, or bug, use the `systematic-debugging` skill before proposing or applying a fix. A test author's RED run is not a failure in this sense: a test that fails for its stated reason, in a worktree where the covered behavior is absent or the finding is unfixed, is the evidence the task asked for. Debug the failures that survive the merge, and any failure whose reason does not match what the test author predicted.
 Ensure implementation and required tests or equivalent validations are complete before proceeding.
 Proceed to Step 4 only after the user confirms.
 

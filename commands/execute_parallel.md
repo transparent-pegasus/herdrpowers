@@ -22,11 +22,13 @@ Do not edit workflow files unless the user's current request explicitly asks to 
 
 Every dispatch in this workflow goes through the `orchestration` skill, with `using-herdr-sibling-panes` as the transport. Read both before the first delegation, and resolve the repository's assignments and review gates as `orchestration` describes: `.herdrpowers/config.yaml` first, then `orchestration/roles.yaml` for anything it omits. Every gate this workflow would run is resolved up front; a gate set to `enabled: false` is skipped and named in the final report.
 
-Routing comes from `assignments:`, not from this file. With the shipped defaults that means: implementation tracks (`complex-coding` / `simple-coding`), `task-review`, and `final-branch-review` on **Coder** panes; `chores` and `verification` on **Generalist** panes; `test-authoring` and `review-fixes` on the pane that owns the track. A repo that reassigns any of them gets its route honored — read the table, do not assume these defaults.
+Routing comes from `assignments:`, not from this file, and the resolved YAML is the source of truth for every default — read each task's `role` and `mode` there rather than recalling one. This workflow touches implementation tracks (`complex-coding` / `simple-coding`), `test-authoring`, `fix-round-test-authoring`, `review-fixes`, `chores`, `verification`, `documentation-impact-review`, `task-review`, `fix-round-re-review`, and `final-branch-review`. A review task whose role binds to a list of agent types runs once per entry.
 - Track extraction, integration, and final synthesis stay with the orchestrator.
 - In-process subagents are not used. Do not dispatch the Agent tool for workflow work.
 
-**Parallelism is bounded by panes and worktrees, not by ambition.** One implementation pane per worktree, one worktree per track. If fewer idle panes exist than tracks, run the tracks in waves — never two implementers in one worktree, and never interrupt a working pane.
+**Parallelism is bounded by panes and worktrees, not by ambition.** One implementation pane per worktree, one worktree per track — and count the whole writer set a track needs, not one pane per track: with `test-authoring` in `mode: delegate` a track occupies two panes of the resolved role at once (implementer plus test author, each in its own worktree), and the reviews that follow need panes of the review role that did not write the code.
+
+Do not compute a wave plan from those numbers. Take what is idle, start those tracks, and **wait** for the rest: when no pane of the needed type is idle, wait for one to free — never interrupt a working pane, and never collapse two writers into one worktree to save a pane. If panes free up one at a time, the tracks land one at a time; a run that degrades all the way to serial execution is a slow correct run, not a failure, and the final report says how much parallelism was actually achieved.
 
 **Every delegation** states its own track's absolute worktree path (and requires the pane to confirm it is there first), the owned files, the edit policy, the report-file path under `<REPORT_DIRECTORY>`, a unique completion marker, and the prohibition on re-delegating. Read results from report files, not from pane scrollback.
 
@@ -65,14 +67,14 @@ Proceed directly to Step 3 after setup completes.
 Inform the user that parallel implementation and testing will begin.
 Read and use the pane-driven-development skill for the per-track task loop.
 For each confirmed implementation track:
-- assign one Coder pane and one isolated worktree
+- assign the track its writer set — an implementation pane and its worktree, plus a test-author pane and worktree when `test-authoring` is delegated — and wait rather than start a track whose writers are not all available
 - provide the exact task text (as a brief file), owned files, constraints, and expected verification
 - require the implementer to stop and escalate if the task expands beyond its assigned ownership
-- the implementing pane writes its own tests and owns RED-GREEN-REFACTOR per the test-driven-development skill; say so in the brief
+- route the track's tests by the resolved `test-authoring` assignment and say which in the brief; a delegated test author gets its own worktree off the track's base, never the track's worktree
 - run track-local verification inside that track's worktree before considering the track complete
-- send each track's task review to a fresh pane that did not implement it, preferably of a different agent type
+- send each track's task review to a fresh pane that did not implement it, preferably of a different agent type — once per entry when the resolved role binds to a list
 
-On any test failure, unexpected behavior, or bug — in a pane or in the orchestrator — use the systematic-debugging skill before proposing or applying a fix.
+On any test failure, unexpected behavior, or bug — in a pane or in the orchestrator — use the systematic-debugging skill before proposing or applying a fix. A test author's RED run is not a failure in this sense: a test that fails for its stated reason, in a worktree where the covered behavior is absent or the finding is unfixed, is the evidence the task asked for. Debug the failures that survive the merge, and any failure whose reason does not match what the test author predicted.
 
 After all parallel tracks complete:
 - integrate changes onto the coordination branch in a controlled order

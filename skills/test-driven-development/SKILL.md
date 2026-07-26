@@ -7,14 +7,16 @@ description: Use when implementing any feature or bugfix, before writing impleme
 
 ## Who Writes the Test (READ FIRST)
 
-**You do — the pane implementing the task owns RED-GREEN-REFACTOR for it.** There is no separate test-authoring agent in this pack: the delegation brief that hands you a task also hands you its tests.
+**The resolved `test-authoring` assignment says** — read it (see `orchestration`), do not assume. Two shapes ship, and they bind different rules.
 
-That removes the structural guard against grading your own homework, so two compensating rules bind instead:
+**A separate pane writes them (`mode: delegate`).** That pane works from the task brief alone, in a worktree at the commit before the implementation, and is never shown the implementation — so its assertions cannot be shaped by code it read. If you are that pane, `pane-driven-development`'s test author brief binds you: tests only, never production code, and a test that *passes* in that worktree is a defect to investigate and report. If you are the implementing pane, you implement the brief's stated interface exactly — someone else's assertions are already written against it — and you do not write the tests.
+
+**The implementing pane writes them (`mode: implementer`).** The delegation brief that hands you a task also hands you its tests. That removes the structural guard against grading your own homework, so two compensating rules bind instead:
 
 - **Assertions come from the requirements, never from the code.** Write the test against the task brief's stated behavior and exact values, before the implementation exists. A test written after the code, shaped to match it, catches nothing.
-- **The RED run is evidence you must produce.** Your report carries the failing command and its output *before* implementation, with the reason the failure was expected, plus the passing run after. The reviewing pane treats missing or reconstructed RED evidence as a finding, and reviews your test code as the only independent check on it.
+- **The RED run is evidence you must produce.** Your report carries the failing command and its output *before* implementation, with the reason the failure was expected, plus the passing run after. The reviewing panes treat missing or reconstructed RED evidence as a finding, and review your test code as the only independent check on it.
 
-The Iron Law below binds you directly: no production code without a failing test first.
+Either shape: whoever writes a test produces its RED run, assertions trace to the requirements, and the report names which pane wrote the tests. `fix-round-test-authoring` answers the same question for a fix round's covering tests. The Iron Law below binds whichever pane owns them: no production code without a failing test first.
 
 ## Where Tests Go and How to Run Them
 
