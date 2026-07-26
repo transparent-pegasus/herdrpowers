@@ -20,7 +20,7 @@ Do not edit workflow files unless the user's current request explicitly asks to 
 
 ## Orchestration
 
-Planning and design stay with the orchestrator — the pane the user typed the request into. Only the reviews are delegated, through the `orchestration` skill with `using-herdr-sibling-panes` as the transport. Read both, plus `orchestration/roles.yaml`, before the first delegation. In-process subagents are not used.
+Planning and design stay with the orchestrator — the pane the user typed the request into. Only the reviews are delegated, through the `orchestration` skill with `using-herdr-sibling-panes` as the transport. Read both before the first delegation, and resolve the repository's assignments and review gates as `orchestration` describes: `.herdrpowers/config.yaml` first, then `orchestration/roles.yaml` for anything it omits. Every gate this workflow would run is resolved up front; a gate set to `enabled: false` is skipped and named in the final report. In-process subagents are not used.
 
 ## Execution Steps
 
@@ -37,8 +37,9 @@ Save the plan to `<PLAN_PATH_PATTERN>`.
 Proceed directly to Step 3 — do not ask for approval yet.
 
 3. Independent Double Review
+Gate: `reviews.plan-double-review`. When it is disabled, skip this step, tell the user the plan is going to approval unreviewed, and go to Step 4.
 Inform the user that the plan goes to independent review before approval.
-Resolve the Reviewer role from `orchestration/roles.yaml` and delegate the **same self-contained review request** to one idle pane of each Reviewer agent type, in separate panes, with no shared draft opinion between them.
+Resolve the Reviewer role from the merged configuration and delegate the **same self-contained review request** to one idle pane of each Reviewer agent type, in separate panes, with no shared draft opinion between them. The number of reviews is the length of the resolved `roles.reviewer.agents` list.
 Each review request states: the plan file path, the design doc path, the absolute repository path, that the review is read-only, the report-file path under `<REPORT_DIRECTORY>`, a unique completion marker, and that the recipient must execute the review itself and must not re-delegate.
 Wait for both to finish, read both report files, and compare the findings.
 Never delegate a review of the plan to the pane that drafted it.
@@ -54,5 +55,5 @@ Present the resolved plan, the findings, and their resolutions to the user, and 
 - Code is not touched until the resolved plan is approved.
 - The remaining development-cycle responsibilities live in `/execute`, `/execute_parallel`, and `/full_cycle`, not in `<REPO_INSTRUCTION_FILES>`.
 - If the design discussion changes scope materially, revisit Brainstorming before writing the plan.
-- Name in the final report which reviews ran, which were skipped, and any role that fell back to a substitute agent.
+- Name in the final report which reviews ran, which were skipped for lack of panes, which were disabled in `.herdrpowers/config.yaml`, and any role that fell back to a substitute agent.
 - Read the specific `SKILL.md` file for a skill before invoking it.

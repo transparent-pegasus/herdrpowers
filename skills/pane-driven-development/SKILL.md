@@ -163,15 +163,39 @@ before execution begins, not one interrupt per discovery mid-plan. If the
 scan is clean, proceed without comment. The review loop remains the net for
 conflicts that only emerge from implementation.
 
-## Role Selection
+## Role Selection and Review Gates
 
-Routing is `orchestration`'s job, not this skill's. Resolve it from that skill's `roles.yaml` at the start of execution:
+Routing and gating are `orchestration`'s job, not this skill's. Resolve both at
+the start of execution from the merged configuration it describes —
+`<repo-root>/.herdrpowers/config.yaml` first, then the pack's
+`orchestration/roles.yaml` for anything the repo file omits. Resolve once, up
+front; do not re-read per task.
+
+Two gates change this skill's loop:
+
+- **`reviews.task-review: false`** — skip §3 entirely. A task then completes on
+  the implementing pane's own report: read it, resolve any concerns, and record
+  the completion line. There is no fix loop to enter, because nothing produced
+  findings. Name the disabled gate in your final report.
+- **`reviews.fix-round-re-review: false`** — a fix round ends when the fix
+  report shows the covering tests, the command, and the output. The round still
+  counts against the five-round cap, and the breaker still trips at five with
+  whatever findings the fixing pane did not claim as fixed. Name the disabled
+  gate in your final report.
+
+The `final-branch-review` gate belongs to the calling workflow, not to this
+skill: when it is disabled, skip the Final Review section below.
+
+**Independence is not configurable.** With `task-review` on, the review always
+goes to a pane that did not write the code. No config value relaxes that.
+
+Role assignments come from the same merged configuration:
 
 - **Implementation tasks, test authoring, code review** → Coder.
 - **Chores discovered mid-plan** (lookups, file moves, log gathering, mechanical edits) → Generalist.
 - **Plan revisions** stay with you, the orchestrator.
 
-Panes are not reserved per role — pick any idle pane of the matching agent type at delegation time. When no pane of the right type is idle, wait; do not interrupt a working pane. When an agent type is exhausted (usage limit, or two markerless delegations on two panes of that type), take its substitute from `roles.yaml`'s `fallbacks:` map and name the fallback in your final report.
+Panes are not reserved per role — pick any idle pane of the matching agent type at delegation time. When no pane of the right type is idle, wait; do not interrupt a working pane. When an agent type is exhausted (usage limit, or two markerless delegations on two panes of that type), take its substitute from the resolved `fallbacks:` map and name the fallback in your final report.
 
 **Escalation is a type swap.** Panes have no model dial you control, so "try something stronger" means a different agent type: a fresh pane of another Coder-eligible type, or the substitute in `fallbacks:`. Use it when a pane reports BLOCKED for lack of reasoning, and at fix-loop rounds 4-5. Name the swap in the ledger line.
 
@@ -225,6 +249,9 @@ completely, provide additional context if needed, and don't rush it into
 implementation.
 
 ### 3. Review the task
+
+Skip this step when `reviews.task-review` is disabled (see Role Selection and
+Review Gates) — go straight to §5 with the pane's own report.
 
 Per-task reviews are task-scoped gates. The broad review happens once, at the
 final whole-branch review. Never skip the task review, and never accept a
@@ -322,7 +349,10 @@ contains the covering tests, the command run, and the output; delegate the
 re-review once all three are present. Name the covering test files in the fix
 message — a one-line fix does not need the whole suite.
 
-**The re-review is scoped.** Run `scripts/review-package PLAN_FILE FIX_BASE HEAD`
+**The re-review is scoped.** Skipped when `reviews.fix-round-re-review` is
+disabled — the round then closes on the fix report's covering tests, command,
+and output, and the cap still counts it. Otherwise: run
+`scripts/review-package PLAN_FILE FIX_BASE HEAD`
 where FIX_BASE is the head the previous review saw, and delegate
 [re-review-brief.md](re-review-brief.md) to a fresh pane with the findings
 list, the brief, the report file, and the printed diff path. The re-reviewer
@@ -371,6 +401,9 @@ the review has open Critical/Important issues that are neither fixed nor
 parked-with-ruling at the cap.
 
 ## Final Review
+
+Skipped when the calling workflow's `reviews.final-branch-review` gate is
+disabled; go straight to Finish and say the branch is unreviewed.
 
 The final whole-branch review gets a package too: run
 `scripts/review-package PLAN_FILE MERGE_BASE HEAD` (MERGE_BASE = the commit the
@@ -455,6 +488,8 @@ artifacts over as files, in both directions:
 | "Ledger bookkeeping is overhead" | The ledger is what survives compaction. Orchestrators without one have re-delegated entire completed task sequences. |
 | "The implementing pane is idle — it can review its own work" | That is a self-review with extra steps. Review goes to a pane that did not write the code, or the report says the review was not independent. |
 | "The plan mandates it, so the finding is invalid" | Plan-vs-review conflicts are your human partner's call. Present both and ask which governs. |
+| "I'll turn the gate off in `.herdrpowers/config.yaml` to get past this loop" | The config is the user's declaration, read once at start. Changing it mid-run to escape a review is falsifying the run's terms. Hit the cap and adjudicate. |
+| "Task review is disabled, so the pane can review its own work" | Disabling a gate removes the review; it never relaxes independence for the gates still on. |
 
 ## Example Workflow
 
@@ -465,7 +500,8 @@ You: I'm using Pane-Driven Development to execute this plan.
 [Read plan file once: docs/herdrpowers/plans/feature-plan.md]
 [Resolve workspace: scripts/pdd-workspace docs/herdrpowers/plans/feature-plan.md
  → /repo/.herdrpowers/pdd/feature-plan/ — no ledger inside, fresh start]
-[Read orchestration/roles.yaml; herdr pane list -> w2:p18 (codex, idle), w2:p19 (cursor, idle)]
+[Resolve config: .herdrpowers/config.yaml over orchestration/roles.yaml — all gates enabled]
+[herdr pane list -> w2:p18 (codex, idle), w2:p19 (cursor, idle)]
 [Create todos for all tasks]
 
 Task 1: Hook installation script
@@ -546,6 +582,8 @@ Done! Using finishing-a-development-branch.
 - Re-delegate a task the progress ledger already marks complete — check
   the ledger (and `git log`) after any compaction or resume
 - Read or write another plan's workspace directory
+- Write `.herdrpowers/config.yaml` from inside a run — it is the user's input, resolved once at start; changing an assignment or a gate is an init-workflow decision
+- Finish a run with a disabled gate unnamed in the report
 
 **If a pane fails the task:**
 - Diagnose with `using-herdr-sibling-panes`' failure table first

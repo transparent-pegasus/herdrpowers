@@ -8,7 +8,12 @@ Every development workflow routes its dispatches through the `orchestration` ski
 
 ### `/init`
 
-One-time repository initialization. Detects the repo's tooling, confirms values with the user, and writes the `Herdrpowers Configuration` section into the repo's `CLAUDE.md` / `AGENTS.md` — the section every other workflow and skill uses to resolve `<KEY>` placeholders (`<BASE_BRANCH>`, `<REPORT_DIRECTORY>`, `<PLAN_PATH_PATTERN>`, `<BASELINE_VERIFICATION_COMMAND>`, …). Pack files themselves are never edited. On Claude Code plugin installs it surfaces as `/herdrpowers:init`.
+One-time repository initialization, re-runnable to update. Detects the repo's tooling, confirms values with the user, and writes two deliverables:
+
+- the `Herdrpowers Configuration` section into the repo's `CLAUDE.md` / `AGENTS.md` — the section every other workflow and skill uses to resolve `<KEY>` placeholders (`<BASE_BRANCH>`, `<REPORT_DIRECTORY>`, `<PLAN_PATH_PATTERN>`, `<BASELINE_VERIFICATION_COMMAND>`, …);
+- `.herdrpowers/config.yaml` — the repo's role assignments and review gates. Every assignment and every review gate is configurable and individually togglable there, overriding the pack's shipped `roles.yaml` defaults key by key. Tracked, not scratch.
+
+Pack files themselves are never edited. On Claude Code plugin installs it surfaces as `/herdrpowers:init`. See [Roles](./roles.md) for the schema and the gate table.
 
 Use when: the pack was just installed (plugin or checked-in copy), or the repo's base branch, report directory, or test/verification commands changed.
 

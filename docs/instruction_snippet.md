@@ -15,7 +15,7 @@ Rules:
    In-process subagents are not used.
 2. Independence comes from fresh pane context: the pane that writes code never
    reviews it, and plans get two independent reviews from two agent types
-   before approval.
+   before approval. No configuration relaxes this.
 3. The pane implementing a task writes that task's tests and owns
    RED-GREEN-REFACTOR. Assertions come from the requirements, never from the
    code, and the RED run is quoted in the report.
@@ -31,7 +31,10 @@ Rules:
 8. Before claiming completion, use the `verification-before-completion` skill;
    on failures, use `systematic-debugging`.
 9. `<KEY>` placeholders resolve from the `Herdrpowers Configuration` section in
-   this file.
+   this file. Role assignments and review gates resolve from
+   `.herdrpowers/config.yaml`, which is read once before the first delegation
+   and never written from inside a run. Any review gate disabled there is named
+   in the workflow's final report.
 ```
 
 For checked-in copies, adjust workflow invocation to how your tool reads `commands/` (slash commands, skills, or direct file reads — see [workflows.md](./workflows.md)).

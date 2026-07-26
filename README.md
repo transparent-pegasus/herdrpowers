@@ -65,13 +65,28 @@ Then ask the agent to "follow the workflow in `commands/full_cycle.md`" or "use 
 /herdrpowers:init
 ```
 
-Plugin files are read-only, so repo-specific values are never written into the pack. `/init` detects the repo's tooling, confirms the values with you, and writes a `Herdrpowers Configuration` section into the target repo's `CLAUDE.md` / `AGENTS.md`. Every skill and command resolves its `<KEY>` placeholders (`<BASE_BRANCH>`, `<REPORT_DIRECTORY>`, `<TARGETED_TEST_COMMAND>`, `<PLAN_PATH_PATTERN>`, …) from that section.
+Plugin files are read-only, so repo-specific values are never written into the pack. `/init` detects the repo's tooling, confirms the values with you, and writes two things into the target repo:
+
+- a `Herdrpowers Configuration` section in `CLAUDE.md` / `AGENTS.md` — every skill and command resolves its `<KEY>` placeholders (`<BASE_BRANCH>`, `<REPORT_DIRECTORY>`, `<TARGETED_TEST_COMMAND>`, `<PLAN_PATH_PATTERN>`, …) from there;
+- `.herdrpowers/config.yaml` — your role assignments and review gates. Every assignment and every review is configurable and individually togglable, overriding the pack's shipped defaults key by key:
+
+```yaml
+roles:
+  coder: { agent: codex }
+  reviewer: { agents: [codex, cursor] }   # one plan review per entry
+reviews:
+  task-review:          { enabled: true,  role: coder }
+  fix-round-re-review:  { enabled: false, role: coder }   # off: name it in the report
+  final-branch-review:  { enabled: true,  role: coder }
+```
+
+Re-run `/init` any time to change them. Two things stay fixed regardless: a pane never reviews work it wrote, and a disabled gate is named in every final report.
 
 Then start a feature with `/herdrpowers:full_cycle`, or break it up with `plan` → `execute` / `execute_parallel`. For small changes use `quick`.
 
 ### Updating
 
-Plugin installs update through the marketplace (`/plugin marketplace update` in Claude Code, `codex plugin marketplace upgrade` for Codex). The repo-local `Herdrpowers Configuration` section survives updates untouched, because the pack never stores repo-specific values in its own files. Checked-in copies update by diffing the new `skills/` / `commands/` against the copy — see [`changelogs/`](./changelogs/).
+Plugin installs update through the marketplace (`/plugin marketplace update` in Claude Code, `codex plugin marketplace upgrade` for Codex). The repo-local `Herdrpowers Configuration` section and `.herdrpowers/config.yaml` survive updates untouched, because the pack never stores repo-specific values in its own files. Checked-in copies update by diffing the new `skills/` / `commands/` against the copy — see [`changelogs/`](./changelogs/).
 
 ## Supported Platforms
 
@@ -84,14 +99,14 @@ The payload is a single tree at the repository root, discovered by each platform
 | **Cursor** | `skills/` (auto) | `commands/` as slash commands (auto) |
 | **Aider / Gemini CLI / others** | read `skills/<name>/SKILL.md` directly | read `commands/<name>.md` directly |
 
-Roles bind to **agent types**, not to platforms: the orchestrator can be any agent CLI, and Coder / Generalist / Reviewer resolve to whatever `skills/orchestration/roles.yaml` says. Swap that one file to change who does what.
+Roles bind to **agent types**, not to platforms: the orchestrator can be any agent CLI, and Coder / Generalist / Reviewer resolve to whatever the repo's `.herdrpowers/config.yaml` says, falling back to `skills/orchestration/roles.yaml`. Change assignments and review gates in the repo file — the pack's defaults stay untouched.
 
 ## Repository Structure
 
 ```
 skills/          # 16 skills (single tree, platform-neutral wording)
   herdr/                       vendored official herdr skill (Apache-2.0)
-  orchestration/               routing, roles.yaml, fallbacks, plan double review
+  orchestration/               routing, roles.yaml defaults, review gates, fallbacks
   using-herdr-sibling-panes/   the delegation transport + composer scripts
   pane-driven-development/     the per-task loop over panes + brief templates
   …                            planning, TDD, debugging, review, worktrees, docs

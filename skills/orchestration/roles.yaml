@@ -1,6 +1,12 @@
-# Role assignments for the orchestration skill.
-# Single source of truth for who does what — to change an assignment,
-# edit ONLY this file. SKILL.md refers to roles, never to agent names.
+# Shipped defaults for the orchestration skill: who does what, and which
+# review gates run.
+#
+# THIS FILE IS THE PACK'S DEFAULT, NOT THE PLACE TO CUSTOMIZE A REPO.
+# A target repository overrides any key below in its own
+# `.herdrpowers/config.yaml` (written by the init workflow) — that file wins
+# key by key, and anything it omits falls back here. Plugin installations are
+# read-only, so the repo file is the only editable layer on those installs.
+# See "Configuration resolution" in SKILL.md.
 #
 # Roles bind to agent types, not reserved panes: at delegation time,
 # any idle pane of the matching agent type can take the task.
@@ -34,3 +40,32 @@ roles:
 # An agent with no entry here has no substitute.
 fallbacks:
   cursor: [grok]
+
+# Review gates. Every gate has exactly two knobs: whether it runs, and which
+# role performs it. `enabled: false` removes the gate from every workflow that
+# would otherwise run it — the workflow must then name the disabled gate in its
+# final report, because a missing review is missing independence.
+#
+# Disabling a gate never relaxes the independence rule for the gates that stay
+# on: a pane never reviews work it wrote.
+reviews:
+  plan-double-review:
+    description: Independent review of a plan or design before approval (/plan, /full_cycle)
+    enabled: true
+    role: reviewer # one review per agent type listed under roles.reviewer.agents
+  documentation-impact-review:
+    description: Pre-implementation sweep for non-code files the change will invalidate
+    enabled: true
+    role: planning-design
+  task-review:
+    description: Per-task gate in pane-driven-development — spec compliance + code quality
+    enabled: true
+    role: coder
+  fix-round-re-review:
+    description: Scoped verification of one fix round's diff (re-review-brief.md)
+    enabled: true
+    role: coder
+  final-branch-review:
+    description: Broad whole-branch review before the integration decision
+    enabled: true
+    role: coder

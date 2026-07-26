@@ -11,6 +11,8 @@ Delegate the review to a **fresh herdr sibling pane** to catch issues before the
 
 **Core principle:** Review early, review often. Never review your own work, and never send a change back to the pane that wrote it.
 
+**Gate:** the whole-branch review this skill requests is the `reviews.final-branch-review` gate; per-task reviews are `reviews.task-review`. Both resolve from `.herdrpowers/config.yaml` over the pack's `orchestration/roles.yaml` defaults — see "Review gates" in `orchestration`. A disabled gate means the review does not run and the final report says so. It never means the implementing pane reviews itself.
+
 ## When to Request Review
 
 **Mandatory:**
@@ -35,7 +37,7 @@ HEAD_SHA=$(git rev-parse HEAD)
 The package never enters your own context — you pass the path, the pane reads the file.
 
 **2. Pick the pane:**
-Resolve the role from `orchestration`'s `roles.yaml` (code review → Coder). Pick any idle pane of that type **other than the one that implemented the change**; prefer a different agent type when one is idle. If the only idle pane is the implementer's, wait for another, or state in the final report that the review was not independent.
+Resolve the gate's `role` from the merged configuration (default: Coder). Pick any idle pane of that type **other than the one that implemented the change**; prefer a different agent type when one is idle. If the only idle pane is the implementer's, wait for another, or state in the final report that the review was not independent.
 
 **3. Delegate:**
 Write the review contract from [review-brief.md](review-brief.md) to a file, then submit the one-line instruction through `using-herdr-sibling-panes` (`composer-submit.sh`) and wait for the completion marker. Never submit an agent-pane prompt with `pane run`.

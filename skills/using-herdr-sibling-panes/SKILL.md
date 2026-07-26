@@ -145,6 +145,6 @@ Treat an agent type as **exhausted** when its output says the usage or rate limi
 
 Do not match vendor error strings; they change with every CLI release. The reliable signal is the outcome: no marker, twice, on two panes.
 
-When exhausted, report it upward. If this skill was entered from the `orchestration` skill, the orchestrator resolves a substitute from the `fallbacks:` map in its `roles.yaml` and re-delegates there. Standalone, run the work in the orchestrator pane and say which agent was skipped and why.
+When exhausted, report it upward. If this skill was entered from the `orchestration` skill, the orchestrator resolves a substitute from that skill's merged `fallbacks:` map (`.herdrpowers/config.yaml` over `roles.yaml`) and re-delegates there. Standalone, run the work in the orchestrator pane and say which agent was skipped and why.
 
 Record the exhausted agent type for the rest of the task and stop routing to it, so one exhausted agent does not burn a retry on every subsequent delegation.

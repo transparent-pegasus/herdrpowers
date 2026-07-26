@@ -2,7 +2,28 @@
 
 herdrpowers has no in-process subagents and no named agent personas. Work is delegated to **sibling agent panes inside herdr**, and roles bind to *agent types*, not to reserved panes or specific tools. Any idle pane of the right type can take any task; a pane that just finished a review can take a coding task next.
 
-Role assignments live in one swappable file: [`skills/orchestration/roles.yaml`](../skills/orchestration/roles.yaml). To change who does what, edit only that file — the skills speak in roles, never in tool names.
+Role assignments and review gates resolve from two files, in order:
+
+1. **`<repo-root>/.herdrpowers/config.yaml`** — the target repository's own configuration, written by `/init`. Wins key by key. This is where you change who does what and which reviews run.
+2. **[`skills/orchestration/roles.yaml`](../skills/orchestration/roles.yaml)** — the pack's shipped defaults, supplying every key the repo file omits.
+
+Both share one schema: `roles:`, `fallbacks:`, `reviews:`. Customize the repo file, not `roles.yaml` — plugin installs are read-only, and editing a checked-in copy makes the pack diff-dirty against upstream. The skills speak in roles and gate names, never in tool names.
+
+## Review Gates
+
+Every review in the pack is individually togglable under `reviews:`, with two knobs each: `enabled` and the `role` that performs it.
+
+| Gate | Runs in | Off means |
+|---|---|---|
+| `plan-double-review` | `/plan`, `/full_cycle` | Plans reach the user for approval unreviewed |
+| `documentation-impact-review` | `/execute`, `/full_cycle`, `/quick` | No pre-implementation sweep for non-code files |
+| `task-review` | `pane-driven-development` | A task completes on the implementing pane's own report |
+| `fix-round-re-review` | the fix loop | Fix rounds close on the fixing pane's word; the five-round cap still applies |
+| `final-branch-review` | `/execute`, `/execute_parallel`, `/full_cycle`, `/quick` | The branch reaches the integration decision unreviewed |
+
+Two things no configuration changes: **a pane never reviews work it wrote**, and **the plan reviews that do run come from two different agent types**. A disabled gate removes a review; it never converts one into a self-review.
+
+**A disabled gate is named in every final report**, alongside any role that fell back and any review that degraded for lack of panes — so nobody later mistakes an unreviewed branch for a reviewed one. Configuration is input: it is read once before the first delegation and never written from inside a run.
 
 ## The Roles
 
@@ -41,7 +62,7 @@ The older design separated a `test-engineer` from a `code-reviewer` so nobody gr
 
 An agent type is exhausted when its output says the usage or rate limit is reached, or when two delegations to two different idle panes of that type both come back with no completion marker and no work done. Exhaustion is a property of the agent type, not of one pane.
 
-The orchestrator then takes the first substitute from the `fallbacks:` map in `roles.yaml` that has a usable idle pane, re-delegates the same instruction unchanged, and routes around the exhausted type for the rest of the task. Every fallback is named in the final report.
+The orchestrator then takes the first substitute from the resolved `fallbacks:` map that has a usable idle pane, re-delegates the same instruction unchanged, and routes around the exhausted type for the rest of the task. Every fallback is named in the final report.
 
 If no substitute is available, the work runs in the orchestrator pane when that is safe, and the report says which independence was lost.
 
