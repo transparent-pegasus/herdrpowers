@@ -1,6 +1,6 @@
 ---
 name: orchestration
-description: "Route every task received directly from the user through the pane that received it (the orchestrator) in herdr unless the user explicitly denies orchestration. Does NOT apply to tasks delegated from another pane — execute those yourself, never re-delegate. Role assignments and review gates come from the repository's .herdrpowers/config.yaml, falling back to the pack's roles.yaml defaults: planning/design is done by the orchestrator and double-reviewed by Reviewer agents; complex coding goes to Coder agents; everything else goes to Generalist agents, via using-herdr-sibling-panes. Every review gate is individually togglable, and a disabled gate is named in the final report. Roles bind to agent types, not reserved panes — any idle pane of the right type can take any task, and an exhausted agent is replaced by its substitute from the fallbacks map."
+description: "Route every task received directly from the user through the pane that received it (the orchestrator) in herdr unless the user explicitly denies orchestration. Does NOT apply to tasks delegated from another pane — execute those yourself, never re-delegate. Routing comes from the repository's .herdrpowers/config.yaml, falling back to the pack's roles.yaml defaults: a role list plus a role and a mode assigned to every delegation task — implementation, tests, chores, verification, and each review. Delegation runs through using-herdr-sibling-panes. With the shipped assignments, planning/design is done by the orchestrator and double-reviewed by Reviewer agents, complex coding goes to Coder agents, and the rest to Generalist agents. Every task is reassignable and every review individually togglable; any non-default assignment or disabled review is named in the final report. Roles bind to agent types, not reserved panes — any idle pane of the right type can take any task, and an exhausted agent is replaced by its substitute from the fallbacks map."
 ---
 
 # Orchestration
@@ -12,29 +12,60 @@ Two files answer "who does what, and which reviews run", in this order:
 1. **`<repo-root>/.herdrpowers/config.yaml`** — the target repository's own configuration, written by the init workflow. Wins key by key.
 2. **[`roles.yaml`](roles.yaml)** — the pack's shipped defaults. Supplies every key the repo file omits.
 
-Read both at the start of every orchestrated task (the repo file may be absent — that is normal, and means defaults apply throughout). They share one schema: `roles:` (role → agent type), `fallbacks:` (agent → substitutes), `reviews:` (gate → `enabled` + `role`). Merging is per key, not per file: a repo config that sets only `reviews.task-review.enabled` keeps every default role assignment.
+Read both at the start of every orchestrated task (the repo file may be absent — that is normal, and means defaults apply throughout). They share one schema:
 
-**Customize in the repo file, never in `roles.yaml`.** Plugin installations are read-only, so `roles.yaml` is not editable there at all; on checked-in copies, editing it makes the pack diff-dirty against upstream. The rest of this skill refers to roles and gates by name, never to tool names.
+- **`roles:`** — the role list: each role and the agent type(s) it binds to.
+- **`fallbacks:`** — agent → ordered substitutes, for when an agent cannot take work.
+- **`assignments:`** — every delegation task, each with the role that performs it.
 
-If the repo has no `.herdrpowers/config.yaml` and the user wants to change an assignment or turn a review off, run the init workflow (`/herdrpowers:init`, or `commands/init.md`) — do not edit `roles.yaml`.
+Merging is per key, not per file: a repo config that sets only `assignments.chores.role` keeps every other assignment, every role binding, and every fallback at its default.
+
+**Customize in the repo file, never in `roles.yaml`.** Plugin installations are read-only, so `roles.yaml` is not editable there at all; on checked-in copies, editing it makes the pack diff-dirty against upstream. The rest of this skill refers to roles and task names, never to tool names.
+
+If the repo has no `.herdrpowers/config.yaml` and the user wants to reassign a task, change a mode, or turn a review off, run the init workflow (`/herdrpowers:init`, or `commands/init.md`) — do not edit `roles.yaml`.
 
 **Never write either file from inside an orchestrated run.** The configuration is input, resolved once before the first delegation. Rewriting it mid-run to route around an unavailable agent or to escape a review gate falsifies the terms the run reported under; unavailability is what `fallbacks:` and honest degradation are for.
 
-## Review gates
+## Delegation tasks and their assignments
 
-Each entry under `reviews:` has two knobs: `enabled` (does this gate run at all) and `role` (which role performs it). Resolve every gate before the workflow's first delegation, not when you reach it.
+`assignments:` is the routing table. Read it instead of assuming a route: every unit of work this pack hands out appears there, with the same knobs.
 
-| Gate | Runs in | Off means |
+- **`role`** — which role from `roles:` performs the task.
+- **`mode`** — where it runs: `delegate` (a fresh idle pane of that role), `orchestrator` (the orchestrator pane itself, nothing delegated), or `implementer` (the pane that already owns the task does it).
+- **`enabled`** — review tasks only. `false` removes the gate entirely. Work tasks are mandatory: to stop delegating one, set `mode: orchestrator` — never `enabled: false`.
+
+Resolve every task the workflow will touch before its first delegation, not when you reach it.
+
+**Work tasks** — these always happen; the assignment decides who and where:
+
+| Task | Default | Covers |
 |---|---|---|
-| `plan-double-review` | `/plan`, `/full_cycle` | The plan goes straight to the user for approval, unreviewed |
-| `documentation-impact-review` | `/execute`, `/execute_parallel`, `/full_cycle`, `/quick` | No pre-implementation sweep for non-code files |
-| `task-review` | `pane-driven-development` | A task completes on the implementing pane's own report |
-| `fix-round-re-review` | `pane-driven-development` fix loop | Fixes are taken on the fixing pane's word; the round still counts against the five-round cap |
-| `final-branch-review` | `/execute`, `/execute_parallel`, `/full_cycle`, `/quick` | The branch reaches the integration decision unreviewed |
+| `plan-and-design` | planning-design / orchestrator | Brainstorming, design docs, implementation plans |
+| `complex-coding` | coder / delegate | Implementation over the "Complex coding boundary" below |
+| `simple-coding` | generalist / delegate | Localized, pattern-following edits under that boundary |
+| `chores` | generalist / delegate | Lookups, file moves, log gathering, mechanical edits, lint/format runs |
+| `test-authoring` | coder / implementer | Writing a task's tests |
+| `review-fixes` | coder / implementer | Fixing review findings |
+| `verification` | generalist / delegate | Running the repo's baseline and supplemental verification commands |
 
-**A disabled gate is named in the final report**, next to any role that fell back and any review that degraded for lack of panes. The user turned it off; the report says so, every run, so nobody later mistakes an unreviewed branch for a reviewed one.
+**Review tasks** — optional gates:
 
-**Disabling a gate never relaxes independence for the gates that stay on.** A pane never reviews work it wrote, and the two plan reviews still come from two different agent types. If a config asks for something that violates that — the same agent type in both Reviewer slots, or a review routed back to the implementing pane — honor the independence rule, ignore that part of the config, and say so in the report.
+| Task | Default | Runs in | Off means |
+|---|---|---|---|
+| `plan-double-review` | reviewer / delegate | `/plan`, `/full_cycle` | The plan goes straight to the user for approval, unreviewed |
+| `documentation-impact-review` | planning-design / orchestrator | `/execute`, `/execute_parallel`, `/full_cycle`, `/quick` | No pre-implementation sweep for non-code files |
+| `task-review` | coder / delegate | `pane-driven-development` | A task completes on the implementing pane's own report |
+| `fix-round-re-review` | coder / delegate | `pane-driven-development` fix loop | Fixes are taken on the fixing pane's word; the round still counts against the five-round cap |
+| `final-branch-review` | coder / delegate | `/execute`, `/execute_parallel`, `/full_cycle`, `/quick` | The branch reaches the integration decision unreviewed |
+
+**Every non-default assignment, every non-default mode, and every disabled review is named in the final report**, next to any role that fell back and any review that degraded for lack of panes. The user configured it; the report says so, every run, so nobody later mistakes an unreviewed branch for a reviewed one, or a self-tested one for independently tested.
+
+### What no assignment can change
+
+- **A pane never reviews work it wrote.** Disabling a review removes it; it never converts one into a self-review. If a config routes a review to the implementing pane, honor the independence rule, ignore that part of the config, and say so in the report.
+- **The plan reviews that do run come from two different agent types.** A config that would put the same type in both Reviewer slots is overridden the same way.
+- **`test-authoring: delegate` is allowed but changes where independence comes from.** By default the implementing pane writes its own tests, and independence comes from the reviewer auditing test code the implementer wrote. Route test authoring to a separate pane and that pairing is gone — the report must then name which pane wrote the tests. Do not silently drop either half.
+- **`review-fixes` escalates regardless of mode.** Fix-loop rounds 4-5 go to a fresh pane of an escalated agent type even when the mode is `implementer`, per "Escalation is a type swap".
 
 ## Role assignments
 
@@ -50,27 +81,32 @@ Use `using-herdr-sibling-panes` for every delegation. Submit through its bundled
 
 ## Task routing
 
-1. **Planning / design**: the orchestrator does the planning and design work itself, then sends the resulting plan for double review to both Reviewer agents with the same self-contained task.
-2. **Complex coding**: delegate to a Coder agent. See "Complex coding boundary" below.
-3. **Everything else**: delegate to a Generalist agent — simple coding, search, file inspection, tests, lint, formatting, and other mechanical or routine operations.
+Routing is two steps: name the delegation task, then read its assignment.
 
-When categories overlap, use the heavier category (planning/design > complex coding > everything else).
+1. **Name the task.** Classify the work against the task list above: design work is `plan-and-design`; coding splits into `complex-coding` and `simple-coding` at the boundary below; lookups, moves, log gathering, and lint/format runs are `chores`; running verification commands is `verification`. When a piece of work spans tasks, use the heavier one (`plan-and-design` > `complex-coding` > `simple-coding` > `chores`).
+2. **Read its assignment.** Take `role` and `mode` from `assignments:`. `mode: delegate` → any idle pane of that role's agent type. `mode: orchestrator` → do it here, in this pane. Do not substitute your own judgment for the configured route; a repo that sent `simple-coding` to the Coder role meant it.
 
 Every delegation must satisfy the "Delegation contract" below.
 
 ## Development-cycle routing
 
-When this skill drives one of the pack's workflows (`/herdrpowers:execute`, `execute_parallel`, `full_cycle`, `quick`), the mapping is fixed:
+When this skill drives one of the pack's workflows (`/herdrpowers:execute`, `execute_parallel`, `full_cycle`, `quick`), the same table governs — there is no separate hard-coded mapping. The defaults produce:
 
-* **Implementation tasks, test authoring, and code review** → Coder. The pane that writes tests owns RED-GREEN-REFACTOR per `test-driven-development`; say so in the brief. There is no separate test-writing or reviewing agent type — a Coder pane does both.
-* **Chores that come up while executing a plan** — lookups, file moves, log gathering, mechanical edits, lint/format runs → Generalist.
-* **Plan and design** stay with the orchestrator, double-reviewed per "Plan/design double review" below.
+* **Implementation tasks** → the `complex-coding` / `simple-coding` assignment, by default a Coder pane.
+* **Tests** → the `test-authoring` assignment, by default `mode: implementer`: the pane that implements a task writes its tests and owns RED-GREEN-REFACTOR per `test-driven-development`. Say so in the brief.
+* **Code review** → the `task-review` and `final-branch-review` assignments, by default a Coder pane other than the implementer's.
+* **Chores that come up while executing a plan** → the `chores` assignment, by default a Generalist pane.
+* **Plan and design** → the `plan-and-design` assignment, by default the orchestrator, gated by `plan-double-review`.
 
-**Review independence** comes from a fresh pane context, not from a different tool: every delegation starts by resetting the target session, so a reviewing pane never sees the implementing pane's reasoning. Where an idle pane of a different agent type is available, prefer it for review over the type that implemented the change. Never send a change back for review to the pane that wrote it.
+A repo that reassigns any of these gets its route honored; the workflow names every non-default assignment and mode in its final report.
+
+**Review independence** comes from a fresh pane context, not from a different tool: every delegation starts by resetting the target session, so a reviewing pane never sees the implementing pane's reasoning. Where an idle pane of a different agent type is available, prefer it for review over the type that implemented the change. Never send a change back for review to the pane that wrote it — no assignment overrides that.
 
 ## Complex coding boundary
 
-Coding work is **complex** (→ Coder) when ANY of the following holds:
+This boundary decides which task name the work gets — `complex-coding` or `simple-coding` — not which role it goes to. The assignment does that.
+
+Coding work is `complex-coding` when ANY of the following holds:
 
 * **Cross-cutting change**: the change spans 3+ files or 2+ modules/layers whose interactions must stay consistent (e.g. API + client + schema).
 * **Design freedom**: there is no single obvious implementation — data structures, interfaces, or algorithms must be chosen among meaningful alternatives.
@@ -79,15 +115,15 @@ Coding work is **complex** (→ Coder) when ANY of the following holds:
 * **Risky refactor**: behavior must be preserved while structure changes, and existing tests do not fully pin the behavior down.
 * **Algorithmic or performance work**: correctness or complexity analysis is required, not just wiring code together.
 
-Coding work is **simple** (→ Generalist) when ALL of the following hold:
+Coding work is `simple-coding` when ALL of the following hold:
 
 * The change is localized (1–2 files) and the intended edit can be stated precisely up front.
 * It follows an existing pattern in the codebase (add a similar handler, field, test case, config entry).
 * Failure is cheap and visible — a wrong result is caught immediately by tests, types, lint, or a quick run.
 
-Examples: renaming a symbol, adding a CRUD endpoint that mirrors an existing one, writing tests for pinned-down behavior, bumping a dependency, fixing a lint/type error → Generalist. Introducing a new subsystem, reworking the streaming pipeline, fixing a race condition, changing an interface used across modules → Coder.
+Examples: renaming a symbol, adding a CRUD endpoint that mirrors an existing one, writing tests for pinned-down behavior, bumping a dependency, fixing a lint/type error → `simple-coding`. Introducing a new subsystem, reworking the streaming pipeline, fixing a race condition, changing an interface used across modules → `complex-coding`.
 
-Default when uncertain: treat it as complex and send it to the Coder — a misrouted simple task costs little there, while a complex task misrouted to the Generalist produces subtle breakage.
+Default when uncertain: `complex-coding`. With the default assignments a misrouted simple task costs little on the Coder, while a complex task misrouted to the Generalist produces subtle breakage. A repo that assigns both task names to the same role makes this distinction moot — that is a legitimate configuration.
 
 ## Plan/design double review
 

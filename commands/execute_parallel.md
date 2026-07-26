@@ -22,8 +22,7 @@ Do not edit workflow files unless the user's current request explicitly asks to 
 
 Every dispatch in this workflow goes through the `orchestration` skill, with `using-herdr-sibling-panes` as the transport. Read both before the first delegation, and resolve the repository's assignments and review gates as `orchestration` describes: `.herdrpowers/config.yaml` first, then `orchestration/roles.yaml` for anything it omits. Every gate this workflow would run is resolved up front; a gate set to `enabled: false` is skipped and named in the final report.
 
-- Implementation tracks, test authoring, and code review → **Coder** panes.
-- Chores that come up while executing the plan (lookups, file moves, log gathering, mechanical edits, lint/format runs) → **Generalist** panes.
+Routing comes from `assignments:`, not from this file. With the shipped defaults that means: implementation tracks (`complex-coding` / `simple-coding`), `task-review`, and `final-branch-review` on **Coder** panes; `chores` and `verification` on **Generalist** panes; `test-authoring` and `review-fixes` on the pane that owns the track. A repo that reassigns any of them gets its route honored — read the table, do not assume these defaults.
 - Track extraction, integration, and final synthesis stay with the orchestrator.
 - In-process subagents are not used. Do not dispatch the Agent tool for workflow work.
 
@@ -100,7 +99,7 @@ Proceed to Step 6 only when verification evidence is fresh and successful.
 If any task is discovered to be coupled, conflicting, or blocked on another track, stop parallel execution for that task and continue it sequentially.
 
 6. Final Code Review
-Gate: `reviews.final-branch-review`. When it is disabled, skip this step and tell the user the branch is reaching the integration decision unreviewed.
+Gate: `assignments.final-branch-review`. When it is disabled, skip this step and tell the user the branch is reaching the integration decision unreviewed.
 Inform the user that the final review is starting.
 Read and use the requesting-code-review skill to delegate a whole-branch review to a fresh pane over the fully integrated changeset on the coordination branch.
 Fix any critical or important issues reported — one fix delegation carrying the complete findings list, not one pane per finding.
@@ -127,5 +126,5 @@ Do not assume merge. Execute only the chosen option. Per-track worktrees whose w
 - Branch every worktree from `<BASE_BRANCH>`.
 - If tests fail or errors occur, pause and use the systematic-debugging skill.
 - Before claiming that verification passed or the task is complete, use `verification-before-completion`.
-- Name in the final report every role that fell back to a substitute agent, every review gate disabled in `.herdrpowers/config.yaml`, and every step that ran in the orchestrator pane instead of being delegated.
+- Name in the final report every role that fell back to a substitute agent, every non-default assignment or mode and every disabled review from `.herdrpowers/config.yaml`, and every step that ran in the orchestrator pane instead of being delegated.
 - Read the specific `SKILL.md` file for a skill before invoking it.

@@ -1,5 +1,5 @@
-# Shipped defaults for the orchestration skill: who does what, and which
-# review gates run.
+# Shipped defaults for the orchestration skill: the role list, and the
+# role assigned to every delegation task.
 #
 # THIS FILE IS THE PACK'S DEFAULT, NOT THE PLACE TO CUSTOMIZE A REPO.
 # A target repository overrides any key below in its own
@@ -7,65 +7,122 @@
 # key by key, and anything it omits falls back here. Plugin installations are
 # read-only, so the repo file is the only editable layer on those installs.
 # See "Configuration resolution" in SKILL.md.
-#
-# Roles bind to agent types, not reserved panes: at delegation time,
-# any idle pane of the matching agent type can take the task.
 
+# ---------------------------------------------------------------------------
+# Role list. Roles bind to agent types, not to reserved panes: at delegation
+# time, any idle pane of the matching agent type can take the task.
+# `orchestrator` is not an agent type — it means the pane the user typed into.
+# ---------------------------------------------------------------------------
 roles:
   planning-design:
     description: Planning and design work
-    agent: orchestrator # runs in the orchestrator pane itself
+    agent: orchestrator
   reviewer:
-    description: Independent double review of plans and designs
-    agents: # one review each, independent
+    description: Independent review of plans and designs — one review per entry
+    agents:
       - codex
       - cursor
   coder:
     description: >-
       Complex coding (see "Complex coding boundary" in SKILL.md), plus test
-      authoring and code review of implemented changes. The pane that writes
-      tests owns RED-GREEN-REFACTOR; review always goes to a different pane
-      than the one that implemented the change.
+      authoring and code review of implemented changes.
     agent: codex
   generalist:
-    description: Everything else — simple coding, search, file inspection, tests, lint, routine operations
+    description: Simple coding, search, file inspection, tests, lint, routine operations
     agent: cursor
 
 # Substitutes for an agent that cannot take work right now — usage/rate limit
 # reached, no pane of that type in the session, or every pane of that type
-# crashed and would not restart. See "Exhaustion and fallback" in SKILL.md for
-# what counts as exhausted and how a substitute is chosen.
+# crashed and would not restart. See "Exhaustion and fallback" in SKILL.md.
 #
 # Tried left to right; the first substitute with a usable idle pane wins.
 # An agent with no entry here has no substitute.
 fallbacks:
   cursor: [grok]
 
-# Review gates. Every gate has exactly two knobs: whether it runs, and which
-# role performs it. `enabled: false` removes the gate from every workflow that
-# would otherwise run it — the workflow must then name the disabled gate in its
-# final report, because a missing review is missing independence.
+# ---------------------------------------------------------------------------
+# Delegation tasks, each assigned a role. This is the routing table: the skill
+# reads it instead of hard-coding "implementation goes to Coder".
 #
-# Disabling a gate never relaxes the independence rule for the gates that stay
-# on: a pane never reviews work it wrote.
-reviews:
+# Every task takes the same knobs:
+#   role     — which role from the list above performs it
+#   mode     — where it runs:
+#                delegate     a fresh idle pane of `role`, via
+#                             using-herdr-sibling-panes
+#                orchestrator the orchestrator pane itself; nothing delegated
+#                implementer  the pane that already owns the task does it
+#   enabled  — review tasks only: `false` removes the gate entirely.
+#              Work tasks are mandatory; to stop delegating one, set
+#              `mode: orchestrator` rather than disabling it.
+#
+# Every non-default assignment, every non-default mode, and every disabled
+# review is named in the workflow's final report.
+# ---------------------------------------------------------------------------
+assignments:
+
+  # --- work tasks (mandatory; `mode` decides whether they are delegated) ---
+
+  plan-and-design:
+    description: Brainstorming, design docs, and implementation plans
+    role: planning-design
+    mode: orchestrator # the orchestrator holds the design context; delegating loses it
+  complex-coding:
+    description: Implementation tasks over the "Complex coding boundary" in SKILL.md
+    role: coder
+    mode: delegate
+  simple-coding:
+    description: Localized, pattern-following edits under that same boundary
+    role: generalist
+    mode: delegate
+  chores:
+    description: Lookups, file moves, log gathering, mechanical edits, lint/format runs
+    role: generalist
+    mode: delegate
+  test-authoring:
+    description: >-
+      Writing a task's tests. `mode: implementer` means the pane implementing
+      the task writes them and owns RED-GREEN-REFACTOR. Setting `delegate`
+      restores a separate test author: independence then no longer comes from
+      the reviewer auditing test code the implementer wrote, so the workflow
+      must name which pane wrote the tests in its report.
+    role: coder
+    mode: implementer
+  review-fixes:
+    description: >-
+      Fixing review findings. `mode: implementer` sends them back to the pane
+      that wrote the code (fix-loop rounds 1-3); rounds 4-5 escalate to a fresh
+      pane regardless, per "Escalation is a type swap" in SKILL.md.
+    role: coder
+    mode: implementer
+  verification:
+    description: Running the repo's baseline and supplemental verification commands
+    role: generalist
+    mode: delegate
+
+  # --- review tasks (optional; `enabled: false` removes the gate) ---
+
   plan-double-review:
     description: Independent review of a plan or design before approval (/plan, /full_cycle)
+    role: reviewer
+    mode: delegate
     enabled: true
-    role: reviewer # one review per agent type listed under roles.reviewer.agents
   documentation-impact-review:
     description: Pre-implementation sweep for non-code files the change will invalidate
-    enabled: true
     role: planning-design
+    mode: orchestrator
+    enabled: true
   task-review:
     description: Per-task gate in pane-driven-development — spec compliance + code quality
-    enabled: true
     role: coder
+    mode: delegate
+    enabled: true
   fix-round-re-review:
     description: Scoped verification of one fix round's diff (re-review-brief.md)
-    enabled: true
     role: coder
+    mode: delegate
+    enabled: true
   final-branch-review:
     description: Broad whole-branch review before the integration decision
-    enabled: true
     role: coder
+    mode: delegate
+    enabled: true

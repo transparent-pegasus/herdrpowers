@@ -31,10 +31,10 @@ Rules:
 8. Before claiming completion, use the `verification-before-completion` skill;
    on failures, use `systematic-debugging`.
 9. `<KEY>` placeholders resolve from the `Herdrpowers Configuration` section in
-   this file. Role assignments and review gates resolve from
-   `.herdrpowers/config.yaml`, which is read once before the first delegation
-   and never written from inside a run. Any review gate disabled there is named
-   in the workflow's final report.
+   this file. Routing resolves from `.herdrpowers/config.yaml`: a role list plus
+   a role and a mode for every delegation task. It is read once before the first
+   delegation and never written from inside a run. Any non-default assignment or
+   disabled review is named in the workflow's final report.
 ```
 
 For checked-in copies, adjust workflow invocation to how your tool reads `commands/` (slash commands, skills, or direct file reads — see [workflows.md](./workflows.md)).

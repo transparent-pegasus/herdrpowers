@@ -37,7 +37,7 @@ Save the plan to `<PLAN_PATH_PATTERN>`.
 Proceed directly to Step 3 — do not ask for approval yet.
 
 3. Independent Double Review
-Gate: `reviews.plan-double-review`. When it is disabled, skip this step, tell the user the plan is going to approval unreviewed, and go to Step 4.
+Gate: `assignments.plan-double-review`. When it is disabled, skip this step, tell the user the plan is going to approval unreviewed, and go to Step 4.
 Inform the user that the plan goes to independent review before approval.
 Resolve the Reviewer role from the merged configuration and delegate the **same self-contained review request** to one idle pane of each Reviewer agent type, in separate panes, with no shared draft opinion between them. The number of reviews is the length of the resolved `roles.reviewer.agents` list.
 Each review request states: the plan file path, the design doc path, the absolute repository path, that the review is read-only, the report-file path under `<REPORT_DIRECTORY>`, a unique completion marker, and that the recipient must execute the review itself and must not re-delegate.
@@ -55,5 +55,5 @@ Present the resolved plan, the findings, and their resolutions to the user, and 
 - Code is not touched until the resolved plan is approved.
 - The remaining development-cycle responsibilities live in `/execute`, `/execute_parallel`, and `/full_cycle`, not in `<REPO_INSTRUCTION_FILES>`.
 - If the design discussion changes scope materially, revisit Brainstorming before writing the plan.
-- Name in the final report which reviews ran, which were skipped for lack of panes, which were disabled in `.herdrpowers/config.yaml`, and any role that fell back to a substitute agent.
+- Name in the final report which reviews ran, which were skipped for lack of panes, which were disabled in `.herdrpowers/config.yaml`, any non-default assignment or mode, and any role that fell back to a substitute agent.
 - Read the specific `SKILL.md` file for a skill before invoking it.

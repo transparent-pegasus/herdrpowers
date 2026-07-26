@@ -22,9 +22,7 @@ Do not edit workflow files unless the user's current request explicitly asks to 
 
 Every dispatch in this workflow goes through the `orchestration` skill, with `using-herdr-sibling-panes` as the transport. Read both before the first delegation, and resolve the repository's assignments and review gates as `orchestration` describes: `.herdrpowers/config.yaml` first, then `orchestration/roles.yaml` for anything it omits. Every gate this workflow would run is resolved up front; a gate set to `enabled: false` is skipped and named in the final report.
 
-- Planning and design stay with the orchestrator — the pane the user typed the request into — and are double-reviewed by **Reviewer** agents.
-- Implementation tasks, test authoring, and code review → **Coder** panes.
-- Chores that come up while executing the plan (lookups, file moves, log gathering, mechanical edits, lint/format runs) → **Generalist** panes.
+Routing comes from `assignments:`, not from this file. With the shipped defaults that means: `plan-and-design` in the orchestrator pane, double-reviewed by **Reviewer** agents; `complex-coding` / `simple-coding`, `task-review`, and `final-branch-review` on **Coder** panes; `chores` and `verification` on **Generalist** panes; `test-authoring` and `review-fixes` on the pane that owns the task. A repo that reassigns any of them gets its route honored — read the table, do not assume these defaults.
 - In-process subagents are not used. Do not dispatch the Agent tool for workflow work.
 
 **Every delegation** states the absolute worktree path (and requires the pane to confirm it is there first), the exact scope, the edit policy, the report-file path under `<REPORT_DIRECTORY>`, a unique completion marker, and the prohibition on re-delegating. Read results from the report file, not from pane scrollback, and re-run the decisive command rather than trusting a "verified" claim.
@@ -43,7 +41,7 @@ Proceed to Step 2 as soon as the last clarifying question has been answered and 
 Inform the user that you will create an implementation plan.
 Read and use the writing-plans skill to break the design into small achievable tasks.
 Save the plan to `<PLAN_PATH_PATTERN>`.
-Gate: `reviews.plan-double-review`. When it is disabled, skip the review and say the plan is going to approval unreviewed.
+Gate: `assignments.plan-double-review`. When it is disabled, skip the review and say the plan is going to approval unreviewed.
 Otherwise the plan is not complete when it is written. Delegate the same self-contained review request to one idle pane of each Reviewer agent type in the merged configuration, independently and in separate panes. Never send the plan for review to the pane that drafted it. Degrade to one review, or to a critical self-review, when Reviewer agents are unavailable — and say which happened.
 Resolve every finding, present the resolved plan with the findings and their resolutions, and ask the user to approve.
 Proceed to Step 3 only after the user approves the resolved plan. Code is not touched before that.
@@ -54,7 +52,7 @@ Read and use the using-git-worktrees skill to set up a new branch and worktree (
 Record the worktree's absolute path — every delegation brief must carry it.
 
 4. Documentation Impact Review
-Gate: `reviews.documentation-impact-review`. When it is disabled, skip to Step 5 and name the skipped gate in the final report.
+Gate: `assignments.documentation-impact-review`. When it is disabled, skip to Step 5 and name the skipped gate in the final report.
 Inform the user that you will identify every file that must be updated if the implementation changes behavior, contracts, prompts, schema, or workflow instructions.
 List the expected non-code follow-up targets before implementation begins, including `<REPO_INSTRUCTION_FILES>`, any affected files under `docs/`, any agent-instruction directories present (such as `.claude/`, `.agents/`, `commands/`), example env/config files, and CI/deploy definitions.
 Proceed to Step 5 only after the update target list is explicit.
@@ -62,8 +60,8 @@ Proceed to Step 5 only after the update target list is explicit.
 5. Implementation and Testing
 Inform the user that implementation and testing will begin.
 Read and use the pane-driven-development skill to execute the plan's tasks, delegating a fresh pane per task.
-Rule requirement: the Coder pane that implements a task also writes its tests and owns RED-GREEN-REFACTOR per the test-driven-development skill. Say so in every implementation brief. There is no separate test-authoring agent.
-Rule requirement: each task's review goes to a fresh pane — never the pane that implemented it, and preferably a different agent type.
+Rule requirement: with the default `test-authoring: {role: coder, mode: implementer}`, the pane that implements a task also writes its tests and owns RED-GREEN-REFACTOR per the test-driven-development skill. Say so in every implementation brief. If the repo reassigned `test-authoring` to `mode: delegate`, route tests to that assignment instead and name in the report which pane wrote them.
+Rule requirement: the `task-review` assignment always resolves to a fresh pane — never the pane that implemented it, and preferably a different agent type. When that gate is disabled, say so in the report.
 Never run two implementation panes against the same worktree.
 When the plan has tasks that are genuinely independent — no ordering dependency, no overlapping write ownership — switch to `/execute_parallel`'s track extraction rather than serializing them here.
 On any test failure, unexpected behavior, or bug — in a pane or in the orchestrator — use the systematic-debugging skill before proposing or applying a fix. No speculative fixes.
@@ -88,7 +86,7 @@ If a required verification command cannot run because Docker, gcloud, or another
 Proceed to Step 8 only when verification evidence is fresh and successful.
 
 8. Final Code Review
-Gate: `reviews.final-branch-review`. When it is disabled, skip to Step 9 and tell the user the branch is reaching the integration decision unreviewed.
+Gate: `assignments.final-branch-review`. When it is disabled, skip to Step 9 and tell the user the branch is reaching the integration decision unreviewed.
 Inform the user that the final review is starting.
 Read and use the requesting-code-review skill to delegate a whole-branch review to a fresh pane over the entire changeset.
 Fix any critical or important issues reported — one fix delegation carrying the complete findings list, not one pane per finding.
@@ -106,5 +104,5 @@ Do not assume merge. Execute only the chosen option, and delete the worktree onl
 - Branch from `<BASE_BRANCH>`, never from a branch the deploy flow does not expect.
 - If tests fail or errors occur, pause and use the systematic-debugging skill.
 - Before claiming that verification passed or the task is complete, use `verification-before-completion`.
-- Name in the final report every role that fell back to a substitute agent, every review gate disabled in `.herdrpowers/config.yaml`, and every step that ran in the orchestrator pane instead of being delegated.
+- Name in the final report every role that fell back to a substitute agent, every non-default assignment or mode and every disabled review from `.herdrpowers/config.yaml`, and every step that ran in the orchestrator pane instead of being delegated.
 - Read the specific `SKILL.md` file for a skill before invoking it.

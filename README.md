@@ -8,7 +8,7 @@ It is the merge of two packs: the orchestration and delegation transport from [h
 
 - **One orchestrator, many panes.** Whichever pane the user types into owns the task: it plans, delegates, integrates, and reports. A pane that receives a delegated instruction executes it in place and never re-delegates.
 - **Independence from fresh context.** Every delegation resets the target session. The pane that writes code never reviews it; plans get two independent reviews from two agent types before approval. There are no named `test-engineer` / `code-reviewer` personas — the property comes from the reset, not from the label.
-- **TDD, owned by the implementer.** The pane implementing a task writes that task's tests and owns RED-GREEN-REFACTOR. Assertions come from the requirements, never from the code, and the RED run is quoted in the report — which the reviewing pane audits as the only independent check.
+- **TDD, owned by the implementer.** By default the pane implementing a task writes that task's tests and owns RED-GREEN-REFACTOR (the `test-authoring` assignment; reassignable per repo). Assertions come from the requirements, never from the code, and the RED run is quoted in the report — which the reviewing pane audits as the only independent check.
 - **Composer-safe delegation.** Agent CLIs take input through a stateful composer that swallows keys and retains stale text. Submission goes through the bundled `composer-submit.sh`, completion is detected with a unique marker, and results are handed over as **files** — never reconstructed from pane scrollback.
 - **Isolated workspaces.** Feature work happens in a git worktree off `<BASE_BRANCH>`, one implementation pane per worktree.
 - **Degrade honestly.** Outside herdr, or with no idle pane, the work runs inline — and the report says which steps were not delegated and which independence was lost.
@@ -68,19 +68,26 @@ Then ask the agent to "follow the workflow in `commands/full_cycle.md`" or "use 
 Plugin files are read-only, so repo-specific values are never written into the pack. `/init` detects the repo's tooling, confirms the values with you, and writes two things into the target repo:
 
 - a `Herdrpowers Configuration` section in `CLAUDE.md` / `AGENTS.md` — every skill and command resolves its `<KEY>` placeholders (`<BASE_BRANCH>`, `<REPORT_DIRECTORY>`, `<TARGETED_TEST_COMMAND>`, `<PLAN_PATH_PATTERN>`, …) from there;
-- `.herdrpowers/config.yaml` — your role assignments and review gates. Every assignment and every review is configurable and individually togglable, overriding the pack's shipped defaults key by key:
+- `.herdrpowers/config.yaml` — a **role list** plus the **role assigned to every delegation task**. Nothing is hard-coded: implementation, tests, chores, verification, and each of the five reviews are all reassignable, overriding the pack's shipped defaults key by key.
 
 ```yaml
-roles:
-  coder: { agent: codex }
-  reviewer: { agents: [codex, cursor] }   # one plan review per entry
-reviews:
-  task-review:          { enabled: true,  role: coder }
-  fix-round-re-review:  { enabled: false, role: coder }   # off: name it in the report
-  final-branch-review:  { enabled: true,  role: coder }
+roles:                                        # role -> agent type(s)
+  coder:      { agent: codex }
+  generalist: { agent: cursor }
+  reviewer:   { agents: [codex, cursor] }     # one plan review per entry
+
+assignments:                                  # task -> role + where it runs
+  complex-coding:      { role: coder,      mode: delegate }
+  chores:              { role: generalist, mode: delegate }
+  test-authoring:      { role: coder,      mode: implementer }  # implementer writes its own tests
+  verification:        { role: generalist, mode: delegate }
+  task-review:         { role: coder,      mode: delegate, enabled: true }
+  fix-round-re-review: { role: coder,      mode: delegate, enabled: false }  # off: named in the report
 ```
 
-Re-run `/init` any time to change them. Two things stay fixed regardless: a pane never reviews work it wrote, and a disabled gate is named in every final report.
+`mode` is `delegate` (a fresh pane of that role), `orchestrator` (this pane, nothing delegated), or `implementer` (the pane that already owns the task). Reviews also take `enabled`; work tasks are never disabled — `mode: orchestrator` is how one stops being delegated.
+
+Re-run `/init` any time to change them. Two things stay fixed regardless: a pane never reviews work it wrote, and every non-default assignment or disabled review is named in the final report.
 
 Then start a feature with `/herdrpowers:full_cycle`, or break it up with `plan` → `execute` / `execute_parallel`. For small changes use `quick`.
 
@@ -99,14 +106,14 @@ The payload is a single tree at the repository root, discovered by each platform
 | **Cursor** | `skills/` (auto) | `commands/` as slash commands (auto) |
 | **Aider / Gemini CLI / others** | read `skills/<name>/SKILL.md` directly | read `commands/<name>.md` directly |
 
-Roles bind to **agent types**, not to platforms: the orchestrator can be any agent CLI, and Coder / Generalist / Reviewer resolve to whatever the repo's `.herdrpowers/config.yaml` says, falling back to `skills/orchestration/roles.yaml`. Change assignments and review gates in the repo file — the pack's defaults stay untouched.
+Roles bind to **agent types**, not to platforms: the orchestrator can be any agent CLI, and Coder / Generalist / Reviewer resolve to whatever the repo's `.herdrpowers/config.yaml` says, falling back to `skills/orchestration/roles.yaml`. Reassign any delegation task, change where it runs, or turn a review off in the repo file — the pack's defaults stay untouched.
 
 ## Repository Structure
 
 ```
 skills/          # 16 skills (single tree, platform-neutral wording)
   herdr/                       vendored official herdr skill (Apache-2.0)
-  orchestration/               routing, roles.yaml defaults, review gates, fallbacks
+  orchestration/               routing, roles.yaml defaults, delegation assignments, fallbacks
   using-herdr-sibling-panes/   the delegation transport + composer scripts
   pane-driven-development/     the per-task loop over panes + brief templates
   …                            planning, TDD, debugging, review, worktrees, docs

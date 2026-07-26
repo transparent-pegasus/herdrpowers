@@ -14,7 +14,7 @@ Every task in this skill is delegated to a **herdr sibling agent pane**, never t
 Two boundaries override anything below:
 
 - **No in-process subagents.** Wherever this document says "dispatch," read "delegate to an idle sibling pane through `using-herdr-sibling-panes`." The Agent tool and named subagent types are not used by this pack.
-- **The Coder pane that writes tests owns RED-GREEN-REFACTOR.** There is no separate test-writing agent. The implementing pane writes the failing test first per `test-driven-development` and reports RED/GREEN evidence. Review independence comes from the *fresh pane context* of the reviewing delegation, not from a different named role.
+- **The pane that writes tests owns RED-GREEN-REFACTOR.** By default (`test-authoring: {role: coder, mode: implementer}`) that is the implementing pane: it writes the failing test first per `test-driven-development` and reports RED/GREEN evidence, and independence comes from the reviewing pane auditing test code its author also implemented. A repo may reassign `test-authoring` to a separate pane — then the report must name which pane wrote the tests, because that pairing no longer holds. Review independence itself comes from the *fresh pane context* of the reviewing delegation, not from a named role, and is never configurable.
 
 Execute the plan by delegating a fresh implementer pane per task, a task review (spec compliance + code quality) after each, and a broad whole-branch review at the end.
 
@@ -163,37 +163,51 @@ before execution begins, not one interrupt per discovery mid-plan. If the
 scan is clean, proceed without comment. The review loop remains the net for
 conflicts that only emerge from implementation.
 
-## Role Selection and Review Gates
+## Delegation Assignments
 
-Routing and gating are `orchestration`'s job, not this skill's. Resolve both at
-the start of execution from the merged configuration it describes —
-`<repo-root>/.herdrpowers/config.yaml` first, then the pack's
+Routing is `orchestration`'s job, not this skill's. Resolve the whole
+`assignments:` table at the start of execution from the merged configuration it
+describes — `<repo-root>/.herdrpowers/config.yaml` first, then the pack's
 `orchestration/roles.yaml` for anything the repo file omits. Resolve once, up
 front; do not re-read per task.
 
-Two gates change this skill's loop:
+Six tasks in that table drive this loop. The default column is what the pack
+ships; the repo file may change any of it:
 
-- **`reviews.task-review: false`** — skip §3 entirely. A task then completes on
+| Task | Default | Where it lands in this skill |
+|---|---|---|
+| `complex-coding` / `simple-coding` | coder / delegate | §1, the implementer delegation |
+| `test-authoring` | coder / implementer | The implementing pane writes its own tests (`test-driven-development`) |
+| `task-review` | coder / delegate | §3 |
+| `review-fixes` | coder / implementer | §4 rounds 1-3 go back to the implementing pane |
+| `fix-round-re-review` | coder / delegate | §4's scoped re-review |
+| `chores` | generalist / delegate | Lookups, file moves, log gathering, mechanical edits found mid-plan |
+
+Plan revisions stay with you, the orchestrator (`plan-and-design`).
+
+Three configurations change the loop's shape:
+
+- **`task-review` disabled** — skip §3 entirely. A task then completes on
   the implementing pane's own report: read it, resolve any concerns, and record
   the completion line. There is no fix loop to enter, because nothing produced
   findings. Name the disabled gate in your final report.
-- **`reviews.fix-round-re-review: false`** — a fix round ends when the fix
+- **`fix-round-re-review` disabled** — a fix round ends when the fix
   report shows the covering tests, the command, and the output. The round still
   counts against the five-round cap, and the breaker still trips at five with
   whatever findings the fixing pane did not claim as fixed. Name the disabled
   gate in your final report.
+- **`test-authoring: {mode: delegate}`** — tests go to a separate pane of that
+  role instead of the implementing one. The implementer's brief then stops
+  carrying RED-GREEN-REFACTOR ownership, and your report must name which pane
+  wrote the tests, because the reviewer is no longer auditing test code its
+  author also implemented.
 
 The `final-branch-review` gate belongs to the calling workflow, not to this
 skill: when it is disabled, skip the Final Review section below.
 
 **Independence is not configurable.** With `task-review` on, the review always
-goes to a pane that did not write the code. No config value relaxes that.
-
-Role assignments come from the same merged configuration:
-
-- **Implementation tasks, test authoring, code review** → Coder.
-- **Chores discovered mid-plan** (lookups, file moves, log gathering, mechanical edits) → Generalist.
-- **Plan revisions** stay with you, the orchestrator.
+goes to a pane that did not write the code, whatever the config says. And
+`review-fixes` escalates at rounds 4-5 to a fresh pane regardless of its mode.
 
 Panes are not reserved per role — pick any idle pane of the matching agent type at delegation time. When no pane of the right type is idle, wait; do not interrupt a working pane. When an agent type is exhausted (usage limit, or two markerless delegations on two panes of that type), take its substitute from the resolved `fallbacks:` map and name the fallback in your final report.
 
@@ -236,7 +250,7 @@ Implementer panes report one of four statuses. Handle each appropriately:
 `systematic-debugging` — root cause before fix, in the pane and in the
 orchestrator:
 1. If it is a context problem, provide more context and re-delegate to the same pane
-2. If the task needs more reasoning, escalate the agent type (see Role Selection)
+2. If the task needs more reasoning, escalate the agent type (see Delegation Assignments)
 3. If the task is too large, break it into smaller pieces
 4. If the plan itself is wrong, escalate to the human
 
@@ -250,8 +264,8 @@ implementation.
 
 ### 3. Review the task
 
-Skip this step when `reviews.task-review` is disabled (see Role Selection and
-Review Gates) — go straight to §5 with the pane's own report.
+Skip this step when `assignments.task-review` is disabled (see Delegation
+Assignments) — go straight to §5 with the pane's own report.
 
 Per-task reviews are task-scoped gates. The broad review happens once, at the
 final whole-branch review. Never skip the task review, and never accept a
@@ -335,7 +349,7 @@ report-file path, and the findings — the report file is the persistent memory
 either way.
 
 **Rounds 4-5 — delegate to a fresh pane of an escalated agent type** (see
-Role Selection), with the brief path, the report-file path, the open findings,
+Delegation Assignments), with the brief path, the report-file path, the open findings,
 and this framing: "A prior pane attempted this task [N] times; you own it now.
 Read the report file for what was tried." A loop that survives three rounds in
 one session usually means that pane cannot see its own problem — fresh eyes and
@@ -349,7 +363,7 @@ contains the covering tests, the command run, and the output; delegate the
 re-review once all three are present. Name the covering test files in the fix
 message — a one-line fix does not need the whole suite.
 
-**The re-review is scoped.** Skipped when `reviews.fix-round-re-review` is
+**The re-review is scoped.** Skipped when `assignments.fix-round-re-review` is
 disabled — the round then closes on the fix report's covering tests, command,
 and output, and the cap still counts it. Otherwise: run
 `scripts/review-package PLAN_FILE FIX_BASE HEAD`
@@ -402,7 +416,7 @@ parked-with-ruling at the cap.
 
 ## Final Review
 
-Skipped when the calling workflow's `reviews.final-branch-review` gate is
+Skipped when the calling workflow's `assignments.final-branch-review` gate is
 disabled; go straight to Finish and say the branch is unreviewed.
 
 The final whole-branch review gets a package too: run

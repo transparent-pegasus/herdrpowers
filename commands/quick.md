@@ -24,9 +24,7 @@ Do not edit workflow files unless the user's current request explicitly asks to 
 
 Resolve the repository's assignments and review gates as `orchestration` describes before the first delegation: `.herdrpowers/config.yaml` first, then `orchestration/roles.yaml` for anything it omits. A gate set to `enabled: false` is skipped and named in the final report.
 
-- The scoped implementation may run in the orchestrator pane — the change is small by definition — or go to a **Coder** pane. Either way the implementer writes its own tests and owns RED-GREEN-REFACTOR.
-- Chores (lookups, log gathering, mechanical edits, lint/format runs) → **Generalist** panes.
-- The final review → a fresh pane that did not write the code, preferably a different agent type.
+Routing comes from `assignments:`, not from this file. The scoped implementation may run in the orchestrator pane — the change is small by definition — or go to the pane its `complex-coding` / `simple-coding` assignment names. With the default `test-authoring: implementer` the implementer writes its own tests and owns RED-GREEN-REFACTOR. `chores` and `verification` follow their assignments. The `final-branch-review` assignment always resolves to a fresh pane that did not write the code, preferably a different agent type.
 - In-process subagents are not used. Do not dispatch the Agent tool for workflow work.
 
 **Degrade, don't block.** If `HERDR_ENV` is unset or no idle sibling agent pane exists, review the change yourself against `requesting-code-review`'s brief and state plainly in the final report that the review was not independent.
@@ -40,7 +38,7 @@ Engage in a design and requirement gathering discussion without writing implemen
 Proceed to Step 2 only after the design is explicit and the user confirms.
 
 2. Documentation Impact Review
-Gate: `reviews.documentation-impact-review`. When it is disabled, skip this step and name the skipped gate in the final report.
+Gate: `assignments.documentation-impact-review`. When it is disabled, skip this step and name the skipped gate in the final report.
 Inform the user that you will identify every file that must be updated if the implementation changes behavior, contracts, prompts, schema, or workflow instructions.
 List the expected non-code follow-up targets before implementation begins, including `<REPO_INSTRUCTION_FILES>`, any affected files under `docs/`, any agent-instruction directories present (such as `.claude/`, `.agents/`, `commands/`), example env/config files, and CI/deploy definitions.
 Proceed to Step 3 only after the update target list is explicit and the user confirms.
@@ -71,7 +69,7 @@ If a required verification command cannot run because Docker, gcloud, or another
 Proceed to Step 6 only when verification evidence is fresh, successful, and the user confirms.
 
 6. Final Code Review
-Gate: `reviews.final-branch-review`. When it is disabled, skip this step and tell the user the change is shipping unreviewed — for a workflow whose only independence is this review, say it plainly.
+Gate: `assignments.final-branch-review`. When it is disabled, skip this step and tell the user the change is shipping unreviewed — for a workflow whose only independence is this review, say it plainly.
 Inform the user that the final review is starting.
 Read the specific `SKILL.md` for `requesting-code-review`, then delegate the review of the entire changeset to a fresh pane that did not write the code.
 Fix any critical or important issues reported.
@@ -84,7 +82,7 @@ Proceed only when the review assesses it as Ready to merge and the user confirms
 - Treat `<REPO_INSTRUCTION_FILES>`, the repository's build/test/deploy configuration, and the latest approved plan as the source of truth for repository-specific commands, environment variables, and deploy flows.
 - Block and require user confirmation at the end of every step. Do not proceed autonomously through the whole cycle.
 - Never let the pane that wrote the code be the pane that reviews it — no configuration relaxes this.
-- Name in the final report every role that fell back to a substitute agent and every review gate disabled in `.herdrpowers/config.yaml`.
+- Name in the final report every role that fell back to a substitute agent, and every non-default assignment or mode and every disabled review from `.herdrpowers/config.yaml`.
 - If tests fail or errors occur, pause and use the `systematic-debugging` skill.
 - Before claiming that verification passed or the task is complete, use `verification-before-completion`.
 - Read the specific `SKILL.md` file for a skill before invoking it.

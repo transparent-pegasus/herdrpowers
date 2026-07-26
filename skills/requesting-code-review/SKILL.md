@@ -11,7 +11,7 @@ Delegate the review to a **fresh herdr sibling pane** to catch issues before the
 
 **Core principle:** Review early, review often. Never review your own work, and never send a change back to the pane that wrote it.
 
-**Gate:** the whole-branch review this skill requests is the `reviews.final-branch-review` gate; per-task reviews are `reviews.task-review`. Both resolve from `.herdrpowers/config.yaml` over the pack's `orchestration/roles.yaml` defaults — see "Review gates" in `orchestration`. A disabled gate means the review does not run and the final report says so. It never means the implementing pane reviews itself.
+**Gate:** the whole-branch review this skill requests is the `assignments.final-branch-review` gate; per-task reviews are `assignments.task-review`. Both resolve from `.herdrpowers/config.yaml` over the pack's `orchestration/roles.yaml` defaults — see "Review gates" in `orchestration`. A disabled gate means the review does not run and the final report says so. It never means the implementing pane reviews itself.
 
 ## When to Request Review
 
