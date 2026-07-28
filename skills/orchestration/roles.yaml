@@ -149,6 +149,6 @@ assignments:
     enabled: true
   final-branch-review:
     description: Broad whole-branch review before the integration decision
-    role: coder
+    role: reviewer
     mode: delegate
     enabled: true
