@@ -92,7 +92,7 @@ Review tasks — same two knobs plus `enabled`, which turns the gate off entirel
 | `final-branch-review` | The branch reaches the integration decision unreviewed |
 
 Rules to state while proposing:
-- Say plainly what each `enabled: false` costs before the user confirms it. Disabling a gate is the user's call; presenting it as free is not.
+- Say plainly what each `enabled: false` costs before the user confirms it. Disabling a gate is the user's call; presenting it as free is not. Mention that `/strict_full_cycle` runs every gate anyway, so a disabled one is skipped by default but reachable on demand.
 - Work tasks are never disabled. To stop delegating one, set `mode: orchestrator`.
 - **A review task assigned to a role that binds to a list of agent types runs once per entry.** Assigning `task-review` or `fix-round-re-review` to such a role multiplies pane usage per task by the list length. Say the arithmetic out loud before the user confirms it.
 - `test-authoring` and `fix-round-test-authoring` decide who writes tests. `mode: delegate` puts them in a pane that never sees the implementation, which costs an extra pane and a throwaway worktree per task; `mode: implementer` collapses them onto the pane whose behavior they cover, leaving the reviewers as the only check on that test code. Either is legitimate; state the trade before the user chooses, because the workflow reports which one ran.
@@ -211,7 +211,7 @@ Re-read every written file and confirm:
 - `.herdrpowers/config.yaml` is not git-ignored (`git check-ignore -v .herdrpowers/config.yaml` must find no matching rule).
 
 8. Report
-List the files written and the final values: the placeholder keys, the role list, and every delegation task with its role and mode. Name explicitly any review set to `enabled: false` and what independence that gives up, and any task moved off its default role or mode. Note that `/plan`, `/execute`, `/execute_parallel`, `/full_cycle`, `/quick`, and the pack's skills now resolve their placeholders from the instruction-file section, and their routing from `.herdrpowers/config.yaml`.
+List the files written and the final values: the placeholder keys, the role list, and every delegation task with its role and mode. Name explicitly any review set to `enabled: false` and what independence that gives up, and any task moved off its default role or mode. Note that `/plan`, `/execute`, `/execute_parallel`, `/full_cycle`, `/strict_full_cycle`, `/quick`, and the pack's skills now resolve their placeholders from the instruction-file section, and their routing from `.herdrpowers/config.yaml`.
 
 ## Execution Requirements
 

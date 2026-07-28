@@ -89,7 +89,7 @@ assignments:                                  # task -> role + where it runs
 
 Re-run `/init` any time to change them. Two things stay fixed regardless: a pane never reviews work it wrote, and every non-default assignment or disabled review is named in the final report.
 
-Then start a feature with `/herdrpowers:full_cycle`, or break it up with `plan` → `execute` / `execute_parallel`. For small changes use `quick`.
+Then start a feature with `/herdrpowers:full_cycle`, or break it up with `plan` → `execute` / `execute_parallel`. For small changes use `quick`. To run the same cycle with every review gate forced on regardless of the `enabled` values above, use `strict_full_cycle`.
 
 ### Updating
 
@@ -117,7 +117,8 @@ skills/          # 16 skills (single tree, platform-neutral wording)
   using-herdr-sibling-panes/   the delegation transport + composer scripts
   pane-driven-development/     the per-task loop over panes + brief templates
   …                            planning, TDD, debugging, review, worktrees, docs
-commands/        # Workflows: init, plan, execute, execute_parallel, full_cycle, quick
+commands/        # Workflows: init, plan, execute, execute_parallel, full_cycle,
+                 #            strict_full_cycle, quick
 docs/            # Human-facing framework docs + instruction-file snippet
 changelogs/      # Upstream-refresh history inherited from superpowers-extended
 .claude-plugin/  # Claude Code plugin + marketplace manifests
@@ -132,7 +133,7 @@ NOTICE           # Third-party attribution (required by Apache-2.0)
 - **[Development Cycle Guide](./docs/development_cycle.md)** — Step-by-step walkthrough of the 7-phase process.
 - **[Roles](./docs/roles.md)** — Orchestrator, Reviewer, Coder, Generalist; `roles.yaml` and fallbacks.
 - **[Skills](./docs/skills.md)** — Catalog of every skill and when to use it.
-- **[Workflows](./docs/workflows.md)** — `/init`, `/full_cycle`, `/plan`, `/execute`, `/execute_parallel`, `/quick`.
+- **[Workflows](./docs/workflows.md)** — `/init`, `/full_cycle`, `/strict_full_cycle`, `/plan`, `/execute`, `/execute_parallel`, `/quick`.
 
 ## What Changed in the Merge
 
