@@ -46,6 +46,8 @@ Review tasks — same knobs plus `enabled`, which removes the gate:
 
 Work tasks are never disabled — `mode: orchestrator` is how one stops being delegated. A repo may also define a role beyond the shipped four and assign tasks to it.
 
+One workflow overrides this column: `/strict_full_cycle` ignores `enabled` and runs every gate above, naming each one it forced on in its report. It changes nothing else — no `role`, no `mode`, no invariant — and never writes the configuration file.
+
 ### One delegation per listed agent type
 
 A role declared with `agents:` (a list) rather than `agent:` runs **one delegation per entry**. That is where a double review comes from — the role, not the task — so assigning a review task to a list role multiplies its pane usage by the list length, and assigning it to a single-agent role makes it a single review. A one-entry list is a deliberate single delegation; an empty list is the same as disabling the task.

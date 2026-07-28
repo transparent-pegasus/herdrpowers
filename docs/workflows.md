@@ -23,6 +23,12 @@ The full development cycle for a new feature or sizeable change, and the pack's 
 
 Use when: starting real feature work.
 
+### `/strict_full_cycle`
+
+`/full_cycle` with every review gate forced on: the resolved configuration's `enabled` key is ignored for review tasks, so a gate the repository turned off runs anyway and is named as forced-on in the final report. Everything else still binds — `role`, `mode`, `roles:`, `fallbacks:`, and every invariant. Strict mode overrides one key, not the routing, and never writes the configuration file.
+
+Use when: the branch must clear every gate the pack defines regardless of how the repository is configured — a release branch, a change on a security or money path, or an unfamiliar repository.
+
 ### `/plan`
 
 Brainstorming, plan creation, and the plan's independent double review. Stops after the resolved plan is approved.
@@ -43,9 +49,9 @@ Use when: the approved plan has tasks that truly can be implemented in parallel 
 
 ### `/quick`
 
-A shortened cycle for small-scoped changes. Keeps brainstorming, documentation impact review, implementation with TDD, documentation update, verification, and an independent final review. Skips separate plan creation and double review, workspace isolation, and integration/cleanup.
+A shortened cycle for small-scoped changes. Keeps brainstorming, workspace isolation off `<BASE_BRANCH>`, documentation impact review, implementation with TDD, documentation update, verification, an independent final review, and the integration handoff. Skips only the separate plan creation and its double review.
 
-Use when: the change is small enough to land without a separate written plan or an isolated worktree. If scope grows, stop and switch to `/full_cycle`.
+Use when: the change is small enough to land without a separate written plan. If scope grows, stop and switch to `/full_cycle`.
 
 ## Guarantees
 
