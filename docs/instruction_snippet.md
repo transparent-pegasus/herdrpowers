@@ -23,7 +23,8 @@ Rules:
    run is quoted in the report, and the report names the test author.
 4. Feature work happens on a branch off `<BASE_BRANCH>`, normally in a git
    worktree (`using-git-worktrees` skill) — never directly on the base branch.
-5. Follow the workflows: `/init` (one-time setup), `/full_cycle`, `/plan`,
+5. Follow the workflows: `/init` (one-time setup), `/full_cycle`,
+   `/strict_full_cycle` (same cycle, every review gate forced on), `/plan`,
    `/execute`, `/execute_parallel`, `/quick`. Stay inside their phases.
 6. Delegated panes write reports to files under `<REPORT_DIRECTORY>` and reply
    with the path plus a completion marker. A "verified" claim is checked

@@ -1,6 +1,6 @@
 # Development Cycle Guide
 
-This guide describes the 7-phase herdrpowers development cycle. The full cycle is driven by the `/full_cycle` workflow; `/plan`, `/execute`, `/execute_parallel`, and `/quick` run structured subsets.
+This guide describes the 7-phase herdrpowers development cycle. The full cycle is driven by the `/full_cycle` workflow — or by `/strict_full_cycle`, which runs the same phases with every review gate forced on regardless of the repository's configuration; `/plan`, `/execute`, and `/execute_parallel` run structured subsets, and `/quick` runs every phase but the written plan and its double review.
 
 Every phase that delegates work does so through the `orchestration` skill to a **herdr sibling agent pane**. Nothing here uses in-process subagents. Outside herdr, each phase degrades to inline execution and the final report says which independence was lost.
 
@@ -104,4 +104,4 @@ The agent is autonomous within a phase but not independent across phases. You:
 - **Provide context**: Answer clarifying questions before the agent proceeds.
 - **Confirm success**: Validate that the implementation meets your expectations before merging.
 
-Every workflow (`/full_cycle`, `/plan`, `/execute`, `/execute_parallel`, `/quick`) blocks for user confirmation between phases. That is by design.
+Every workflow (`/full_cycle`, `/strict_full_cycle`, `/plan`, `/execute`, `/execute_parallel`, `/quick`) blocks for user confirmation between phases. That is by design.
