@@ -42,7 +42,7 @@ Inform the user that you will create an implementation plan.
 Read and use the writing-plans skill to break the design into small achievable tasks.
 Save the plan to `<PLAN_PATH_PATTERN>`.
 Gate: `assignments.plan-double-review`. When it is disabled, skip the review and say the plan is going to approval unreviewed.
-Otherwise the plan is not complete when it is written. Delegate the same self-contained review request to one idle pane of each Reviewer agent type in the merged configuration, independently and in separate panes. Never send the plan for review to the pane that drafted it. Degrade to one review, or to a critical self-review, when Reviewer agents are unavailable — and say which happened.
+Otherwise the plan is not complete when it is written. Delegate the same self-contained review request to one idle pane of each Reviewer agent type in the merged configuration, independently and in separate panes (reset-backed; the drafting pane is fine after a reset). Degrade to one review, or to a critical self-review, when Reviewer agents are unavailable — and say which happened.
 Resolve every finding, present the resolved plan with the findings and their resolutions, and ask the user to approve.
 Proceed to Step 3 only after the user approves the resolved plan. Code is not touched before that.
 
@@ -61,7 +61,7 @@ Proceed to Step 5 only after the update target list is explicit.
 Inform the user that implementation and testing will begin.
 Read and use the pane-driven-development skill to execute the plan's tasks, delegating a fresh pane per task.
 Rule requirement: route each task's tests by the resolved `test-authoring` assignment — `mode: delegate` to a pane that never sees the implementation, `mode: implementer` to the implementing pane under RED-GREEN-REFACTOR per the test-driven-development skill. Say which in every implementation brief, and name in the report which pane wrote the tests.
-Rule requirement: the `task-review` assignment always resolves to a fresh pane — never the pane that implemented it, and preferably a different agent type; when its role binds to a list of agent types, it runs once per entry. When that gate is disabled, say so in the report.
+Rule requirement: the `task-review` assignment resolves to any idle pane of its role's agent type(s) via a reset-backed submit — including the pane that implemented; when its role binds to a list of agent types, it runs once per entry. When that gate is disabled, say so in the report.
 Never run two implementation panes against the same worktree.
 When the plan has tasks that are genuinely independent — no ordering dependency, no overlapping write ownership — switch to `/execute_parallel`'s track extraction rather than serializing them here.
 On any test failure, unexpected behavior, or bug — in a pane or in the orchestrator — use the systematic-debugging skill before proposing or applying a fix. No speculative fixes. A test author's RED run is not a failure in this sense: a test that fails for its stated reason, in a worktree where the covered behavior is absent or the finding is unfixed, is the evidence the task asked for. Debug the failures that survive the merge, and any failure whose reason does not match what the test author predicted.
@@ -88,7 +88,7 @@ Proceed to Step 8 only when verification evidence is fresh and successful.
 8. Final Code Review
 Gate: `assignments.final-branch-review`. When it is disabled, skip to Step 9 and tell the user the branch is reaching the integration decision unreviewed.
 Inform the user that the final review is starting.
-Read and use the requesting-code-review skill to delegate a whole-branch review to a fresh pane over the entire changeset.
+Read and use the requesting-code-review skill to delegate a whole-branch review via a reset-backed submit over the entire changeset.
 Fix any critical or important issues reported — one fix delegation carrying the complete findings list, not one pane per finding.
 Proceed to Step 9 only when the review assesses it as Ready to merge.
 

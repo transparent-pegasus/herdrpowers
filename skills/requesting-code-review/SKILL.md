@@ -7,11 +7,11 @@ description: Use when completing tasks, implementing major features, or before m
 
 **Placeholder resolution:** `<KEY>` placeholders in this file (such as `<BASE_BRANCH>`) resolve from the `Herdrpowers Configuration` section of the repository's `CLAUDE.md` / `AGENTS.md`. If that section is missing, initialize it with the pack's init workflow (`/herdrpowers:init` on Claude Code plugin installs; `commands/init.md` otherwise).
 
-Delegate the review to a **fresh herdr sibling pane** to catch issues before they cascade. The reviewing pane starts from a reset session, so it sees the work product and never your thought process — that is where review independence comes from in this pack, not from a separate named agent.
+Delegate the review to a **herdr sibling pane via a reset-backed submit** to catch issues before they cascade. The reviewing pane starts from a reset session, so it sees the work product and never the implementer's thought process — that is where review independence comes from in this pack, not from a separate named agent or a different pane ID.
 
-**Core principle:** Review early, review often. Never review your own work, and never send a change back to the pane that wrote it.
+**Core principle:** Review early, review often. Do not review your own work inside an unreset session. A reset-backed delegation may reuse any idle pane of the resolved role's agent type(s), including the pane that wrote the code.
 
-**Gate:** the whole-branch review this skill requests is the `assignments.final-branch-review` gate; per-task reviews are `assignments.task-review`. Both resolve from `.herdrpowers/config.yaml` over the pack's `orchestration/roles.yaml` defaults — see "Delegation tasks and their assignments" in `orchestration`. When the resolved role binds to a list of agent types, the review runs once per entry, in separate panes, and their findings merge into one list. A disabled gate means the review does not run and the final report says so. It never means the implementing pane reviews itself.
+**Gate:** the whole-branch review this skill requests is the `assignments.final-branch-review` gate; per-task reviews are `assignments.task-review`. Both resolve from `.herdrpowers/config.yaml` over the pack's `orchestration/roles.yaml` defaults — see "Delegation tasks and their assignments" in `orchestration`. When the resolved role binds to a list of agent types, the review runs once per entry, in separate panes, and their findings merge into one list. A disabled gate means the review does not run and the final report says so. It never means an unreset implementing session reviews itself.
 
 ## When to Request Review
 
@@ -37,7 +37,7 @@ HEAD_SHA=$(git rev-parse HEAD)
 The package never enters your own context — you pass the path, the pane reads the file.
 
 **2. Pick the pane:**
-Resolve the gate's `role` from the merged configuration (default: Coder). Pick any idle pane of that type **other than the one that implemented the change**; prefer a different agent type when one is idle. If the only idle pane is the implementer's, wait for another, or state in the final report that the review was not independent.
+Resolve the gate's `role` from the merged configuration. Pick any idle pane of that role's agent type(s). The pane that implemented is fine when the submit resets the session. If no pane of the needed type is idle but one exists and is busy, wait; do not interrupt. If none exists, fall back per `orchestration`, or state in the final report that the review could not be delegated.
 
 **3. Delegate:**
 Write the review contract from [review-brief.md](review-brief.md) to a file, then submit the one-line instruction through `using-herdr-sibling-panes` (`composer-submit.sh`) and wait for the completion marker. Never submit an agent-pane prompt with `pane run`.
@@ -83,15 +83,15 @@ You: [Delegate one fix with both findings]
 
 | Excuse | Reality |
 |--------|---------|
-| "I'll just review the diff myself instead of delegating" | You're the orchestrator — reviewing the diff inline burns the context window you need to keep driving the work, and it is not an independent review. Delegate to a fresh pane: the diff and the evaluation live in its session, and only the findings come back to you. |
+| "I'll just review the diff myself instead of delegating" | You're the orchestrator — reviewing the diff inline burns the context window you need to keep driving the work, and it is not an independent review. Delegate via a reset-backed submit: the diff and the evaluation live in that session, and only the findings come back to you. |
 | "The reviewing pane needs my whole session history to understand the change" | Hand it precisely crafted context, never your session's history. That keeps the review on the work product, not your thought process. |
-| "The only idle pane is the one that wrote the code" | Wait for another, or say plainly in the final report that the review was not independent. A pane reviewing its own work is a self-review with extra steps. |
+| "The only idle pane is the one that wrote the code" | Reuse it after a reset-backed submit. Independence is the fresh session, not a different pane ID. |
 
 ## Red Flags
 
 **Never:**
 - Skip review because "it's simple"
-- Send the review to the pane that wrote the code
+- Review the change inside an unreset implementing session
 - Submit the review prompt with `pane run`, or without a completion marker
 - Accept "looks good" without a written report file
 - Ignore Critical issues

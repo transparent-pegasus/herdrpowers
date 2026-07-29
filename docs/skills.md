@@ -31,7 +31,7 @@ Skills live in a single tree at `skills/<name>/SKILL.md`. Claude Code, Codex, an
 
 ## Review
 
-- **`requesting-code-review`** — Delegates the review to a fresh pane that did not write the code. Provides the review contract at `review-brief.md`.
+- **`requesting-code-review`** — Delegates the review via a reset-backed submit to any idle pane of the resolved role's agent type(s). Provides the review contract at `review-brief.md`.
 - **`receiving-code-review`** — How the implementer processes review feedback (verify → evaluate → respond → implement; no performative agreement).
 
 ## Infrastructure & Meta

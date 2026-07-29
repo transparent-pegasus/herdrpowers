@@ -42,7 +42,7 @@ Inform the user that the plan goes to independent review before approval.
 Resolve the Reviewer role from the merged configuration and delegate the **same self-contained review request** to one idle pane of each Reviewer agent type, in separate panes, with no shared draft opinion between them. The number of reviews is the length of the resolved `roles.reviewer.agents` list.
 Each review request states: the plan file path, the design doc path, the absolute repository path, that the review is read-only, the report-file path under `<REPORT_DIRECTORY>`, a unique completion marker, and that the recipient must execute the review itself and must not re-delegate.
 Wait for both to finish, read both report files, and compare the findings.
-Never delegate a review of the plan to the pane that drafted it.
+Each review is a reset-backed submit — the drafting pane is fine after a reset.
 Degrade instead of blocking: with only one Reviewer agent type available, run a single review and say so; with none available, critically review the plan yourself and state that no independent review happened.
 
 4. Resolution and Approval
