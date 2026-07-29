@@ -13,10 +13,11 @@ Rules:
    received them (the orchestrator) via the `orchestration` skill. A task
    delegated from another pane is executed in place and never re-delegated.
    In-process subagents are not used.
-2. Independence comes from fresh pane context: the pane that writes code never
-   reviews it, and a review task assigned to a role that binds to a list of
-   agent types runs once per entry, from different types. No configuration
-   relaxes this.
+2. Independence comes from a reset session on each reset-backed delegation:
+   the same physical pane may later review work it previously wrote after a
+   reset. A review task assigned to a role that binds to a list of agent
+   types runs once per entry, from different types. Routing follows the
+   resolved assignment only. No configuration relaxes this.
 3. The resolved `test-authoring` assignment says which pane writes a task's
    tests — a pane that never sees the implementation, or the implementing pane
    itself. Assertions come from the requirements, never from the code, the RED

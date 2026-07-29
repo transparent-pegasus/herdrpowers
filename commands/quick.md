@@ -20,11 +20,11 @@ Do not edit workflow files unless the user's current request explicitly asks to 
 
 ## Orchestration
 
-`/quick` skips the plan, not the independence. The one thing it never runs in the implementing context is the final review: that goes to a fresh pane through the `orchestration` skill, with `using-herdr-sibling-panes` as the transport.
+`/quick` skips the plan, not the independence. The final review goes through the `orchestration` skill via a reset-backed submit, with `using-herdr-sibling-panes` as the transport.
 
 Resolve the repository's assignments and review gates as `orchestration` describes before the first delegation: `.herdrpowers/config.yaml` first, then `orchestration/roles.yaml` for anything it omits. A gate set to `enabled: false` is skipped and named in the final report.
 
-Routing comes from `assignments:`, not from this file, and the resolved YAML is the source of truth for every default. The scoped implementation may run in the orchestrator pane — the change is small by definition — or go to the pane its `complex-coding` / `simple-coding` assignment names. `test-authoring`, `chores`, and `verification` follow their assignments. The `final-branch-review` assignment always resolves to a fresh pane that did not write the code, preferably a different agent type — once per entry when its role binds to a list of agent types.
+Routing comes from `assignments:`, not from this file, and the resolved YAML is the source of truth for every default. The scoped implementation may run in the orchestrator pane — the change is small by definition — or go to the pane its `complex-coding` / `simple-coding` assignment names. `test-authoring`, `chores`, and `verification` follow their assignments. The `final-branch-review` assignment resolves to any idle pane of its role's agent type(s) via a reset-backed submit — once per entry when its role binds to a list of agent types.
 - In-process subagents are not used. Do not dispatch the Agent tool for workflow work.
 
 **Every delegation** states the worktree's absolute path (and requires the pane to confirm it is there first), the exact scope, the edit policy, the report-file path under `<REPORT_DIRECTORY>`, a unique completion marker, and the prohibition on re-delegating. Read results from the report file, not from pane scrollback.
@@ -80,7 +80,7 @@ Proceed to Step 7 only when verification evidence is fresh, successful, and the 
 7. Final Code Review
 Gate: `assignments.final-branch-review`. When it is disabled, skip this step and tell the user the change is shipping unreviewed — for a workflow whose only independence is this review, say it plainly.
 Inform the user that the final review is starting.
-Read the specific `SKILL.md` for `requesting-code-review`, then delegate the review of the entire changeset to a fresh pane that did not write the code.
+Read the specific `SKILL.md` for `requesting-code-review`, then delegate the review of the entire changeset via a reset-backed submit to any idle pane of the resolved role's agent type(s).
 Fix any critical or important issues reported.
 Proceed to Step 8 only when the review assesses it as Ready to merge and the user confirms.
 
@@ -97,7 +97,7 @@ Do not assume merge. Execute only the chosen option, and delete the worktree onl
 - Branch from `<BASE_BRANCH>`, never from a branch the deploy flow does not expect.
 - Treat `<REPO_INSTRUCTION_FILES>`, the repository's build/test/deploy configuration, and the latest approved plan as the source of truth for repository-specific commands, environment variables, and deploy flows.
 - Block and require user confirmation at the end of every step. Do not proceed autonomously through the whole cycle.
-- Never let the pane that wrote the code be the pane that reviews it — no configuration relaxes this.
+- Do not review the change inside an unreset implementing session — independence is the reset; same physical pane after a reset-backed submit is fine.
 - Name in the final report the branch and the worktree's absolute path, every role that fell back to a substitute agent, and every non-default assignment or mode and every disabled review from `.herdrpowers/config.yaml`.
 - If tests fail or errors occur, pause and use the `systematic-debugging` skill.
 - Before claiming that verification passed or the task is complete, use `verification-before-completion`.

@@ -1,9 +1,6 @@
 # Code Review Brief Template
 
-The review runs in a **fresh sibling pane** — never the pane that wrote the
-code, and preferably an idle pane of a different agent type. Submit a one-line
-instruction that points at this contract written to a file; the contract itself
-never goes through the composer.
+The review runs in a **sibling pane via a reset-backed submit** — any idle pane of the resolved role's agent type(s), including the pane that wrote the code. Submit a one-line instruction that points at this contract written to a file; the contract itself never goes through the composer.
 
 **Purpose:** Review completed work against requirements and code quality standards before it cascades into more work.
 
