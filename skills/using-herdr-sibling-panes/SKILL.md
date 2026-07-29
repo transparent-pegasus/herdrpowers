@@ -42,6 +42,8 @@ Agent CLIs take input through a composer — a stateful input box with slash-com
 
 Therefore, never submit `/clear` or delegated prompts to an agent pane with `pane run`. Use the bundled helper, which clears the composer, resets the session, submits exactly one instruction, and confirms the pane actually started.
 
+**Width is a precondition.** Cursor's composer has been measured ignoring Enter in narrow panes, while Codex still submitted at widths down to 4 columns. Raising the settle seconds does not compensate. The observed boundary is not monotonic — 22 columns passed while 24 failed — and remains unexplained, so the default 40-column floor is conservative, not a measured cliff. Before touching the composer, the helper reads the foreground process's terminal width. Below `HERDR_COMPOSER_MIN_COLS` (default `40`), it temporarily widens the pane with `herdr pane zoom`; if the pane remains below the floor, it refuses with exit `4` and names the measured width and floor. Any zoom taken by the helper is removed on exit, including failure paths.
+
 `$SKILL_DIR` below is the directory containing *this* `SKILL.md`. The scripts ship next to it, so resolve them against it — never against the repo you are working in.
 
 ```bash
@@ -50,7 +52,7 @@ COMPOSER_SUBMIT="$SKILL_DIR/scripts/composer-submit.sh"
 rtk "$COMPOSER_SUBMIT" "$PANE" "$INSTRUCTION"
 ```
 
-Exit codes: `0` submitted and running, `2` bad usage or the pane is not a usable idle agent pane, `3` the instruction did not submit.
+Exit codes: `0` submitted and running, `2` bad usage or the pane is not a usable idle agent pane, `3` the instruction did not submit, `4` the pane remained too narrow after a zoom attempt.
 
 ### Verified keys
 
@@ -99,9 +101,9 @@ Before an agent type is used as a delegation target for the first time, and agai
 rtk "$SKILL_DIR/scripts/probe-composer.sh" "$PANE"
 ```
 
-It checks, in order: the pane is an idle agent pane; leftover composer text clears without killing the TUI; `/clear` resets the session and the TUI survives; an instruction submits and the pane starts working; the split completion marker is not matched by the prompt echo; the marker is matched when the task finishes; a running task can be interrupted and the pane returns to idle; and the agent process is the same one it was before the probe.
+It checks, in order: the pane is an idle agent pane; the pane meets the conservative composer-width floor; leftover composer text clears without killing the TUI; `/clear` resets the session and the TUI survives; an instruction submits and the pane starts working; the split completion marker is not matched by the prompt echo; the marker is matched when the task finishes; a running task can be interrupted and the pane returns to idle; and the agent process is the same one it was before the probe.
 
-Any `FAIL` means that agent type is not delegatable yet — find the CLI's real key for the failing step and update the helper before sending it work.
+Any `FAIL` stops onboarding until it is resolved. A width failure is a layout precondition: widen the pane and re-run. For other failures, find the CLI's real key for the failing step and update the helper before sending it work.
 
 ## Task contract
 
@@ -115,7 +117,13 @@ Every instruction must include the **absolute working directory** (a pane does n
 PANE=w2:p18
 INSTRUCTION="Please run rtk make lint in /path/to/repo. Make no edits. Report the command, exit code, and errors. End with LINT_OK immediately followed by _7F3A."
 COMPOSER_SUBMIT="$SKILL_DIR/scripts/composer-submit.sh"
-rtk "$COMPOSER_SUBMIT" "$PANE" "$INSTRUCTION"
+submit_rc=0
+rtk "$COMPOSER_SUBMIT" "$PANE" "$INSTRUCTION" || submit_rc=$?
+case "$submit_rc" in
+  0) ;;
+  4) echo "composer submission needs a wider layout; fix it and retry" >&2; exit 4 ;;
+  *) echo "composer submission failed with exit $submit_rc; diagnose it before waiting" >&2; exit "$submit_rc" ;;
+esac
 rtk herdr wait output "$PANE" --match "LINT_OK_7F3A" --timeout 300000
 rtk herdr pane list
 # If the target is still working:
@@ -129,9 +137,12 @@ Re-read pane ids after panes close because ids can compact. Do not send work to 
 
 `herdr wait output` exits non-zero on timeout, so every delegation ends in exactly one of these states. Diagnose with `herdr pane get`, `herdr pane read --source recent`, and `herdr pane process-info --pane "$PANE"`.
 
+Helper exits `2` and `4` mean the delegation never started. Do not call `herdr wait output` after either exit, and never count either one toward the two-pane no-marker exhaustion rule.
+
 | state | how it looks | what to do |
 | --- | --- | --- |
 | **finished** | marker matched | read the result, integrate it |
+| **too narrow** | helper exits `4` after its zoom attempt | fix the pane or enclosing-terminal layout and retry the same delegation; this is layout retry only — never exhaustion or fallback |
 | **did not submit** | helper exits `3` | check for the marker first — a very fast task can finish before the status poll sees it. Otherwise re-run the helper once; a second `3` means the keys are wrong for this CLI, so run the probe |
 | **crashed** | `pane get` has no `agent` field; `pane read` shows a shell prompt | restart it in place with the argv from `pane process-info` taken *before* the crash, then re-delegate once |
 | **blocked** | `agent_status: blocked` | the agent is waiting on an approval or input prompt. Do not answer it blindly — report it to the user |
@@ -143,8 +154,16 @@ Re-read pane ids after panes close because ids can compact. Do not send work to 
 
 Treat an agent type as **exhausted** when its output says the usage or rate limit is reached, or when two delegations to two different idle panes of that type both come back with no marker and no completed work. Exhaustion is a property of the agent type, not of one pane — do not retry it on a sibling pane of the same type.
 
+Only submissions for which the helper returned `0` can contribute to the two-pane no-marker rule. Helper exits `2` and `4` never started a delegation and must never count as exhaustion.
+
 Do not match vendor error strings; they change with every CLI release. The reliable signal is the outcome: no marker, twice, on two panes.
 
 When exhausted, report it upward. If this skill was entered from the `orchestration` skill, the orchestrator resolves a substitute from that skill's merged `fallbacks:` map (`.herdrpowers/config.yaml` over `roles.yaml`) and re-delegates there. Standalone, run the work in the orchestrator pane and say which agent was skipped and why.
 
 Record the exhausted agent type for the rest of the task and stop routing to it, so one exhausted agent does not burn a retry on every subsequent delegation.
+
+### Future work
+
+File-based completion detection — polling the report file or a sentinel — is the recommended next improvement. It would remove the 16-character marker limit and two-fragment prompt rule, and is independent of the width fix.
+
+A non-interactive bypass (`cursor-agent -p` or `codex exec`) was evaluated and deferred. It would eliminate composer bugs, but loses interactive `/clear`, session resume, and visible progress.
