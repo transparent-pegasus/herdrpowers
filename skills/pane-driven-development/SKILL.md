@@ -14,7 +14,7 @@ Every task in this skill is delegated to a **herdr sibling agent pane**, never t
 Two boundaries override anything below:
 
 - **No in-process subagents.** Wherever this document says "dispatch," read "delegate to an idle sibling pane through `using-herdr-sibling-panes`." The Agent tool and named subagent types are not used by this pack.
-- **The pane that writes tests owns RED-GREEN-REFACTOR**, and the resolved `test-authoring` / `fix-round-test-authoring` assignments say which pane that is. With `mode: delegate` a separate pane writes them from the task brief alone (see "Parallel test authoring" below); with `mode: implementer` the implementing or fixing pane writes its own per `test-driven-development`. Either way the pane that writes a test produces its RED evidence, and your report names which pane wrote the tests. Review independence itself comes from the *fresh pane context* of the reviewing delegation, not from a named role, and is never configurable.
+- **The pane that writes tests owns RED-GREEN-REFACTOR**, and the resolved `test-authoring` / `fix-round-test-authoring` assignments say which pane that is. With `mode: delegate` a separate pane writes them from the task brief alone (see "Parallel test authoring" below); with `mode: implementer` the implementing or fixing pane writes its own per `test-driven-development`. Either way the pane that writes a test produces its RED evidence, and your report names which pane wrote the tests. Review independence itself comes from the *reset session* of each reviewing delegation, not from a named role or a different pane ID, and is never configurable.
 
 Execute the plan by delegating a fresh implementer pane per task, the task's tests per `test-authoring`, a task review (spec compliance + code quality) after each, and a broad whole-branch review at the end.
 
@@ -218,9 +218,11 @@ the degradation in your report.
 The `final-branch-review` gate belongs to the calling workflow, not to this
 skill: when it is disabled, skip the Final Review section below.
 
-**Independence is not configurable.** With `task-review` on, the review always
-goes to a pane that did not write the code, whatever the config says. And
-`review-fixes` escalates at rounds 4-5 to a fresh pane regardless of its mode.
+**Independence is not configurable.** With `task-review` on, the review is always
+a reset-backed delegation to the resolved role's agent type(s) — same physical
+pane is fine after a reset; do not review inside an unreset implementing
+session. And `review-fixes` escalates at rounds 4-5 to a fresh pane regardless
+of its mode.
 
 Panes are not reserved per role — pick any idle pane of the matching agent type at delegation time. When no pane of the right type is idle, wait; do not interrupt a working pane. When an agent type is exhausted (usage limit, or two markerless delegations on two panes of that type), take its substitute from the resolved `fallbacks:` map and name the fallback in your final report.
 
@@ -363,13 +365,13 @@ final whole-branch review. Never skip the task review, and never accept a
 report missing either verdict — spec compliance AND task quality are both
 required. A pane's self-review never replaces the task review; both are needed.
 
-- Send the review to a **fresh pane** — one per agent type in the resolved
-  role, in separate panes, all from the same review package. Never send a
-  change back for review to the pane that wrote it, and prefer a different
-  agent type than the one that implemented it for any slot that has a choice.
-  Wait for every review to return before acting on any of them; merge the
-  findings into one open list and deduplicate. Reviews that disagree are
-  yours to adjudicate, not to average.
+- Send the review to a **reset-backed pane** — one per agent type in the resolved
+  role, in separate panes when the list has multiple entries, all from the same
+  review package. Any idle pane of those types is fine, including the pane that
+  implemented; do not apply a prefer-different-type heuristic. Wait for every
+  review to return before acting on any of them; merge the findings into one
+  open list and deduplicate. Reviews that disagree are yours to adjudicate,
+  not to average.
 - Hand the reviewer its diff as a file: run this skill's
   `scripts/review-package PLAN_FILE BASE HEAD` and pass the reviewer the file
   path it prints (or, without bash: `git log --oneline`, `git diff --stat`,
@@ -554,7 +556,7 @@ The final whole-branch review gets a package too: run
 branch started from, e.g. `git merge-base <BASE_BRANCH> HEAD`) and include the
 printed path in the final review brief, so the final reviewer reads
 one file instead of re-deriving the branch diff with git commands. Delegate it
-to a fresh pane — prefer an agent type that implemented none of the tasks —
+to any idle pane of the resolved role's agent type(s) via a reset-backed submit —
 using `requesting-code-review`'s
 [review-brief.md](../requesting-code-review/review-brief.md). Point it at
 the ledger's deferred-minor and parked lines so it can triage which must be
@@ -638,7 +640,7 @@ artifacts over as files, in both directions:
 | "The fix was small, skip the re-review" | Unreviewed fixes are how regressions land. Every round ends with a scoped re-review. |
 | "Reviews slow the loop down" | The loop without reviews is just unverified churn. Reviews are the loop's brakes and steering. |
 | "Ledger bookkeeping is overhead" | The ledger is what survives compaction. Orchestrators without one have re-delegated entire completed task sequences. |
-| "The implementing pane is idle — it can review its own work" | That is a self-review with extra steps. Review goes to a pane that did not write the code, or the report says the review was not independent. |
+| "The implementing pane is idle — it can review its own work" | Reuse it after a reset-backed submit. Independence is the fresh session, not a different pane ID. Do not review inside the unreset implementing session. |
 | "The plan mandates it, so the finding is invalid" | Plan-vs-review conflicts are your human partner's call. Present both and ask which governs. |
 | "I'll turn the gate off in `.herdrpowers/config.yaml` to get past this loop" | The config is the user's declaration, read once at start. Changing it mid-run to escape a review is falsifying the run's terms. Hit the cap and adjudicate. |
 | "Task review is disabled, so the pane can review its own work" | Disabling a gate removes the review; it never relaxes independence for the gates still on. |

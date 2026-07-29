@@ -56,7 +56,7 @@ Wherever a list role is used: the delegations come from different agent types, a
 
 ### What no assignment changes
 
-- **A pane never reviews work it wrote.** Disabling a review removes it; it never converts one into a self-review.
+- **Review independence is the reset session, not pane ID.** A reset-backed review may reuse any idle pane of the resolved role's agent type(s), including the pane that implemented. Disabling a review removes it; it never converts one into an in-session self-review.
 - **Reviews from a list role come from different agent types.**
 - **`review-fixes` escalates at fix-loop rounds 4-5** to a fresh pane of an escalated agent type, whatever its mode says.
 - **The report names which pane wrote the tests**, whatever `test-authoring` and `fix-round-test-authoring` resolve to.
@@ -89,10 +89,10 @@ Everything else: simple coding that follows an existing pattern, search, file in
 
 ## Where Independence Comes From
 
-The older design separated a `test-engineer` from a `code-reviewer` so nobody graded their own homework. This pack gets the same property from **fresh pane context** instead:
+The older design separated a `test-engineer` from a `code-reviewer` so nobody graded their own homework. This pack gets the same property from **reset sessions** instead:
 
-- Every delegation resets the target session, so a reviewing pane never sees the implementing pane's reasoning.
-- A change is never sent back for review to the pane that wrote it; where an idle pane of a different agent type exists, it is preferred for review.
+- Every reset-backed delegation clears the target session, so a reviewing agent never sees the implementing session's reasoning.
+- The same physical pane may take that review after a reset. Routing follows the resolved assignment only (`agent:` / `agents:`); there is no prefer-different-type heuristic.
 - RED evidence is a report artifact: the failing run before the code exists, quoted, with the reason the failure was expected. Missing or reconstructed RED evidence is a finding.
 
 Test independence is a `mode`, and each setting pays for it differently:

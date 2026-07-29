@@ -56,7 +56,7 @@ The active coding phase. Each task in the plan is delegated to a fresh pane.
     1. Extract the task brief to a file; delegate it with the worktree path, report path, and completion marker.
     2. The task's tests follow the resolved `test-authoring` assignment: a separate pane writing them from the same brief in its own worktree at the pre-implementation commit — where **RED** is structural, because the code genuinely is not there — or the implementing pane writing them itself under RED-GREEN-REFACTOR.
     3. Each pane writes its full report to a file and replies with status + marker. A delegated test author's commit is cherry-picked into the task worktree and run: passing is **GREEN**, failing is a finding.
-    4. The orchestrator builds the review package and delegates the task review to **freshly reset panes that did not write the code** — one per agent type the review's role binds to: one pass each, two verdicts — **Spec Compliance** and **Task Quality**.
+    4. The orchestrator builds the review package and delegates the task review via **reset-backed submits** to idle panes of the review role's agent type(s) — one per listed type: one pass each, two verdicts — **Spec Compliance** and **Task Quality**.
     5. Critical/Important findings from all reviews merge into one list and enter the fix loop: rounds 1-3 go back to the same implementing pane, rounds 4-5 to a fresh pane of an escalated agent type, the round's covering tests written per `fix-round-test-authoring`, each round closed by a **scoped re-review** of the fix diff only. Five rounds is the cap — then the orchestrator adjudicates each open finding into the ledger, or stops on a load-bearing one.
 - **Skills**: `pane-driven-development`, `test-driven-development`, `systematic-debugging`.
 - **Roles**: as assigned in [`roles.yaml`](../skills/orchestration/roles.yaml) — the pack ships implementation and test authoring on Coder, per-task review on Reviewer, chores on Generalist.
@@ -67,7 +67,7 @@ Independent tracks can run concurrently — one pane per worktree, never two imp
 
 ### Phase 6: Verification and Final Code Review
 
-Repository verification runs inside the worktree, then a final review of the entire changeset runs in a fresh pane.
+Repository verification runs inside the worktree, then a final review of the entire changeset runs via a reset-backed submit.
 
 - **Purpose**: Evidence before assertions, then a merge-level judgment on the whole branch.
 - **Outcome**: Verification output quoted from the report file (or re-run), plus a report with Critical / Important / Minor issues.

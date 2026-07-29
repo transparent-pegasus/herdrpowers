@@ -96,7 +96,7 @@ Rules to state while proposing:
 - Work tasks are never disabled. To stop delegating one, set `mode: orchestrator`.
 - **A review task assigned to a role that binds to a list of agent types runs once per entry.** Assigning `task-review` or `fix-round-re-review` to such a role multiplies pane usage per task by the list length. Say the arithmetic out loud before the user confirms it.
 - `test-authoring` and `fix-round-test-authoring` decide who writes tests. `mode: delegate` puts them in a pane that never sees the implementation, which costs an extra pane and a throwaway worktree per task; `mode: implementer` collapses them onto the pane whose behavior they cover, leaving the reviewers as the only check on that test code. Either is legitimate; state the trade before the user chooses, because the workflow reports which one ran.
-- Two pack invariants are not configurable — state them if the user asks for either: a pane never reviews work it wrote, and reviews from a list role come from different agent types.
+- Two pack invariants are not configurable — state them if the user asks for either: review independence is the reset session (not pane identity; same physical pane OK after a reset-backed submit), and reviews from a list role come from different agent types.
 - `review-fixes` escalates to a fresh pane at fix-loop rounds 4-5 whatever its mode says.
 
 5. Write Configuration
