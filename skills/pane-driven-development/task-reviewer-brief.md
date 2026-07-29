@@ -6,15 +6,15 @@ compliance and code quality.
 **Purpose:** verify one task's implementation matches its requirements (nothing
 more, nothing less) and is well-built (clean, tested, maintainable).
 
-**Independence:** send this to a **fresh pane** — never the pane that
-implemented the change. Prefer an idle pane of a different agent type than the
-implementer's. Because the implementing pane wrote its own tests, the reviewer
-is the only independent check on the tests: review them.
+**Independence:** send this via a **reset-backed submit** to any idle pane of
+the resolved role's agent type(s) — including the pane that implemented.
+Because the implementing pane wrote its own tests (when `test-authoring` is
+`implementer`), the reviewer is the independent check on the tests: review them.
 
 ## 1. The submitted instruction (one line)
 
 ```bash
-PANE=w2:p19                                    # fresh pane, different agent type if available
+PANE=w2:p19                                    # idle pane of the resolved role's agent type(s)
 INSTRUCTION="Work in /abs/path/to/worktree — confirm you are there before anything else. Review-only task: make no edits and do not mutate the working tree, index, HEAD, or branch state. Read /abs/path/to/task-N-review-brief.md — it holds your review contract and the paths to the task brief, the implementer's report, and the diff package. Write your review to /abs/path/to/task-N-review.md and reply with the two verdicts and the report path. Execute this request yourself, directly; re-delegating to other panes or orchestrating is prohibited. End your reply with REVIEW_N_OK immediately followed by _<4-hex>."
 rtk "$COMPOSER_SUBMIT" "$PANE" "$INSTRUCTION"
 rtk herdr wait output "$PANE" --match "REVIEW_N_OK_<4-hex>" --timeout 900000

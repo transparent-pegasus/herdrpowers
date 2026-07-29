@@ -26,7 +26,7 @@ Routing comes from `assignments:`, not from this file, and the resolved YAML is 
 - Track extraction, integration, and final synthesis stay with the orchestrator.
 - In-process subagents are not used. Do not dispatch the Agent tool for workflow work.
 
-**Parallelism is bounded by panes and worktrees, not by ambition.** One implementation pane per worktree, one worktree per track — and count the whole writer set a track needs, not one pane per track: with `test-authoring` in `mode: delegate` a track occupies two panes of the resolved role at once (implementer plus test author, each in its own worktree), and the reviews that follow need panes of the review role that did not write the code.
+**Parallelism is bounded by panes and worktrees, not by ambition.** One implementation pane per worktree, one worktree per track — and count the whole writer set a track needs, not one pane per track: with `test-authoring` in `mode: delegate` a track occupies two panes of the resolved role at once (implementer plus test author, each in its own worktree), and the reviews that follow need idle panes of the review role (reset-backed; may reuse a writer pane after it finishes).
 
 Do not compute a wave plan from those numbers. Take what is idle, start those tracks, and **wait** for the rest: when no pane of the needed type is idle, wait for one to free — never interrupt a working pane, and never collapse two writers into one worktree to save a pane. If panes free up one at a time, the tracks land one at a time; a run that degrades all the way to serial execution is a slow correct run, not a failure, and the final report says how much parallelism was actually achieved.
 
@@ -72,7 +72,7 @@ For each confirmed implementation track:
 - require the implementer to stop and escalate if the task expands beyond its assigned ownership
 - route the track's tests by the resolved `test-authoring` assignment and say which in the brief; a delegated test author gets its own worktree off the track's base, never the track's worktree
 - run track-local verification inside that track's worktree before considering the track complete
-- send each track's task review to a fresh pane that did not implement it, preferably of a different agent type — once per entry when the resolved role binds to a list
+- send each track's task review to any idle pane of the resolved role's agent type(s) via a reset-backed submit — once per entry when the resolved role binds to a list
 
 On any test failure, unexpected behavior, or bug — in a pane or in the orchestrator — use the systematic-debugging skill before proposing or applying a fix. A test author's RED run is not a failure in this sense: a test that fails for its stated reason, in a worktree where the covered behavior is absent or the finding is unfixed, is the evidence the task asked for. Debug the failures that survive the merge, and any failure whose reason does not match what the test author predicted.
 
@@ -103,7 +103,7 @@ If any task is discovered to be coupled, conflicting, or blocked on another trac
 6. Final Code Review
 Gate: `assignments.final-branch-review`. When it is disabled, skip this step and tell the user the branch is reaching the integration decision unreviewed.
 Inform the user that the final review is starting.
-Read and use the requesting-code-review skill to delegate a whole-branch review to a fresh pane over the fully integrated changeset on the coordination branch.
+Read and use the requesting-code-review skill to delegate a whole-branch review via a reset-backed submit over the fully integrated changeset on the coordination branch.
 Fix any critical or important issues reported — one fix delegation carrying the complete findings list, not one pane per finding.
 Proceed to Step 7 only when the review assesses it as Ready to merge.
 

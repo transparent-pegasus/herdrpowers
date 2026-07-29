@@ -77,7 +77,7 @@ Compare findings across the returned reviews, resolve disagreements, and only th
 
 ### What no assignment can change
 
-- **A pane never reviews work it wrote.** Disabling a review removes it; it never converts one into a self-review. If a config routes a review to the implementing pane, honor the independence rule, ignore that part of the config, and say so in the report.
+- **Review independence is the reset session, not pane ID.** A `mode: delegate` review may use any idle pane of the resolved role's agent type(s), including the pane that implemented, because submission resets the session. Do not apply a prefer-different-type heuristic. An unreset continuing session must not review its own work product; disabling a review removes it rather than converting one into that kind of self-review. If a config tries to turn a still-on review into an in-session self-review, honor the reset rule, ignore that part of the config, and say so in the report.
 - **Reviews from a list role come from different agent types.** A config that would put the same type in two slots is overridden the same way.
 - **The report names which pane wrote the tests**, whatever `test-authoring` and `fix-round-test-authoring` resolve to. With `mode: delegate` the tests come from a pane that never saw the implementation; with `mode: implementer` they come from the pane whose behavior they cover, and the reviewers auditing that test code are the only remaining check on it. Both are legitimate; a report that does not say which one ran is not.
 - **`review-fixes` escalates regardless of mode.** Fix-loop rounds 4-5 go to a fresh pane of an escalated agent type even when the mode is `implementer`, per "Escalation is a type swap".
@@ -115,7 +115,7 @@ When this skill drives one of the pack's workflows (`/herdrpowers:execute`, `exe
 
 Read each one's `role` and `mode` from the resolved configuration; the workflow names every assignment its repo config changed in the final report.
 
-**Review independence** comes from a fresh pane context, not from a different tool: every delegation starts by resetting the target session, so a reviewing pane never sees the implementing pane's reasoning. Where an idle pane of a different agent type is available, prefer it for review over the type that implemented the change. Never send a change back for review to the pane that wrote it — no assignment overrides that.
+**Review independence** comes from a fresh session on each reset-backed delegation, not from a different pane ID or a different tool: every `composer-submit.sh` call resets the target session, so the reviewing agent never sees the implementing session's reasoning. Pick any idle pane of the resolved role's agent type(s) — including the pane that implemented — and do not apply a prefer-different-type heuristic. Unreset continuing sessions must not review their own work product.
 
 ## Complex coding boundary
 
@@ -144,9 +144,9 @@ Default when uncertain: `complex-coding`. With the default assignments a misrout
 
 Runs when the `plan-double-review` gate is enabled, under "Roles that bind to a list" above — one review per agent type in the resolved role, with that section's different-types, degrade, and say-which-it-was rules.
 
-Draft the plan in the orchestrator pane, then run the reviews through `using-herdr-sibling-panes` (one per agent type, in separate panes), wait for all of them to complete, compare the findings, resolve disagreements, and only then act or report. Reviewers are reviewers, not substitutes for the orchestrator's final judgment.
+Draft the plan in the orchestrator pane, then run the reviews through `using-herdr-sibling-panes` (one per agent type in the resolved role, in separate panes when the list has multiple entries), wait for all of them to complete, compare the findings, resolve disagreements, and only then act or report. Reviewers are reviewers, not substitutes for the orchestrator's final judgment.
 
-Two specifics beyond the general rules: never delegate a review of a plan to the pane that drafted it, and if no listed agent type is available at all, the orchestrator critically reviews its own plan and states that no independent review happened.
+Two specifics beyond the general rules: each review is a reset-backed delegation (the drafting session's reasoning is not in the reviewer's context), and if no listed agent type is available at all, the orchestrator critically reviews its own plan and states that no independent review happened.
 
 ## Exhaustion and fallback
 

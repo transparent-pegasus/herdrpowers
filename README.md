@@ -7,7 +7,7 @@ It is the merge of two packs: the orchestration and delegation transport from [h
 ## Core Principles
 
 - **One orchestrator, many panes.** Whichever pane the user types into owns the task: it plans, delegates, integrates, and reports. A pane that receives a delegated instruction executes it in place and never re-delegates.
-- **Independence from fresh context.** Every delegation resets the target session. The pane that writes code never reviews it, and a role that binds to a list of agent types runs one review per entry — so plans and tasks get independent reviews from different agent types. There are no named `test-engineer` / `code-reviewer` personas — the property comes from the reset, not from the label.
+- **Independence from fresh context.** Every reset-backed delegation starts a fresh session — that is the independence property, not pane identity. The same physical pane may later review work it previously wrote after a reset. A role that binds to a list of agent types runs one review per entry. Routing follows the resolved assignment only (`agent:` / `agents:`); there is no prefer-different-type heuristic. There are no named `test-engineer` / `code-reviewer` personas — the property comes from the reset, not from the label.
 - **TDD, and who owns it is a setting.** The `test-authoring` assignment decides: `delegate` puts a task's tests in a pane that works from the same brief in a worktree at the pre-implementation commit and never sees the code — RED is structural there; `implementer` gives RED-GREEN-REFACTOR to the implementing pane, and the reviewers audit that test code as the only independent check. `fix-round-test-authoring` answers the same for a fix round. Assertions come from the requirements, never from the code, the RED run is quoted in the report, and the report names which pane wrote the tests.
 - **Composer-safe delegation.** Agent CLIs take input through a stateful composer that swallows keys and retains stale text. Submission goes through the bundled `composer-submit.sh`, completion is detected with a unique marker, and results are handed over as **files** — never reconstructed from pane scrollback.
 - **Isolated workspaces.** Feature work happens in a git worktree off `<BASE_BRANCH>`, one implementation pane per worktree.
@@ -87,7 +87,7 @@ assignments:                                  # task -> role + where it runs
 
 `mode` is `delegate` (a fresh pane of that role), `orchestrator` (this pane, nothing delegated), or `implementer` (the pane that already owns the task). Reviews also take `enabled`; work tasks are never disabled — `mode: orchestrator` is how one stops being delegated.
 
-Re-run `/init` any time to change them. Two things stay fixed regardless: a pane never reviews work it wrote, and every non-default assignment or disabled review is named in the final report.
+Re-run `/init` any time to change them. Two things stay fixed regardless: review independence is the reset session (not pane identity), and every non-default assignment or disabled review is named in the final report.
 
 Then start a feature with `/herdrpowers:full_cycle`, or break it up with `plan` → `execute` / `execute_parallel`. For small changes use `quick`. To run the same cycle with every review gate forced on regardless of the `enabled` values above, use `strict_full_cycle`.
 

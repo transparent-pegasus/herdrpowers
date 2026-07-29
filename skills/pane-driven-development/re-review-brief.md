@@ -14,7 +14,7 @@ contract below is **written to a file** the pane reads first.
 ## 1. The submitted instruction (one line)
 
 ```bash
-PANE=w2:p19                                    # idle pane, NOT the one that wrote the fix
+PANE=w2:p19                                    # idle pane of the resolved role's agent type(s)
 INSTRUCTION="Work in /abs/path/to/worktree — confirm you are there before anything else. Read /abs/path/to/task-N-rereview-brief.md first; it is your complete contract. Write your verdicts to /abs/path/to/task-N-rereview-R.md and reply with the round verdict, the open findings, and that path. Execute this request yourself, directly; re-delegating to other panes or orchestrating is prohibited. End your reply with RRVW_N_R immediately followed by _<4-hex>."
 COMPOSER_SUBMIT="$SKILL_DIR/scripts/composer-submit.sh"   # using-herdr-sibling-panes
 rtk "$COMPOSER_SUBMIT" "$PANE" "$INSTRUCTION"
