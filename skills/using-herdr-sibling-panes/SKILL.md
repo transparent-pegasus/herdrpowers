@@ -38,6 +38,7 @@ Agent CLIs take input through a composer — a stateful input box with slash-com
 
 * **Keys consumed by UI.** Slash-command and autocomplete popups swallow the single Enter that `pane run` sends, leaving the text sitting in the composer.
 * **Autocomplete is a lie.** A composer can *render* the highlighted completion (`/clear`) while its buffer still holds what was actually typed (`/cl`). Submitting then sends the partial text to the model as a chat message. Always write a slash command in full, in a single `send-text` call.
+* **Any bare `/word` is a slash trigger, not just a real command.** An incidental `/word` mid-sentence (`... the /run integration step ...`) opens the popup *during the paste*, and `esc` + `enter` then submits a corrupted or truncated string instead of the instruction. Observed on cursor-agent 3× in a row: the pane goes idle with no completion marker and no work done, and `pane read` shows a garbled fragment starting mid-word, sometimes prefixed `$ ` or ending `exit 1` — the remainder ran as a shell command. Rewording (`/run` → `hourly-pipeline`) fixed it immediately on the same panes. Absolute paths (`/abs/path/to/worktree`) have not triggered it. The helper rejects bare slash tokens with exit `2` before submitting; reword the instruction rather than retrying it.
 * **Retained state and races.** A composer can keep the previous prompt or queued follow-ups after completion, and text insertion and key handling are asynchronous, so back-to-back CLI calls can race even with the right keys. Later delegation text then concatenates onto stale input.
 
 Therefore, never submit `/clear` or delegated prompts to an agent pane with `pane run`. Use the bundled helper, which clears the composer, resets the session, submits exactly one instruction, and confirms the pane actually started.
@@ -52,7 +53,7 @@ COMPOSER_SUBMIT="$SKILL_DIR/scripts/composer-submit.sh"
 rtk "$COMPOSER_SUBMIT" "$PANE" "$INSTRUCTION"
 ```
 
-Exit codes: `0` submitted and running, `2` bad usage or the pane is not a usable idle agent pane, `3` the instruction did not submit, `4` the pane remained too narrow after a zoom attempt.
+Exit codes: `0` submitted and running, `2` bad usage (embedded newline, or a bare `/word` slash trigger in the instruction) or the pane is not a usable idle agent pane, `3` the instruction did not submit, `4` the pane remained too narrow after a zoom attempt.
 
 ### Verified keys
 
@@ -111,7 +112,7 @@ Every instruction must include the **absolute working directory** (a pane does n
 
 **Reports go to files.** Terminal scrollback is lossy — an agent on the alternate screen loses rows that `pane read` can never recover. Name a report file path in every brief (under `<REPORT_DIRECTORY>`, or the worktree's scratch directory) and require the pane to write its full report there and reply with that path plus the marker. Read the file; do not reconstruct the result from scrollback.
 
-**Verify claims, do not trust them.** A pane reporting "verified" or "tests pass" is a claim. Re-run the decisive command, or read the quoted output in the report file, before accepting it. Keep the marker at 16 ASCII characters or fewer so terminal wrapping cannot split it. The complete marker must not occur verbatim in the submitted prompt, because `wait output` also sees user text; describe it as two fragments that the delegated agent must concatenate. Keep the instruction on a single line — the helper rejects embedded newlines.
+**Verify claims, do not trust them.** A pane reporting "verified" or "tests pass" is a claim. Re-run the decisive command, or read the quoted output in the report file, before accepting it. Keep the marker at 16 ASCII characters or fewer so terminal wrapping cannot split it. The complete marker must not occur verbatim in the submitted prompt, because `wait output` also sees user text; describe it as two fragments that the delegated agent must concatenate. Keep the instruction on a single line — the helper rejects embedded newlines. Keep bare `/word` tokens out of the text for the same reason: the helper rejects them with exit `2`, because they open the composer's slash popup mid-paste and corrupt the submission. Absolute paths are fine; a step name like `/run` must be reworded or backtick-wrapped.
 
 ```bash
 PANE=w2:p18
