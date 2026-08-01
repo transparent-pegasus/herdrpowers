@@ -11,6 +11,7 @@ Both share one schema — a **role list**, a fallback map, and a **role assigned
 
 - `roles:` — each role and the agent type(s) it binds to.
 - `fallbacks:` — agent → ordered substitutes for when an agent cannot take work.
+- `delegation:` — defaults applying to every task: `pane_scope` and `execution` (see [Delegation Scope and Execution Strategy](#delegation-scope-and-execution-strategy)).
 - `assignments:` — every delegation task, each with the role that performs it and where it runs.
 
 Customize the repo file, not `roles.yaml` — plugin installs are read-only, and editing a checked-in copy makes the pack diff-dirty against upstream. The skills speak in role and task names, never in tool names.
@@ -62,6 +63,24 @@ Wherever a list role is used: the delegations come from different agent types, a
 - **The report names which pane wrote the tests**, whatever `test-authoring` and `fix-round-test-authoring` resolve to.
 
 **Every assignment the repo config changed away from the shipped default, and every disabled review, is named in the final report**, alongside any role that fell back and any review that degraded for lack of panes — so nobody later mistakes an unreviewed branch for a reviewed one. Configuration is input: it is read once before the first delegation and never written from inside a run.
+
+## Delegation Scope and Execution Strategy
+
+Two keys under `delegation:` apply to every task, ahead of any role or assignment.
+
+**`pane_scope`** — which panes may receive a delegation at all, relative to the orchestrator pane:
+
+| value | eligible panes |
+|---|---|
+| `tab` | only panes in the orchestrator's own tab — the shipped default |
+| `workspace` | any pane in the orchestrator's workspace, in any tab |
+| `session` | every agent pane herdr reports |
+
+Cross-tab delegation is off by default because a tab is how a herdr user separates projects. Every pane reports its own `cwd`, and a pane one tab over is usually in a different repository with its own user mid-task — and every delegation resets the target session, so that work would be gone. An out-of-scope pane is not a candidate, not a fallback target, and not counted when deciding whether an agent type is available; a type with no in-scope pane is *unavailable*, which degrades the run and is named in the report.
+
+**`execution`** — what `/full_cycle` and `/strict_full_cycle` attempt for implementation: `parallel` (the shipped default) extracts the plan's independent tracks and runs them concurrently in per-track worktrees off a coordination branch, per `/execute_parallel`; `serial` runs tasks one at a time, per `/execute`. It sets what is attempted, not what is forced — a plan with one track, or a session with one usable pane, still runs serially, and the report says how much parallelism was actually achieved. `/execute` and `/execute_parallel` are explicit user choices and ignore the key.
+
+Under `parallel`, plans are written for it: `writing-plans` emits a `## Tracks` table with each track's goal, tasks, owned files, and dependencies, and tags every task with its track. Execution validates and runs that partition instead of re-deriving one from a document that never had ownership boundaries in mind. A single-track plan is a valid answer, stated as one `main` track with the reason the work does not partition.
 
 ## The Roles
 

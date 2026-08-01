@@ -12,7 +12,7 @@ Run the `/full_cycle` workflow exactly as written: read `full_cycle.md` — the 
 
 Resolve the configuration the way `orchestration` describes — the repository's `.herdrpowers/config.yaml` first, `orchestration/roles.yaml` for anything it omits — and then ignore `enabled` on every review task in the resolved result. Each counts as `enabled: true` for this run, including any review task a later pack release adds. `/full_cycle`'s "when it is disabled, skip" clauses therefore never fire here.
 
-Nothing else changes. `role` and `mode` still bind for every task, as do `roles:` and `fallbacks:`. Strict mode overrides one key: it never reassigns a role, changes a mode, or relaxes an invariant — review independence remains the reset session (not pane identity), and a review whose role binds to a list of agent types still runs once per entry.
+Nothing else changes. `role` and `mode` still bind for every task, as do `roles:`, `fallbacks:`, and `delegation:` — strict mode does not widen `delegation.pane_scope` to find a pane for a forced-on gate, and does not change `delegation.execution`. Strict mode overrides one key: it never reassigns a role, changes a mode, or relaxes an invariant — review independence remains the reset session (not pane identity), and a review whose role binds to a list of agent types still runs once per entry.
 
 Never write the configuration file. `enabled: false` stays where the user put it; this run declines to honor it and says so in the report.
 
