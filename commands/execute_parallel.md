@@ -28,7 +28,9 @@ Routing comes from `assignments:`, not from this file, and the resolved YAML is 
 
 **Parallelism is bounded by panes and worktrees, not by ambition.** One implementation pane per worktree, one worktree per track — and count the whole writer set a track needs, not one pane per track: with `test-authoring` in `mode: delegate` a track occupies two panes of the resolved role at once (implementer plus test author, each in its own worktree), and the reviews that follow need idle panes of the review role (reset-backed; may reuse a writer pane after it finishes).
 
-Do not compute a wave plan from those numbers. Take what is idle, start those tracks, and **wait** for the rest: when no pane of the needed type is idle, wait for one to free — never interrupt a working pane, and never collapse two writers into one worktree to save a pane. If panes free up one at a time, the tracks land one at a time; a run that degrades all the way to serial execution is a slow correct run, not a failure, and the final report says how much parallelism was actually achieved.
+Only panes within `delegation.pane_scope` count toward that arithmetic — under its default, `tab`, idle panes in another tab are not available to this workflow at any point.
+
+Do not compute a wave plan from those numbers. Take what is idle, start those tracks, and **wait** for the rest: when no in-scope pane of the needed type is idle, wait for one to free — never interrupt a working pane, never reach into another tab, and never collapse two writers into one worktree to save a pane. If panes free up one at a time, the tracks land one at a time; a run that degrades all the way to serial execution is a slow correct run, not a failure, and the final report says how much parallelism was actually achieved.
 
 **Every delegation** states its own track's absolute worktree path (and requires the pane to confirm it is there first), the owned files, the edit policy, the report-file path under `<REPORT_DIRECTORY>`, a unique completion marker, and the prohibition on re-delegating. Read results from report files, not from pane scrollback.
 
@@ -39,6 +41,7 @@ Do not compute a wave plan from those numbers. Take what is idle, start those tr
 1. Implementation Track Extraction
 Inform the user that you will extract confirmed implementation tracks before creating any worktree.
 Partition the approved plan into independent implementation tracks yourself, in the orchestrator pane, before creating any worktree or delegating any implementer.
+If the plan already carries a `## Tracks` table (written by the writing-plans skill), that is the partition: validate it against the criteria below and revise it with the user where it does not hold, rather than deriving a second one that contradicts the tags on its tasks.
 When extracting tracks:
 - include only implementation work that can be owned and verified independently
 - exclude documentation updates, repository-wide verification, final review, integration, cleanup, and other coordination tasks from parallel tracks
