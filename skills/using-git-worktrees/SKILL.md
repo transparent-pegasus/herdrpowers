@@ -123,6 +123,14 @@ if [ -f pyproject.toml ]; then poetry install; fi
 if [ -f go.mod ]; then go mod download; fi
 ```
 
+**CodeGraph (optional):** if a codegraph plugin/tool is available *and* the main
+checkout has a `.codegraph/` index, run `codegraph init` in the worktree. The
+index is machine-local and gitignored, so `git worktree add` never copies it —
+without this the worktree has no index and codegraph queries silently fall back
+to plain search. Check the main checkout, not the worktree (`.codegraph/` is
+absent there by definition). If the main checkout is not indexed, skip it:
+indexing is the user's decision.
+
 ## Step 3: Verify Clean Baseline
 
 Run tests to ensure workspace starts clean:
@@ -160,6 +168,8 @@ Ready to implement <feature-name>
 | Permission error on create | Sandbox fallback, work in place |
 | Tests fail during baseline | Report failures + ask |
 | No package.json/Cargo.toml | Skip dependency install |
+| Main checkout has `.codegraph/` | `codegraph init` in the worktree (Step 2) |
+| Main checkout not indexed | Skip codegraph — user's decision |
 
 ## Common Rationalizations
 
