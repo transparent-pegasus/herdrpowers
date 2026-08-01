@@ -6,7 +6,8 @@ set -euo pipefail
 # usage: composer-submit.sh <pane-id> <instruction>
 #
 # exit 0  instruction submitted and the pane started working
-# exit 2  bad usage, or the pane is not a usable idle agent pane
+# exit 2  bad usage (including an instruction holding a bare "/word" slash
+#         trigger), or the pane is not a usable idle agent pane
 # exit 3  instruction did not submit (composer key sequence is wrong for this
 #         agent CLI, or the pane stopped responding) — before retrying, check
 #         whether the task already finished by matching its completion marker
@@ -41,6 +42,23 @@ if [[ $instruction == *$'\n'* ]]; then
   echo "instruction must be a single line" >&2
   exit 2
 fi
+
+# A bare "/word" anywhere in the text opens the composer's slash-command popup
+# during the paste itself, and the paste that follows is then eaten or rewritten
+# by the popup — cursor-agent has been observed submitting a truncated string or
+# running the remainder as a shell command. Multi-segment paths (/abs/path/to/x)
+# do not trigger it and are allowed; a lone /run or /tmp is rejected, because the
+# popup cannot tell a directory from a command.
+read -ra instruction_tokens <<<"$instruction"
+for token in "${instruction_tokens[@]}"; do
+  [[ $token == /?* ]] || continue
+  rest=${token#/}
+  [[ $rest == */* ]] && continue
+  echo "instruction contains the slash-command trigger '$token'; the composer's" >&2
+  echo "popup corrupts the paste. Reword it (drop the leading slash, wrap the" >&2
+  echo "token in backticks, or give a full path such as '$token/') and resubmit." >&2
+  exit 2
+done
 
 pane_field() {
   herdr pane get "$pane_id" 2>/dev/null |
