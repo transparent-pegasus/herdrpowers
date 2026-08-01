@@ -49,7 +49,10 @@ rtk herdr wait output "$PANE" --match "REVIEW_OK_<4-hex>" --timeout 900000
     `git diff`, and `git log` to inspect history. If you need a working copy
     of a different revision, check it out into a separate temporary directory
     (e.g. `git worktree add /tmp/review-[SHA] [SHA]`) — never move HEAD on
-    this checkout.
+    this checkout. Cleaning the tree counts as mutating it: never execute
+    `git checkout`, `git restore`, `git stash`, `git clean`, or `git reset`
+    here. Other panes may have edits in flight, and a dirty tree is a
+    finding to report, not a problem to fix.
 
     ## Scope Discovery
 

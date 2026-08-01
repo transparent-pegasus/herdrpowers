@@ -55,6 +55,13 @@ signature, an error type, a boundary — **stop and report now** with status
 NEEDS_CONTEXT. Guessing an interface here produces tests that fail on
 cosmetics, which costs a fix round to discover. Raise it before writing.
 
+Stay inside the working directory named in your instruction — never edit any
+other checkout of this repository, and in particular never the one the
+implementer is working in. Never execute `git checkout`, `git restore`,
+`git stash`, `git clean`, or `git reset`: they would move your worktree off the
+pre-implementation commit that makes RED meaningful, and they destroy sibling
+work you cannot see.
+
 ### Your Job
 
 1. Write the tests the task's stated behavior requires — see the
