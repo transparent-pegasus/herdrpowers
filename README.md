@@ -2,7 +2,7 @@
 
 **herdrpowers** is a development framework for AI coding agents running inside [herdr](https://herdr.dev). It layers structured skills and multi-phase workflows on top of any repository, and delegates the work — implementation, test authoring, code review — to **idle sibling agent panes**, not to in-process subagents.
 
-It is the merge of two packs: the orchestration and delegation transport from [herdr-orchestration](https://github.com/transparent-pegasus/herdr-orchestration), and the development cycle from [superpowers-extended](https://github.com/transparent-pegasus/superpowers-extended) (which tracks [obra/superpowers](https://github.com/obra/superpowers)), restructured so every dispatch goes through a pane.
+The development cycle derives from [obra/superpowers](https://github.com/obra/superpowers) — brainstorming, plan writing, TDD, systematic debugging, worktrees, review — restructured so every dispatch goes through a pane, and wrapped in a command-driven workflow layer. The orchestration and delegation transport come from [herdr-orchestration](https://github.com/transparent-pegasus/herdr-orchestration). See [What Changed from Superpowers](#what-changed-from-superpowers).
 
 ## Core Principles
 
@@ -124,7 +124,7 @@ skills/          # 16 skills (single tree, platform-neutral wording)
 commands/        # Workflows: init, plan, execute, execute_parallel, full_cycle,
                  #            strict_full_cycle, quick
 docs/            # Human-facing framework docs + instruction-file snippet
-changelogs/      # Upstream-refresh history inherited from superpowers-extended
+changelogs/      # obra/superpowers refresh history + pack-native release notes
 .claude-plugin/  # Claude Code plugin + marketplace manifests
 .codex-plugin/   # Codex plugin manifest
 .cursor-plugin/  # Cursor plugin manifest
@@ -139,16 +139,31 @@ NOTICE           # Third-party attribution (required by Apache-2.0)
 - **[Skills](./docs/skills.md)** — Catalog of every skill and when to use it.
 - **[Workflows](./docs/workflows.md)** — `/init`, `/full_cycle`, `/strict_full_cycle`, `/plan`, `/execute`, `/execute_parallel`, `/quick`.
 
-## What Changed in the Merge
+## What Changed from Superpowers
 
-Cut from superpowers-extended:
+Superpowers is skill-triggered and subagent-driven: skills fire on their own as the conversation goes, and `subagent-driven-development` dispatches each task to an in-process subagent that implements, tests, commits, and self-reviews before a reviewer subagent sees it. herdrpowers keeps that methodology and changes who runs it and how it is started.
 
-- `agents/` (`code-reviewer`, `test-engineer`) — roles now bind to agent types via `roles.yaml`
-- `requesting-test-creation` / `receiving-test-creation` — test authorship is the `test-authoring` assignment
-- `dispatching-parallel-agents` — parallel work goes to sibling panes, not in-process subagents
-- `subagent-driven-development` → rewritten as `pane-driven-development`
+**Dispatch: panes, not in-process subagents.** Every dispatch goes to an idle sibling agent pane over the composer, so the worker is a *separate agent CLI process* — its own context, its own model, its own vendor. That is the whole reason the rest of this list exists: a subagent is a call inside one session, a pane is another agent you have to talk to over a terminal, and it can be a different product than the orchestrator.
 
-Added in its place: pane delegation as the transport for every dispatch, double review from a list role, a delegated test author that never sees the implementation (with reviewer audit of test code as the compensating control when tests stay with the implementer), and honest degradation when panes are unavailable.
+| | Superpowers | herdrpowers |
+|---|---|---|
+| worker | in-process subagent | idle sibling herdr pane (any agent CLI) |
+| task loop | `subagent-driven-development` | `pane-driven-development` |
+| parallel work | `dispatching-parallel-agents` | panes, bounded by idle panes and worktrees |
+| entry point | skills trigger themselves | `commands/` workflows, plus the same skills |
+| routing | fixed in the skill | `.herdrpowers/config.yaml` over `roles.yaml` |
+| who writes tests | the implementer, always | the `test-authoring` assignment |
+| review | one reviewer subagent | a role bound to a list of agent types: one review per entry |
+
+**A command-driven workflow layer.** Superpowers has no `commands/`. herdrpowers adds seven: `init`, `plan`, `execute`, `execute_parallel`, `full_cycle`, `strict_full_cycle`, `quick` — so a cycle is something you start and can stop mid-way, rather than something that unfolds from skill triggers. `/init` is what makes the pack repo-agnostic: plugin files are read-only, so every repo-specific value lives in the target repo instead of in the pack.
+
+**Test authorship became a setting.** Superpowers has the implementer write its own tests. herdrpowers makes that the `test-authoring` assignment: `delegate` puts a task's tests in a *different pane* working from the same brief in a worktree at the pre-implementation commit, which never sees the implementation — RED is structural rather than disciplined. `implementer` keeps the Superpowers behaviour, and then the reviewers auditing that test code are the only independent check. `fix-round-test-authoring` answers the same question for a fix round. Either way the report names which pane wrote the tests.
+
+**Review independence comes from the session reset, not from a persona.** Superpowers dispatches a named reviewer subagent per review. herdrpowers has no reviewer persona at all: `composer-submit.sh` resets the target session before every delegation, so the reviewer is a fresh context by construction, and the same physical pane may later review work it once wrote. Roles bind to agent types, so a reviewer role listing two CLIs gives a genuine cross-vendor double review.
+
+**Everything degrades honestly.** Outside herdr, or with no idle pane, the work runs inline — and the final report says which steps were not delegated, which independence was lost, and which assignments the repo changed.
+
+Skills dropped from upstream: `dispatching-parallel-agents` and `subagent-driven-development` (replaced by pane delegation and `pane-driven-development`), and `using-superpowers` (the pack's own meta-skill). Added: `herdr`, `orchestration`, `using-herdr-sibling-panes`, `pane-driven-development`, `update-docs`. Upstream's `hooks/`, `scripts/`, `tests/`, and `package.json` are not carried — the payload is skills and commands only.
 
 ## Contributing
 
@@ -156,8 +171,8 @@ This repository includes GitHub issue and pull-request templates under [`.github
 
 ## Changelog
 
-Upstream-tracking refreshes inherited from superpowers-extended are recorded in [`changelogs/`](./changelogs/); the sync point is in [`changelogs/UPSTREAM_SHA`](./changelogs/UPSTREAM_SHA).
+Every refresh from [obra/superpowers](https://github.com/obra/superpowers) is recorded in [`changelogs/`](./changelogs/), alongside pack-native release notes; the tracked upstream commit is in [`changelogs/UPSTREAM_SHA`](./changelogs/UPSTREAM_SHA).
 
 ## License
 
-[Apache License 2.0](./LICENSE). This pack bundles the herdr project's official agent skill (Apache-2.0) and material derived from MIT-licensed packs; see [NOTICE](./NOTICE) for attribution.
+[Apache License 2.0](./LICENSE). This pack bundles the herdr project's official agent skill (Apache-2.0) and material derived from MIT-licensed packs, chiefly [obra/superpowers](https://github.com/obra/superpowers); see [NOTICE](./NOTICE) for the full attribution chain.

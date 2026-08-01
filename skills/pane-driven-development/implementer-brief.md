@@ -44,6 +44,13 @@ approach, dependencies or assumptions, or anything unclear above — **stop and
 report them now** with status NEEDS_CONTEXT. Raise concerns before starting
 work; the orchestrator will answer and re-delegate.
 
+Stay inside the working directory named in your instruction — never edit any
+other checkout of this repository. Never execute `git checkout`, `git restore`,
+`git stash`, `git clean`, or `git reset`: other panes may have edits in flight,
+a dirty tree is not evidence of a problem, and those commands destroy work you
+cannot see. If the tree holds changes you did not make, report them and
+continue; do not clean them up.
+
 ### Your Job
 
 1. Implement exactly what the task specifies, then refactor.
