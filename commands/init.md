@@ -26,8 +26,8 @@ Do not edit workflow files unless the user's current request explicitly asks to 
 1. Inventory
 Inspect the repository to ground a proposal for every key below: build and test tooling (`package.json`, `Makefile`, `pyproject.toml`, `Cargo.toml`, CI workflow files), docs layout, and existing `CLAUDE.md` / `AGENTS.md` content.
 If a `Herdrpowers Configuration` section already exists in an instruction file, load it and treat this run as an update of that section.
-Read the pack's `skills/orchestration/roles.yaml` for the shipped role list and the default role assigned to each delegation task. If `.herdrpowers/config.yaml` already exists, load it too and treat this run as an update of both deliverables — never silently reset a customized assignment or a gate the user turned off.
-If herdr is running (`HERDR_ENV=1`), run `herdr pane list` and note which agent types actually exist in the session; a default assignment naming an agent type this user does not have is worth flagging.
+Read the pack's `skills/orchestration/roles.yaml` for the shipped role list, the shipped `delegation:` defaults, and the default role assigned to each delegation task. If `.herdrpowers/config.yaml` already exists, load it too and treat this run as an update of both deliverables — never silently reset a customized assignment or a gate the user turned off.
+If herdr is running (`HERDR_ENV=1`), run `herdr pane list` and note which agent types actually exist in the session, **and which of them share the caller's `tab_id`**. Delegation is confined to the orchestrator's own tab by default, so an agent type that exists only in another tab is not usable by this repository's workflows as configured — flag that, alongside any default assignment naming an agent type this user does not have at all.
 
 2. Propose Values
 Present one proposed value per key with the evidence it was inferred from (file or command).
@@ -99,7 +99,21 @@ Rules to state while proposing:
 - Two pack invariants are not configurable — state them if the user asks for either: review independence is the reset session (not pane identity; same physical pane OK after a reset-backed submit), and reviews from a list role come from different agent types.
 - `review-fixes` escalates to a fresh pane at fix-loop rounds 4-5 whatever its mode says.
 
-5. Write Configuration
+5. Propose Delegation Defaults
+Present the two `delegation:` keys with the shipped defaults read out of `skills/orchestration/roles.yaml`, and what changing each one costs.
+
+| Key | Values | Meaning |
+|---|---|---|
+| `pane_scope` | `tab` / `workspace` / `session` | Which panes may receive a delegation, relative to the pane the user typed into: only its own tab, any tab of its workspace, or every pane in the session |
+| `execution` | `parallel` / `serial` | What `/full_cycle` and `/strict_full_cycle` attempt for implementation — extract the plan's independent tracks and run them concurrently, or run tasks one at a time |
+
+Rules to state while proposing:
+- Widening `pane_scope` past `tab` means a workflow may reset an agent session in another tab — usually another repository, with its own user mid-task. Each delegation resets the target session, so that work is gone. Widen it only when the user runs one project across several tabs on purpose.
+- A narrow `pane_scope` reduces the panes available for reviews and parallel tracks. That is honest degradation, named in every report — not a silent loss.
+- `execution: parallel` shapes plans too: plans get a `## Tracks` table with owned files per track, and `/full_cycle` runs that partition in per-track worktrees off a coordination branch. It attempts parallelism; a plan with one track, or a session with one usable pane, still runs serially.
+- `/execute` and `/execute_parallel` are the user's explicit choice and ignore `execution`. `/strict_full_cycle` overrides `enabled` only — it never widens the scope or switches the strategy.
+
+6. Write Configuration
 After the user approves the values, upsert the following section into `CLAUDE.md` at the repository root (create the file if it does not exist). If `AGENTS.md` exists, mirror the identical section there. Preserve all other content of both files; only add or replace this one section.
 
 ```markdown
@@ -121,7 +135,7 @@ herdrpowers skills and commands resolve `<KEY>` placeholders from this section.
 - `FULL_TEST_SUITE_COMMAND`: <value>
 ```
 
-6. Write `.herdrpowers/config.yaml`
+7. Write `.herdrpowers/config.yaml`
 Create `.herdrpowers/` at the repository root if it does not exist, and write the approved role list and assignments there. Write every key explicitly, even the ones left at their shipped default — a config the user can read end to end is worth more than a minimal one, and a key absent from this file silently follows `roles.yaml`, which changes under them on the next pack refresh.
 
 ```yaml
@@ -145,6 +159,11 @@ roles:
 
 fallbacks: # agent -> ordered substitutes, tried left to right
   <agent type>: [<agent type>]
+
+# --- delegation defaults applying to every task and workflow ---
+delegation:
+  pane_scope: <tab|workspace|session> # tab = the orchestrator's own tab only
+  execution: <parallel|serial> # /full_cycle and /strict_full_cycle strategy
 
 # --- delegation tasks: each assigned a role from the list above ---
 # mode: delegate (fresh pane of that role) | orchestrator (this pane) |
@@ -202,16 +221,17 @@ assignments:
 
 If the repository already had a `.herdrpowers/config.yaml`, rewrite it in full from the approved values — carrying forward every customization the user did not change in this run.
 
-7. Validate
+8. Validate
 Re-read every written file and confirm:
 - the `Herdrpowers Configuration` section exists, every key has a value, and no value is still an angle-bracket placeholder;
 - `.herdrpowers/config.yaml` parses as YAML, has no angle-bracket placeholders left, carries a `fallbacks:` key, and defines every role that any assignment references;
+- `delegation.pane_scope` is one of `tab`, `workspace`, `session`, and `delegation.execution` is one of `parallel`, `serial`;
 - every delegation task named in `skills/orchestration/roles.yaml` appears under `assignments:` with a `role` that exists in `roles:` and a valid `mode`, and every review task there also has `enabled` — count them from that file rather than from a number written here, which goes stale;
 - no work task carries `enabled: false` — that is the wrong knob; `mode: orchestrator` is how a work task stops being delegated;
 - `.herdrpowers/config.yaml` is not git-ignored (`git check-ignore -v .herdrpowers/config.yaml` must find no matching rule).
 
-8. Report
-List the files written and the final values: the placeholder keys, the role list, and every delegation task with its role and mode. Name explicitly any review set to `enabled: false` and what independence that gives up, and any task moved off its default role or mode. Note that `/plan`, `/execute`, `/execute_parallel`, `/full_cycle`, `/strict_full_cycle`, `/quick`, and the pack's skills now resolve their placeholders from the instruction-file section, and their routing from `.herdrpowers/config.yaml`.
+9. Report
+List the files written and the final values: the placeholder keys, the role list, the `delegation:` defaults, and every delegation task with its role and mode. Name explicitly any review set to `enabled: false` and what independence that gives up, any task moved off its default role or mode, and a `pane_scope` widened past `tab` together with which other tabs' sessions that exposes. Note that `/plan`, `/execute`, `/execute_parallel`, `/full_cycle`, `/strict_full_cycle`, `/quick`, and the pack's skills now resolve their placeholders from the instruction-file section, and their routing from `.herdrpowers/config.yaml`.
 
 ## Execution Requirements
 

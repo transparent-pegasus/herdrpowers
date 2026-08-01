@@ -2,7 +2,7 @@
 
 Workflows tie roles and skills into end-to-end development procedures. They live in `commands/`, the default command directory of the Claude Code, Codex, and Cursor plugin conventions. Each file carries YAML frontmatter `description: ...` so supporting platforms expose it as a slash command.
 
-Every development workflow routes its dispatches through the `orchestration` skill to herdr sibling panes. Outside herdr (`HERDR_ENV` unset, or no idle agent pane) each workflow degrades to inline execution and reports which steps were not delegated.
+Every development workflow routes its dispatches through the `orchestration` skill to herdr sibling panes **in the orchestrator's own tab** — `delegation.pane_scope` defaults to `tab`, so a pane in another tab (usually another repository, with its own user mid-task) is never a delegation target unless the repository widens the scope. Outside herdr (`HERDR_ENV` unset, or no in-scope idle agent pane) each workflow degrades to inline execution and reports which steps were not delegated.
 
 ## Available Workflows
 
@@ -20,6 +20,8 @@ Use when: the pack was just installed (plugin or checked-in copy), or the repo's
 ### `/full_cycle`
 
 The full development cycle for a new feature or sizeable change, and the pack's default procedure for a task that arrives directly from the user: brainstorm → plan → **independent double review of the plan** → approval → isolate → documentation impact review → pane-delegated implementation with TDD → documentation update → repository verification → final review via a reset-backed submit → stop and present the integration candidates (merge locally / push and open a PR / push only / keep) for the user to pick.
+
+Implementation runs **in parallel by default** (`delegation.execution` in the resolved configuration): the plan carries a `## Tracks` table with owned files per track, and the confirmed tracks run in per-track worktrees off a coordination branch. Setting `delegation.execution: serial` runs the plan's tasks one at a time instead. Either way the report names which ran and how much parallelism was actually achieved.
 
 Use when: starting real feature work.
 
@@ -64,7 +66,7 @@ All development workflows share the same guardrails:
 - **Transparency**: Each step blocks for user confirmation. Agents do not proceed autonomously through the whole cycle.
 - **Evidence**: `verification-before-completion` runs before any "done" claim, and a delegated pane's claim is verified against its report file — not taken on trust.
 - **Root cause over symptoms**: When tests fail, `systematic-debugging` drives the investigation.
-- **Honest degradation**: Any step that could not be delegated, any role that fell back to a substitute agent, and any non-default assignment or disabled review from `.herdrpowers/config.yaml`, is named in the final report.
+- **Honest degradation**: Any step that could not be delegated, any role that fell back to a substitute agent, any non-default assignment, `delegation:` value, or disabled review from `.herdrpowers/config.yaml`, and any parallel run that degraded toward serial, is named in the final report.
 
 ## Invoking a Workflow
 

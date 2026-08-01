@@ -42,6 +42,23 @@ Before defining tasks, map out which files will be created or modified and what 
 
 This structure informs the task decomposition. Each task should produce self-contained changes that make sense independently.
 
+## Implementation Tracks
+
+**Plan for parallel execution by default.** The pack's default execution strategy (`delegation.execution` in the merged configuration — `.herdrpowers/config.yaml` over `orchestration/roles.yaml`) is `parallel`, and a plan that only lists tasks forces whoever executes it to re-derive the partition afterwards, from a document that was never written with ownership boundaries in mind. Draw the boundaries here, where the file structure is already in front of you.
+
+Group the tasks into **tracks**: sets of tasks that can be implemented in separate worktrees at the same time. A track is parallelizable only when all of these hold:
+
+- **No overlapping write ownership.** Every file belongs to exactly one track. Two tracks that both modify `src/config.py` are one track.
+- **No ordering dependency inside the parallel window.** A track that consumes another's interfaces runs after it, not beside it — record that in `Depends on`.
+- **No shared mutable artifact** requiring same-session coordination (a migration sequence, a lockfile, a generated bundle).
+- **Integration can be deferred** until every track in the wave is complete.
+
+Then declare them in the plan's `## Tracks` table (see the header below) and tag every task with its track.
+
+Two things this is not: it is not a licence to split work that is genuinely sequential — **a single-track plan is a correct answer**, written as one `main` track with one line saying why the work does not partition; and it is not a reason to weaken a task boundary — right-size tasks first, then group them.
+
+Where a file must be touched by two tracks, prefer moving that edit into one track and having the other consume the result. Where that is impossible, put both tasks in the same track.
+
 ## Task Right-Sizing
 
 A task is the smallest unit that carries its own test cycle and is worth a
@@ -82,6 +99,22 @@ naming and copy rules, platform requirements — one line each, with exact
 values copied verbatim from the spec. Every task's requirements implicitly
 include this section.]
 
+## Tracks
+
+| Track | Goal | Tasks | Owned files | Depends on |
+|---|---|---|---|---|
+| `parser` | [one line] | 1-3 | `src/parser/**`, `tests/parser/**` | — |
+| `cli` | [one line] | 4-5 | `src/cli.py`, `tests/test_cli.py` | `parser` |
+
+[Owned-file globs must not overlap between tracks. `Depends on` is empty for
+every track that can start immediately; a track that names another runs after
+it. One track named `main` owning everything is a valid plan — state in one
+line why the work does not partition.]
+
+**Post-integration follow-ups:** [documentation, repo-wide verification, and
+anything else that must wait until every track has landed — these are never
+parallel tracks.]
+
 ---
 ```
 
@@ -89,6 +122,8 @@ include this section.]
 
 ````markdown
 ### Task N: [Component Name]
+
+**Track:** `parser`
 
 **Files:**
 - Create: `exact/path/to/file.py`
@@ -153,6 +188,8 @@ After writing the complete plan, look at the spec with fresh eyes and check the 
 **2. Placeholder scan:** Search your plan for red flags — any of the patterns from the "No Placeholders" section above. Fix them.
 
 **3. Type consistency:** Do the types, method signatures, and property names you used in later tasks match what you defined in earlier tasks? A function called `clearLayers()` in Task 3 but `clearFullLayers()` in Task 7 is a bug.
+
+**4. Track partition:** Does every task name a track that the `## Tracks` table defines? Does every file in a task's **Files** block fall under its own track's owned globs? Two tracks writing the same file is a merge conflict the executing workflow will hit — fix it here by moving the edit into one track, or by merging the two tracks.
 
 If you find issues, fix them inline. No need to re-review — just fix and move on. If you find a spec requirement with no task, add the task.
 

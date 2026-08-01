@@ -16,6 +16,7 @@ Read both at the start of every orchestrated task (the repo file may be absent �
 
 - **`roles:`** — the role list: each role and the agent type(s) it binds to.
 - **`fallbacks:`** — agent → ordered substitutes, for when an agent cannot take work.
+- **`delegation:`** — defaults that apply to every task: `pane_scope` (which panes are eligible at all) and `execution` (parallel or serial by default).
 - **`assignments:`** — every delegation task, each with the role that performs it.
 
 Merging is per key, not per file: a repo config that sets only `assignments.chores.role` keeps every other assignment, every role binding, and every fallback at its default.
@@ -25,6 +26,30 @@ Merging is per key, not per file: a repo config that sets only `assignments.chor
 If the repo has no `.herdrpowers/config.yaml` and the user wants to reassign a task, change a mode, or turn a review off, run the init workflow (`/herdrpowers:init`, or `commands/init.md`) — do not edit `roles.yaml`.
 
 **Never write either file from inside an orchestrated run.** The configuration is input, resolved once before the first delegation. Rewriting it mid-run to route around an unavailable agent or to escape a review gate falsifies the terms the run reported under; unavailability is what `fallbacks:` and honest degradation are for.
+
+## Delegation scope
+
+`delegation.pane_scope` decides which panes are eligible to receive work at all, before any role or assignment is consulted. It is resolved from the merged configuration like everything else, and defaults to `tab`.
+
+| value | eligible panes |
+|---|---|
+| `tab` | only panes whose `tab_id` matches the orchestrator's — the default |
+| `workspace` | any pane in the orchestrator's `workspace_id`, in any tab |
+| `session` | every agent pane `herdr pane list` reports |
+
+Delegating outside the orchestrator's tab is off by default because a tab is how a herdr user separates projects: `herdr pane list` reports a per-pane `cwd`, and a pane one tab over is usually sitting in a different repository, in a session its own user is mid-task in. A reset-backed submit would discard that session.
+
+Scope is a filter, not a preference. An out-of-scope pane is not a candidate, not a last resort, and not a fallback target — and it does not count when deciding whether an agent type is available. When no in-scope pane of the needed type exists, that type is unavailable: wait for one to free up, take a substitute from `fallbacks:`, or degrade per the rules below. Widening the scope mid-run is not one of the options; it is a configuration change, and configuration is never written from inside a run.
+
+`using-herdr-sibling-panes` applies the filter — see "Delegation scope" there for the exact `herdr pane list` query.
+
+## Execution strategy
+
+`delegation.execution` sets what `/full_cycle` and `/strict_full_cycle` attempt for the implementation phase: `parallel` (the default) extracts the plan's independent implementation tracks and runs them concurrently per `/execute_parallel`; `serial` runs the plan's tasks one at a time per `/execute`.
+
+It sets what is attempted, not what is forced. A plan whose extraction leaves fewer than two independent tracks, or a session with only one usable pane, runs serially either way — that is degradation, and the final report says so. `/execute` and `/execute_parallel` are explicit choices by the user and ignore this key.
+
+Under `parallel`, plans are written with tracks declared up front (see `writing-plans`), so extraction confirms a partition the plan already states rather than inventing one after the fact.
 
 ## Delegation tasks and their assignments
 
@@ -61,7 +86,7 @@ Resolve every task the workflow will touch before its first delegation, not when
 
 **`/strict_full_cycle` ignores `enabled` and runs every gate in this table**, naming each one it forced on in its report. It is the pack's only override of the resolved configuration, and it touches nothing but `enabled` — never a `role`, a `mode`, or an invariant.
 
-**Every assignment the repo config changed away from `roles.yaml`, and every disabled review, is named in the final report**, next to any role that fell back and any review that degraded for lack of panes. The user configured it; the report says so, every run, so nobody later mistakes an unreviewed branch for a reviewed one, or a self-tested one for independently tested.
+**Every assignment the repo config changed away from `roles.yaml`, every non-default `delegation:` value, and every disabled review, is named in the final report**, next to any role that fell back and any review that degraded for lack of panes. The user configured it; the report says so, every run, so nobody later mistakes an unreviewed branch for a reviewed one, or a self-tested one for independently tested.
 
 ### Roles that bind to a list
 
@@ -84,7 +109,7 @@ Compare findings across the returned reviews, resolve disagreements, and only th
 
 ## Role assignments
 
-Panes are NOT reserved per role. Roles bind to agent types, not to specific panes: at delegation time, pick any idle pane of the matching agent type. A pane that just finished a review can take a coder or generalist task next, and vice versa. When no pane of the right type is idle, wait or run the work in the orchestrator pane — do not interrupt a working pane.
+Panes are NOT reserved per role. Roles bind to agent types, not to specific panes: at delegation time, pick any idle pane of the matching agent type that is within `delegation.pane_scope`. A pane that just finished a review can take a coder or generalist task next, and vice versa. When no in-scope pane of the right type is idle, wait or run the work in the orchestrator pane — do not interrupt a working pane, and do not reach outside the scope.
 
 ## Orchestrator
 
@@ -152,7 +177,7 @@ Two specifics beyond the general rules: each review is a reset-backed delegation
 
 An agent type is exhausted when `using-herdr-sibling-panes` reports it exhausted — its output says the usage or rate limit is reached, or two delegations to two different idle panes of that type both came back with no marker and no completed work. That skill's "Failure handling" section owns the detection; this skill owns what happens next.
 
-1. Look the exhausted agent up in the resolved `fallbacks:` map and take the first substitute that has a usable idle pane, subject to the two-reviewer rule above.
+1. Look the exhausted agent up in the resolved `fallbacks:` map and take the first substitute that has a usable idle pane **within `delegation.pane_scope`**, subject to the two-reviewer rule above.
 2. Re-delegate the same self-contained instruction to the substitute. Do not rewrite the task to suit it.
 3. If the agent has no `fallbacks:` entry in either file, or every substitute is itself unavailable, degrade: run the work in the orchestrator pane if it is safe to do so, otherwise stop and report.
 4. Remember the exhausted agent type for the rest of the task and route around it from then on.
