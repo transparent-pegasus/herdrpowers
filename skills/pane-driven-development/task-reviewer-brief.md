@@ -31,7 +31,10 @@ merge review — a broad whole-branch review happens separately after all tasks
 are complete.
 
 Your review is read-only on this checkout. Do not mutate the working tree, the
-index, HEAD, or branch state in any way.
+index, HEAD, or branch state in any way. That includes cleaning it up: never
+execute `git checkout`, `git restore`, `git stash`, `git clean`, or `git reset`.
+Other panes may have edits in flight, and a dirty tree is a finding to report,
+not a problem to fix.
 
 ### What Was Requested
 

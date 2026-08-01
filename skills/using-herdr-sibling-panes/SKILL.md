@@ -24,7 +24,7 @@ What to delegate depends on how this skill was entered:
 
 1. Run `herdr pane list` and identify your own pane (the orchestrator) by `$HERDR_PANE_ID`. Every entry carries `pane_id`, `tab_id`, `workspace_id`, `agent`, `agent_status`, and `cwd`.
 2. Discard every out-of-scope pane first — by default that is every pane outside your own tab. See "Delegation scope" below; it applies before anything else in this list.
-3. From what remains, select only sibling panes that have an `agent` field and `agent_status: idle` or `done`. A pane with no `agent` field is a plain shell or a crashed agent — see "Failure handling".
+3. From what remains, select only sibling panes that have an `agent` field and `agent_status: idle` or `done`. A pane with no `agent` field is a plain shell or a crashed agent — see "Failure handling". The `agent` field alone is not proof the agent is alive: it can name a CLI that has since exited, leaving the pane at a shell prompt. The helper checks this before sending anything (it exits `2` when the pane's foreground process is its own shell), so let it — never hand-send text to a pane you have not confirmed.
 4. Distribute independent work items across the available panes, one instruction per pane.
 5. Submit one self-contained instruction per pane with `scripts/composer-submit.sh`. It resets the target session and submits the instruction in one call; do not send `/clear` yourself.
 6. Do not send a second prompt such as "Please run the task I just sent." The submitted instruction is already running.
@@ -57,7 +57,9 @@ rtk herdr pane list | jq -r --arg tab "$HERDR_TAB_ID" --arg self "$HERDR_PANE_ID
 
 For `workspace`, compare `.workspace_id` against `$HERDR_WORKSPACE_ID` instead; for `session`, drop the topology filter. Without `jq`, read the same three fields out of the JSON by hand — do not skip the check.
 
-An out-of-scope pane is not a candidate at all: not a last resort, not a fallback target, and never counted when deciding whether an agent type is available. When no in-scope pane of the needed type exists, that type is unavailable for this delegation — wait for one to free up, fall back per "Exhaustion and fallback", or degrade as the calling skill directs. Never widen the scope mid-run to find a pane; that is a configuration change, and configuration is not written from inside a run.
+An out-of-scope pane is not a candidate at all: not a last resort, not a fallback target, and never counted when deciding whether an agent type is available. When no in-scope pane of the needed type exists, that type is unavailable for this delegation — say so to the user and ask them to start one, wait for one to free up, fall back per "Exhaustion and fallback", or degrade as the calling skill directs. Never widen the scope mid-run to find a pane; that is a configuration change, and configuration is not written from inside a run.
+
+An absolute path in the instruction does not make a cross-repository pane safe. That pane's agent loads *its own* repository's instruction files, configuration, and skills before reading your task, so it works your files under someone else's conventions. If the task itself turns out to target a repository other than the one you are working in, confirm the target with the user before delegating or editing — read-only investigation needs no confirmation.
 
 ## Composer-safe submission
 
@@ -70,7 +72,9 @@ Agent CLIs take input through a composer — a stateful input box with slash-com
 
 Therefore, never submit `/clear` or delegated prompts to an agent pane with `pane run`. Use the bundled helper, which clears the composer, resets the session, submits exactly one instruction, and confirms the pane actually started.
 
-**Width is a precondition.** Cursor's composer has been measured ignoring Enter in narrow panes, while Codex still submitted at widths down to 4 columns. Raising the settle seconds does not compensate. The observed boundary is not monotonic — 22 columns passed while 24 failed — and remains unexplained, so the default 40-column floor is conservative, not a measured cliff. Before touching the composer, the helper reads the foreground process's terminal width. Below `HERDR_COMPOSER_MIN_COLS` (default `40`), it temporarily widens the pane with `herdr pane zoom`; if the pane remains below the floor, it refuses with exit `4` and names the measured width and floor. Any zoom taken by the helper is removed on exit, including failure paths.
+**Width is a precondition.** Cursor's composer has been measured ignoring Enter in narrow panes, while Codex still submitted at widths down to 4 columns. Raising the settle seconds does not compensate. The observed boundary is not monotonic — 22 columns passed while 24 failed — and remains unexplained, so the default 40-column floor is conservative, not a measured cliff. Before touching the composer, the helper reads the foreground process's terminal width. Below `HERDR_COMPOSER_MIN_COLS` (default `40`), it temporarily widens the pane with `herdr pane zoom`; if the pane remains below the floor, it refuses with exit `4` and names the measured width and floor. On exit, including every failure path, it puts the tab's zoom back the way it found it — unzoomed, or zoomed on whichever pane held it before.
+
+**Zoom is one slot per tab, so submissions into one tab serialize.** `herdr pane zoom --on` against an already-zoomed tab *moves* the zoom onto the target pane while reporting `zoom_changed: false`, so a helper that trusted that flag would disclaim cleanup and leak the zoom — and every later submission would then see the leaked zoom and leak it again. The helper reads the tab's real zoom state instead, and holds a per-tab `flock` across measure → zoom → Enter so two concurrent delegations into the same tab cannot trade the slot and resize each other's composer mid-paste. Parallel delegation is unaffected apart from a few seconds of submission ordering; the delegated work still runs concurrently.
 
 `$SKILL_DIR` below is the directory containing *this* `SKILL.md`. The scripts ship next to it, so resolve them against it — never against the repo you are working in.
 
@@ -80,7 +84,7 @@ COMPOSER_SUBMIT="$SKILL_DIR/scripts/composer-submit.sh"
 rtk "$COMPOSER_SUBMIT" "$PANE" "$INSTRUCTION"
 ```
 
-Exit codes: `0` submitted and running, `2` bad usage (embedded newline, or a bare `/word` slash trigger in the instruction) or the pane is not a usable idle agent pane, `3` the instruction did not submit, `4` the pane remained too narrow after a zoom attempt.
+Exit codes: `0` submitted and running, `2` bad usage (embedded newline, or a bare `/word` slash trigger in the instruction) or the pane is not a usable idle agent pane — including a pane whose agent has exited and left it at a shell prompt, `3` the instruction did not submit, `4` the pane remained too narrow after a zoom attempt.
 
 ### Verified keys
 
@@ -99,7 +103,7 @@ Two keys that look plausible and are wrong:
 * **`ctrl+c` quits Codex.** On an idle Codex composer it exits the TUI and drops the pane to a shell. Never use it to cancel composer state; `ctrl+u` does that job without the exit path.
 * **`ctrl+enter` does not submit in Codex.** The text stays in the composer and the delegation silently never runs.
 
-If the helper is unavailable, this is the same sequence by hand. Do not remove the settle points:
+If the helper is unavailable, this is the same sequence by hand. Do not remove the settle points — and understand what you give up: the hand sequence skips the shell-prompt check, the width floor, and the started confirmation, so it will happily type a delegated instruction onto a bare command line. Before the first `send-text`, `pane read` the target and confirm you can see a composer (`›`, `→ Add a follow-up`) and not a shell prompt (`%`, `$`). Send lowercase `enter` as a key; a literal `Enter` string is text, and it silently accumulates in the composer instead of submitting.
 
 ```bash
 rtk herdr pane send-keys "$PANE" ctrl+u
@@ -139,11 +143,19 @@ Every instruction must include the **absolute working directory** (a pane does n
 
 **Reports go to files.** Terminal scrollback is lossy — an agent on the alternate screen loses rows that `pane read` can never recover. Name a report file path in every brief (under `<REPORT_DIRECTORY>`, or the worktree's scratch directory) and require the pane to write its full report there and reply with that path plus the marker. Read the file; do not reconstruct the result from scrollback.
 
-**Verify claims, do not trust them.** A pane reporting "verified" or "tests pass" is a claim. Re-run the decisive command, or read the quoted output in the report file, before accepting it. Keep the marker at 16 ASCII characters or fewer so terminal wrapping cannot split it. The complete marker must not occur verbatim in the submitted prompt, because `wait output` also sees user text; describe it as two fragments that the delegated agent must concatenate. Keep the instruction on a single line — the helper rejects embedded newlines. Keep bare `/word` tokens out of the text for the same reason: the helper rejects them with exit `2`, because they open the composer's slash popup mid-paste and corrupt the submission. Absolute paths are fine; a step name like `/run` must be reworded or backtick-wrapped.
+**Verify claims, do not trust them.** A pane reporting "verified" or "tests pass" is a claim. Re-execute the decisive command, or read the quoted output in the report file, before accepting it.
+
+**Never let a delegated pane undo work it did not do.** Sibling panes can have edits in flight, and a pane that decides a dirty tree is "unexpected churn" will clean it. One did: a read-only link-checking pane ran `git checkout -- package.json aube-lock.yaml` and wiped a sibling's dependency work mid-verify. Every instruction gets an explicit clause: make no edits outside the stated scope, and never execute `git checkout`, `git restore`, `git stash`, `git clean`, or `git reset` — sibling edits may be in flight, and a dirty tree is not evidence of a problem. State the same for the orchestrator's own repository when the pane works in a worktree.
+
+**Check the tree before integrating.** A pane whose task file named a dedicated worktree still edited the orchestrator's main worktree, and it surfaced only when `git merge` refused. Before any merge or integration step, `git status --short` in the integration tree and treat every unexpected modification as a scope violation: save it (`git diff > <scratch>/stray-<task>.patch`), restore the file, and surface it to the user as its own decision. Never let it ride along in a merge commit.
+
+**Marker rules.** Keep the marker at 16 ASCII characters or fewer. `wait output` matches against unwrapped output, so a marker split across lines by a narrow pane still matches — the failure mode is the opposite one. The complete marker must not occur verbatim in the submitted prompt, because `wait output` also sees the echoed user text; describe it as two fragments the delegated agent concatenates, and keep those fragments apart in the sentence. Naming them adjacently ("end with PLANREV followed by _A1C7") has rendered them side by side in a narrow pane and fired the match the moment the prompt echoed, before any work happened.
+
+**On a long delegation, poll for the report file.** The marker is the completion signal for short work. For anything measured in tens of minutes, a `wait output` that times out tells you nothing — the pane may still be working, may have died, or may have finished before the wait started, because `wait output` only scans output emitted after it begins. Poll for the report file the instruction named instead, and require the pane to write it in one final write (or to a temporary path and rename), because a file rewritten in place disappears mid-write and turns an existence check into a false negative. Treat the task as done only when the report file is present *and* the pane reports `idle` or `done`. Keep the instruction on a single line — the helper rejects embedded newlines. Keep bare `/word` tokens out of the text for the same reason: the helper rejects them with exit `2`, because they open the composer's slash popup mid-paste and corrupt the submission. Absolute paths are fine; a step name like `/run` must be reworded or backtick-wrapped. Keep the word `run` out of instruction prose entirely — write `execute`, `invoke`, or name the command — because a wrap that puts `run` at the start of a line pins a cursor pane at `blocked` for the rest of its session; see "A wrapped `run ` line pins a cursor pane at `blocked`".
 
 ```bash
 PANE=w2:p18
-INSTRUCTION="Please run rtk make lint in /path/to/repo. Make no edits. Report the command, exit code, and errors. End with LINT_OK immediately followed by _7F3A."
+INSTRUCTION="Execute rtk make lint in /path/to/repo. Make no edits. Report the command, exit code, and errors. End with LINT_OK immediately followed by _7F3A."
 COMPOSER_SUBMIT="$SKILL_DIR/scripts/composer-submit.sh"
 submit_rc=0
 rtk "$COMPOSER_SUBMIT" "$PANE" "$INSTRUCTION" || submit_rc=$?
@@ -170,13 +182,44 @@ Helper exits `2` and `4` mean the delegation never started. Do not call `herdr w
 | state | how it looks | what to do |
 | --- | --- | --- |
 | **finished** | marker matched | read the result, integrate it |
-| **too narrow** | helper exits `4` after its zoom attempt | fix the pane or enclosing-terminal layout and retry the same delegation; this is layout retry only — never exhaustion or fallback |
+| **too narrow** | helper exits `4` after its zoom attempt | the 40-column floor is conservative, not a measured cliff — resubmit to the same pane with a lower floor (`HERDR_COMPOSER_MIN_COLS=24 rtk "$COMPOSER_SUBMIT" ...`; codex has submitted down to 4 columns, cursor has not) before touching the layout. Layout retry only — never exhaustion or fallback |
 | **did not submit** | helper exits `3` | check for the marker first — a very fast task can finish before the status poll sees it. Otherwise re-run the helper once; a second `3` means the keys are wrong for this CLI, so run the probe |
-| **crashed** | `pane get` has no `agent` field; `pane read` shows a shell prompt | restart it in place with the argv from `pane process-info` taken *before* the crash, then re-delegate once |
-| **blocked** | `agent_status: blocked` | the agent is waiting on an approval or input prompt. Do not answer it blindly — report it to the user |
+| **crashed** | `pane read` shows a shell prompt; `pane get` may or may not still name an `agent`; the helper exits `2` naming the shell pid | restart it in place with the argv from `pane process-info` taken *before* the crash, then re-delegate once |
+| **stalled on an approval** | `pane read` shows `Run this MCP tool?` / `Run (once) (y)`; `agent_status` may be `blocked` **or** `idle` | report the pane and the prompt to the user; do not answer a shell approval yourself — see "A delegated pane can stall on its own approval prompt" |
+| **blocked** | `agent_status: blocked` | the agent is waiting on an approval or input prompt. Do not answer it blindly — report it to the user. Confirm it against `pane read` first: a cursor pane reporting `blocked` at an empty composer is a false positive from the echoed instruction, not a prompt — see below |
 | **interrupted** | pane idle, no marker, output ends mid-task | re-delegate once to the same pane. A second interruption is a failure, not a retry loop |
 | **errored** | pane idle, no marker, output ends in an error | report the error verbatim; do not paper over it with a retry |
 | **exhausted** | usage/rate-limit message in the output, or the pane refuses work while idle | see below |
+
+### A delegated pane can stall on its own approval prompt
+
+An agent CLI that asks before each shell command or MCP tool call will stop mid-task waiting for an answer nobody is watching for. Observed on cursor panes on both halves of a double review: the pane sat at `Run this MCP tool?` or `Run (once) (y)` while `agent_status` read `blocked` on one pane and `idle` on the other, so status alone said "stuck" for one and "finished" for the other, and neither was true. The completion marker never arrived and the review silently degraded to one reviewer.
+
+**Prevent it rather than answer it.** A pane that will take delegated work should be started with the permissions it needs already granted in that CLI's own configuration — cursor's `permissions.allow`, codex's sandbox/approval settings, and so on. That is a one-time setup on the pane, outside any run, and it removes the stall entirely.
+
+When one happens anyway: poll `herdr pane read "$PANE" --source recent --lines 25` alongside the marker wait, and treat a visible approval prompt as a stop, not a completion. Report it to the user with the pane id and the exact prompt text, and let them decide — do not answer a shell-command approval on their behalf, because the command is the delegated agent's idea, not the plan's. The keys, when the user authorizes them: `tab` on an MCP prompt allowlists that tool for the rest of the session (better than `y`, which approves once and prompts again), and `y` answers a single shell approval.
+
+Note the overlap with the section below: herdr's cursor rules key `blocked` off text like `Run (once) (y)` in the scrollback, which is why the same status can mean a genuine prompt or a false positive from the echoed instruction. `pane read` is the arbiter in both directions — never `agent_status` alone.
+
+### A wrapped `run ` line pins a cursor pane at `blocked`
+
+herdr infers `agent_status` from the pane's screen for any CLI whose integration does not report lifecycle state itself. Its cursor rules include an approval-prompt pattern that matches **any line beginning with `run `** anywhere in the recent scrollback (`^\s*(run |...)`, state `blocked`, region `whole_recent`). It is meant to catch cursor's `run (once) (y)` confirmation, but nothing anchors it to an actual prompt affordance.
+
+The echoed instruction is part of that scrollback. In a narrow pane it wraps, and any wrap point that puts `run` at the start of a line trips the rule — position in the sentence is irrelevant. Verified on herdr 0.7.1 with cursor-agent 2026.07.23, in a 30-column pane, same pane and same helper both times:
+
+| instruction ends with | wrapped transcript line | result |
+| --- | --- | --- |
+| `... Make no edits and run no commands.` | `run no commands.` | `blocked` from the moment the prompt echoes, and it never clears |
+| `... Make no edits and execute no shell commands.` | — | `working` → `idle`, normally |
+
+Because the rule scans the whole recent scrollback rather than the live footer, the match survives the turn: the pane sits at an empty follow-up composer, reporting `blocked`, with nothing to approve. No key input clears it. Only `/clear` does, by wiping the transcript that holds the matching line — and that is exactly what the helper cannot send, because it refuses `blocked` panes at exit `2`. Such a pane silently leaves the candidate pool after one delegation.
+
+Two consequences for delegated instructions:
+
+* **Do not let `run` fall at the start of a wrapped line.** You cannot predict the wrap — the helper zooms the pane wide to submit and restores the layout afterwards, so the transcript reflows at the pane's real width. The reliable move is to avoid the word entirely in instruction prose aimed at a cursor pane: write `execute the test suite`, `invoke`, or name the command directly. Commands inside backticks or code blocks are still subject to the same rule if they wrap onto their own line starting with `run `.
+* **Do not clear a `blocked` pane to unstick it.** The status gate stays strict, because an agent genuinely waiting on an approval prompt must never be reset out from under the user. When a pane reports `blocked` but `pane read` shows an idle composer and no prompt, report it to the user as a false-positive status and name the pane. Do not treat the agent type as exhausted — this is one pane's transcript, not a capacity problem.
+
+The underlying fix is upstream in herdr's cursor detection rules. Keep herdr and the agent CLI integrations current, and re-run `scripts/probe-composer.sh` after either is upgraded.
 
 ### Exhaustion and fallback
 

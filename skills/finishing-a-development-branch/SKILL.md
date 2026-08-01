@@ -98,6 +98,9 @@ option — and when they do, execute that option only.
 MAIN_ROOT=$(git -C "$(git rev-parse --git-common-dir)/.." rev-parse --show-toplevel)
 cd "$MAIN_ROOT"
 
+# Scope check — this tree should be clean; anything here was written by mistake
+git status --short
+
 # Merge first — verify success before removing anything
 git checkout <base-branch>
 git pull
@@ -106,6 +109,15 @@ git merge <feature-branch>
 # Verify tests on merged result
 <test command>
 ```
+
+**Every unexpected modification in that `git status --short` is a scope
+violation, not noise.** A delegated pane whose task named a dedicated worktree
+has edited the main checkout instead, and it surfaced only because `git merge`
+refused with "Please commit your changes or stash them" — by which point the
+stray edit was one `git stash` away from riding into the merge commit
+unreviewed. Do not commit it, do not discard it: save it
+(`git diff > <REPORT_DIRECTORY>/stray-<task>.patch`), restore the file, finish
+the merge, and surface the patch to the user as its own decision.
 
 If tests fail on the merged result: stop, leave the worktree and branch in
 place, and investigate — nothing has been pushed, so the merge is local
