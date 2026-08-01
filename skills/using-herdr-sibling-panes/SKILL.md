@@ -22,15 +22,42 @@ What to delegate depends on how this skill was entered:
 
 ## Workflow
 
-1. Run `herdr pane list` and identify your own pane (the orchestrator) and idle sibling agent panes.
-2. Select only sibling panes that have an `agent` field and `agent_status: idle` or `done`. A pane with no `agent` field is a plain shell or a crashed agent — see "Failure handling".
-3. Distribute independent work items across the available panes, one instruction per pane.
-4. Submit one self-contained instruction per pane with `scripts/composer-submit.sh`. It resets the target session and submits the instruction in one call; do not send `/clear` yourself.
-5. Do not send a second prompt such as "Please run the task I just sent." The submitted instruction is already running.
-6. Wait for the instruction's unique completion marker with `herdr wait output`, always with a timeout.
-7. On a marker match, re-read `pane list`. If the pane is still `working`, wait for `idle`; if it is already `idle` or `done`, continue. Agent status lags behind the visible output — the marker is the completion signal, status is not.
-8. On anything other than a marker match, go to "Failure handling". Never retype into a composer to "fix" a failed submission.
-9. Read the completed result and integrate it in the orchestrator pane.
+1. Run `herdr pane list` and identify your own pane (the orchestrator) by `$HERDR_PANE_ID`. Every entry carries `pane_id`, `tab_id`, `workspace_id`, `agent`, `agent_status`, and `cwd`.
+2. Discard every out-of-scope pane first — by default that is every pane outside your own tab. See "Delegation scope" below; it applies before anything else in this list.
+3. From what remains, select only sibling panes that have an `agent` field and `agent_status: idle` or `done`. A pane with no `agent` field is a plain shell or a crashed agent — see "Failure handling".
+4. Distribute independent work items across the available panes, one instruction per pane.
+5. Submit one self-contained instruction per pane with `scripts/composer-submit.sh`. It resets the target session and submits the instruction in one call; do not send `/clear` yourself.
+6. Do not send a second prompt such as "Please run the task I just sent." The submitted instruction is already running.
+7. Wait for the instruction's unique completion marker with `herdr wait output`, always with a timeout.
+8. On a marker match, re-read `pane list`. If the pane is still `working`, wait for `idle`; if it is already `idle` or `done`, continue. Agent status lags behind the visible output — the marker is the completion signal, status is not.
+9. On anything other than a marker match, go to "Failure handling". Never retype into a composer to "fix" a failed submission.
+10. Read the completed result and integrate it in the orchestrator pane.
+
+## Delegation scope
+
+**Delegation stays inside the orchestrator's own tab unless the repository widens it.** A tab is how a herdr user separates projects: every pane carries its own `cwd`, and a pane one tab over is usually sitting in a different repository, in a session its own user is mid-task in. `composer-submit.sh` resets the target session, so a cross-tab delegation destroys that work — silently, and in a repo the task has no business touching.
+
+The scope comes from `delegation.pane_scope` in the merged configuration (`.herdrpowers/config.yaml` over `orchestration/roles.yaml`), and defaults to `tab` — including standalone use, where no configuration was resolved at all.
+
+| value | eligible panes |
+|---|---|
+| `tab` | only panes whose `tab_id` equals the orchestrator's — the default |
+| `workspace` | any pane in the orchestrator's `workspace_id`, in any tab |
+| `session` | every agent pane `herdr pane list` reports |
+
+Filter before selecting anything. Under the default scope, this prints every eligible pane and its agent type:
+
+```bash
+rtk herdr pane list | jq -r --arg tab "$HERDR_TAB_ID" --arg self "$HERDR_PANE_ID" '
+  .result.panes[]
+  | select(.tab_id == $tab and .pane_id != $self)
+  | select(.agent != null and (.agent_status == "idle" or .agent_status == "done"))
+  | "\(.pane_id)\t\(.agent)\t\(.cwd)"'
+```
+
+For `workspace`, compare `.workspace_id` against `$HERDR_WORKSPACE_ID` instead; for `session`, drop the topology filter. Without `jq`, read the same three fields out of the JSON by hand — do not skip the check.
+
+An out-of-scope pane is not a candidate at all: not a last resort, not a fallback target, and never counted when deciding whether an agent type is available. When no in-scope pane of the needed type exists, that type is unavailable for this delegation — wait for one to free up, fall back per "Exhaustion and fallback", or degrade as the calling skill directs. Never widen the scope mid-run to find a pane; that is a configuration change, and configuration is not written from inside a run.
 
 ## Composer-safe submission
 
@@ -154,6 +181,8 @@ Helper exits `2` and `4` mean the delegation never started. Do not call `herdr w
 ### Exhaustion and fallback
 
 Treat an agent type as **exhausted** when its output says the usage or rate limit is reached, or when two delegations to two different idle panes of that type both come back with no marker and no completed work. Exhaustion is a property of the agent type, not of one pane — do not retry it on a sibling pane of the same type.
+
+An agent type with no in-scope pane is **unavailable**, not exhausted. Report it as such: it may have plenty of idle panes one tab over, and the fix is a configuration decision by the user, not a retry.
 
 Only submissions for which the helper returned `0` can contribute to the two-pane no-marker rule. Helper exits `2` and `4` never started a delegation and must never count as exhaustion.
 

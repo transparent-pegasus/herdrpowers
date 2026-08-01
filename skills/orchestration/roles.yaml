@@ -50,6 +50,29 @@ fallbacks:
   cursor: [grok]
 
 # ---------------------------------------------------------------------------
+# Delegation defaults that apply to every task and every workflow.
+# See "Delegation scope" and "Execution strategy" in SKILL.md.
+# ---------------------------------------------------------------------------
+delegation:
+  # Which panes may receive a delegation, relative to the orchestrator pane.
+  # `herdr pane list` reports `pane_id`, `tab_id`, `workspace_id`, and `cwd`
+  # for every pane, so the filter is a field comparison, not a guess.
+  #   tab        only panes whose `tab_id` equals the orchestrator's. The
+  #              default: a tab is how a herdr user separates projects, so a
+  #              pane in another tab is usually another repository's pane.
+  #   workspace  any pane in the orchestrator's `workspace_id`, any tab
+  #   session    every agent pane herdr reports
+  pane_scope: tab
+
+  # Default execution strategy for `/full_cycle` and `/strict_full_cycle`.
+  #   parallel  extract the plan's independent implementation tracks and run
+  #             them concurrently, per `/execute_parallel`. The default.
+  #   serial    run the plan's tasks one at a time, per `/execute`.
+  # Either way a plan with fewer than two independent tracks runs serially —
+  # this key sets what is attempted, not what is forced.
+  execution: parallel
+
+# ---------------------------------------------------------------------------
 # Delegation tasks, each assigned a role. This is the routing table: the skill
 # reads it instead of hard-coding "implementation goes to Coder".
 #

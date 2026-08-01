@@ -21,7 +21,7 @@ The agent asks what you want to build and engages in a design and requirements d
 The orchestrator breaks the approved design into small, achievable tasks — then sends the plan out for **independent double review** before anyone touches code. Two different agent types review the same self-contained request in separate panes, with no shared draft opinion. The orchestrator resolves the findings and presents the resolved plan for approval.
 
 - **Purpose**: Create a clear, actionable roadmap, and catch its defects while they are still cheap.
-- **Outcome**: A reviewed, resolved, approved plan at `<PLAN_PATH_PATTERN>` (not committed).
+- **Outcome**: A reviewed, resolved, approved plan at `<PLAN_PATH_PATTERN>` (not committed), carrying a `## Tracks` table — which tasks can run concurrently, and which files each track owns — because Phase 5 runs those tracks in parallel by default.
 - **Skill**: `writing-plans`. **Roles**: orchestrator (drafts), Reviewer ×2 (review).
 
 A plan is not complete when it is written. It is complete when it is reviewed, resolved, and approved.
@@ -61,7 +61,9 @@ The active coding phase. Each task in the plan is delegated to a fresh pane.
 - **Skills**: `pane-driven-development`, `test-driven-development`, `systematic-debugging`.
 - **Roles**: as assigned in [`roles.yaml`](../skills/orchestration/roles.yaml) — the pack ships implementation and test authoring on Coder, per-task review on Reviewer, chores on Generalist.
 
-Independent tracks can run concurrently — one pane per worktree, never two implementers in one working tree. See `/execute_parallel`.
+Independent tracks run concurrently by default — one pane per worktree, never two implementers in one working tree. `/full_cycle` takes the plan's `## Tracks` table, confirms it with you, and runs the tracks in per-track worktrees off a coordination branch; `delegation.execution: serial` runs them one at a time instead. See `/execute_parallel` for the same machinery invoked explicitly.
+
+Every pane a phase delegates to sits in the orchestrator's own tab, unless the repository widened `delegation.pane_scope`.
 
 ---
 
