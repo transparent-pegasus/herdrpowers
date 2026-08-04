@@ -2,7 +2,7 @@
 
 **herdrpowers** is a development framework for AI coding agents running inside [herdr](https://herdr.dev). It layers structured skills and multi-phase workflows on top of any repository, and delegates the work — implementation, test authoring, code review — to **idle sibling agent panes**, not to in-process subagents.
 
-The development cycle derives from [obra/superpowers](https://github.com/obra/superpowers) — brainstorming, plan writing, TDD, systematic debugging, worktrees, review — restructured so every dispatch goes through a pane, and wrapped in a command-driven workflow layer. The orchestration and delegation transport come from [herdr-orchestration](https://github.com/transparent-pegasus/herdr-orchestration). See [What Changed from Superpowers](#what-changed-from-superpowers).
+The development cycle derives from [obra/superpowers](https://github.com/obra/superpowers) — brainstorming, plan writing, TDD, systematic debugging, worktrees, review — restructured so every dispatch goes through a pane, and wrapped in a command-driven workflow layer. See [What Changed from Superpowers](#what-changed-from-superpowers).
 
 ## Core Principles
 
