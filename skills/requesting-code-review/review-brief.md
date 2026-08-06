@@ -70,6 +70,15 @@ rtk herdr wait output "$PANE" --match "REVIEW_OK_<4-hex>" --timeout 900000
     code as findings. Never mark a requirement satisfied on the
     description's word.
 
+    ## You Do Not Delegate Onward
+
+    Do all of this review yourself. Never hand part of the diff to another
+    pane, and never open a pane for a second opinion. This process already
+    provides every review seat the work gets; a reviewer you delegate
+    duplicates one of them at full cost, and its verdict counts for nothing.
+    If the diff feels too large for one pass, review it in passes yourself
+    and say so in your report.
+
     ## What to Check
 
     **Plan alignment:**
