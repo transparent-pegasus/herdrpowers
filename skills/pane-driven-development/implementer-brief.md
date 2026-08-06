@@ -76,7 +76,13 @@ While iterating, run the focused test for what you are changing; run the full
 suite once before committing, not after every edit.
 
 **Execute this task yourself.** Do not delegate it onward, do not orchestrate
-other panes, and do not open new panes — even for parts that look routine.
+other panes, and do not open new panes — even for parts that look routine, and
+above all not to review your own work. Self-review (below) means reading your
+own diff. Review is the orchestrator's job: after you report, it delegates a
+fresh reviewer against your diff. A reviewer you delegate duplicates that
+review at full cost, and its verdict counts for nothing here. If you catch
+yourself thinking "an independent review would strengthen my report" — that
+review is already scheduled. Report instead.
 
 ### Code Organization
 

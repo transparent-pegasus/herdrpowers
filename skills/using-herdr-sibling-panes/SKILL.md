@@ -153,6 +153,19 @@ Every instruction must include the **absolute working directory** (a pane does n
 
 **On a long delegation, poll for the report file.** The marker is the completion signal for short work. For anything measured in tens of minutes, a `wait output` that times out tells you nothing — the pane may still be working, may have died, or may have finished before the wait started, because `wait output` only scans output emitted after it begins. Poll for the report file the instruction named instead, and require the pane to write it in one final write (or to a temporary path and rename), because a file rewritten in place disappears mid-write and turns an existence check into a false negative. Treat the task as done only when the report file is present *and* the pane reports `idle` or `done`. Keep the instruction on a single line — the helper rejects embedded newlines. Keep bare `/word` tokens out of the text for the same reason: the helper rejects them with exit `2`, because they open the composer's slash popup mid-paste and corrupt the submission. Absolute paths are fine; a step name like `/run` must be reworded or backtick-wrapped. Keep the word `run` out of instruction prose entirely — write `execute`, `invoke`, or name the command — because a wrap that puts `run` at the start of a line pins a cursor pane at `blocked` for the rest of its session; see "A wrapped `run ` line pins a cursor pane at `blocked`".
 
+**Wait in bounded stretches, and reconcile between them.** Never poll with short
+timeouts, and never sit in one silent open-ended wait either. While you have
+local work — reading a report that already came back, packaging the next
+delegation, updating a ledger — do it; delegated panes finish on their own.
+When you are genuinely idle, replace one long `wait output` with stretches of
+five to ten minutes, and between stretches check the report file and re-read
+`pane list` for every live delegation. That between-stretch check is not
+optional: `wait output` only scans output emitted after it starts, so a marker
+landing in the gap is never matched, and the report file is what proves the work
+finished. A pane back at `idle` or `done` with no marker and no report has
+already failed — diagnosing it now costs minutes instead of the rest of the
+session.
+
 ```bash
 PANE=w2:p18
 INSTRUCTION="Execute rtk make lint in /path/to/repo. Make no edits. Report the command, exit code, and errors. End with LINT_OK immediately followed by _7F3A."
