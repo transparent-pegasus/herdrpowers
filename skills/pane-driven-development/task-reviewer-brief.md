@@ -68,6 +68,14 @@ method. If a codegraph plugin/tool is available, use callers/callees and impact
 only for those concrete named risks. If unavailable, use `rg` and focused file
 reads.
 
+### You Do Not Delegate Onward
+
+Do all of this review yourself. Never hand part of the diff to another pane,
+and never open a pane for a second opinion. This process already provides every
+review seat the work gets; a reviewer you delegate duplicates one of them at
+full cost, and its verdict counts for nothing. If the diff feels too large for
+one pass, review it in passes yourself and say so in your report.
+
 ### Do Not Trust the Report
 
 Treat the implementer's report as unverified claims about the code. It may be
@@ -121,6 +129,11 @@ Compare the diff against What Was Requested:
 - **Extra:** features that were not requested, over-engineering, unneeded
   "nice to haves"
 - **Misunderstood:** right feature built the wrong way, wrong problem solved
+
+If the brief lists several files each with its own change (a batched
+delegation), check the diff against that list file by file: every listed file
+must have its corresponding hunk. A listed file the diff never touches is a
+Missing finding, no matter how clean the rest of the batch looks.
 
 If a requirement cannot be verified from this diff alone (it lives in unchanged
 code or spans tasks), report it as a ⚠️ item instead of broadening your search.
