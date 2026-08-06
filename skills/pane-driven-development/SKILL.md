@@ -24,7 +24,28 @@ Execute the plan by delegating a fresh implementer pane per task, the task's tes
 
 **Narration:** between tool calls, narrate at most one short line — the ledger and the report files carry the record.
 
-**Continuous execution:** Do not pause to check in with your human partner between tasks. Execute all tasks from the plan without stopping. The only reasons to stop are: BLOCKED status you cannot resolve, ambiguity that genuinely prevents progress, or all tasks complete.
+**Continuous execution:** Do not pause to check in with your human partner between tasks. Execute all tasks from the plan without stopping. The only reasons to stop are the four named below, or all tasks complete.
+
+**Rulings, not stalls.** A running plan does not wait on a human. Conflicts,
+ambiguities, plan defects, a fix round that ended at the cap — decide them. The
+spec is the binding authority, the plan is its argument, and your judgment
+settles what neither answers. Record every decision in the ledger as
+`Ruling: <what you decided> — <why> — <what it costs if wrong>`, and keep
+going. A wrong ruling costs rework your human partner can see and undo; a
+session parked on a question costs their whole day and buys nothing.
+
+Four things stop you, and only these: an irreversible or destructive
+operation; a security-sensitive action; a side effect outside this worktree
+that norms say you ask about first (a merge, a push to a shared branch, a
+publish); and a plan so broken that every path forward is a guess. For those,
+stop and ask.
+
+**A ruling never rewrites the run's terms.** It resolves what the spec and the
+plan left open — it does not raise the five-round cap, re-enable a gate the
+repository disabled, disable one it enabled, widen `delegation.pane_scope`, or
+touch `.herdrpowers/config.yaml`. Those are the user's declaration, resolved
+once at start; a "ruling" that changes one is falsifying the run's terms, not
+deciding under them.
 
 ## When to Use
 
@@ -68,14 +89,14 @@ digraph process {
         "Write review package, delegate task reviewer panes, one per reviewer agent type (./task-reviewer-brief.md)" [shape=box];
         "Spec OK and quality approved?" [shape=diamond];
         "Finding conflicts with plan text?" [shape=diamond];
-        "Ask human partner which governs" [shape=box];
+        "Rule on the conflict, ledger the ruling" [shape=box];
         "Fix round R of 5: R<=3 same pane; R>=4 fresh pane, escalated agent type; covering tests from a separate fix-round test author" [shape=box];
         "Delegate scoped re-review, one per reviewer agent type (./re-review-brief.md)" [shape=box];
         "All findings addressed?" [shape=diamond];
         "R = 5?" [shape=diamond];
         "Adjudicate each open finding" [shape=box];
         "Any load-bearing finding?" [shape=diamond];
-        "STOP: report BLOCKED to human partner" [shape=box];
+        "Rule and continue; stop only if every path forward is a guess" [shape=box];
         "Park findings in ledger with rulings" [shape=box];
         "Append completion to ledger, mark todo complete" [shape=box];
     }
@@ -97,8 +118,8 @@ digraph process {
     "Write review package, delegate task reviewer panes, one per reviewer agent type (./task-reviewer-brief.md)" -> "Spec OK and quality approved?";
     "Spec OK and quality approved?" -> "Append completion to ledger, mark todo complete" [label="yes"];
     "Spec OK and quality approved?" -> "Finding conflicts with plan text?" [label="no"];
-    "Finding conflicts with plan text?" -> "Ask human partner which governs" [label="yes"];
-    "Ask human partner which governs" -> "Fix round R of 5: R<=3 same pane; R>=4 fresh pane, escalated agent type; covering tests from a separate fix-round test author";
+    "Finding conflicts with plan text?" -> "Rule on the conflict, ledger the ruling" [label="yes"];
+    "Rule on the conflict, ledger the ruling" -> "Fix round R of 5: R<=3 same pane; R>=4 fresh pane, escalated agent type; covering tests from a separate fix-round test author";
     "Finding conflicts with plan text?" -> "Fix round R of 5: R<=3 same pane; R>=4 fresh pane, escalated agent type; covering tests from a separate fix-round test author" [label="no"];
     "Fix round R of 5: R<=3 same pane; R>=4 fresh pane, escalated agent type; covering tests from a separate fix-round test author" -> "Delegate scoped re-review, one per reviewer agent type (./re-review-brief.md)";
     "Delegate scoped re-review, one per reviewer agent type (./re-review-brief.md)" -> "All findings addressed?";
@@ -107,8 +128,9 @@ digraph process {
     "R = 5?" -> "Fix round R of 5: R<=3 same pane; R>=4 fresh pane, escalated agent type; covering tests from a separate fix-round test author" [label="no - next round"];
     "R = 5?" -> "Adjudicate each open finding" [label="yes - breaker trips"];
     "Adjudicate each open finding" -> "Any load-bearing finding?";
-    "Any load-bearing finding?" -> "STOP: report BLOCKED to human partner" [label="yes"];
+    "Any load-bearing finding?" -> "Rule and continue; stop only if every path forward is a guess" [label="yes"];
     "Any load-bearing finding?" -> "Park findings in ledger with rulings" [label="no"];
+    "Rule and continue; stop only if every path forward is a guess" -> "Append completion to ledger, mark todo complete";
     "Park findings in ledger with rulings" -> "Append completion to ledger, mark todo complete";
     "Append completion to ledger, mark todo complete" -> "More tasks remain?";
     "More tasks remain?" -> "Delegate implementer pane (./implementer-brief.md) + test author pane off BASE (./test-author-brief.md)" [label="yes"];
@@ -153,17 +175,25 @@ a ledger file, not only in todos.
 Read the plan once, note its context and Global Constraints, and create a
 todo per task.
 
-Before delegating Task 1, scan the plan once for conflicts:
+Before delegating Task 1, scan the plan once for conflicts, writing down what
+you checked as you check it:
 
 - tasks that contradict each other or the plan's Global Constraints
 - anything the plan explicitly mandates that the review rubric treats as a
   defect (a test that asserts nothing, verbatim duplication of a logic block)
 
-Present everything you find to your human partner as one batched question —
-each finding beside the plan text that mandates it, asking which governs —
-before execution begins, not one interrupt per discovery mid-plan. If the
-scan is clean, proceed without comment. The review loop remains the net for
-conflicts that only emerge from implementation.
+The scan's output is a table, not a verdict. One row for every pair of tasks
+that share a file or an interface: the two tasks, what one produces against
+what the other consumes, and what you found. One row for every task: whether
+its own text agrees with itself — the tests it specifies against the code it
+specifies, the files it creates against the files it later touches. "The scan
+is clean" without those rows is not a scan you ran.
+
+Write the table to the ledger. Rule on each conflict it surfaces before
+execution begins — the spec is the binding authority, the plan is its argument
+— record the ruling beside its row, and delegate Task 1. If the scan is clean,
+proceed without comment. The review loop remains the net for conflicts that
+only emerge from implementation.
 
 ## Delegation Assignments
 
@@ -232,9 +262,25 @@ Panes are not reserved per role — pick any idle pane of the matching agent typ
 
 ## The Task Loop
 
+**Batch small same-shape work.** When the plan lists several tasks that are
+each a small, independent edit of the same kind — the same one-line fix,
+constant change, or field addition repeated across files — do not delegate one
+pane per task. Compose ONE brief listing every file and its change, delegate
+the whole batch to a single pane, and treat it as one unit the rest of the way:
+one review package, one review, one ledger completion line naming every task in
+the batch. When a separate pane writes the tests, it works from that same
+batched brief. Reserve one-delegation-per-task for work that needs its own
+judgment, its own tests, or its own review surface.
+
 Everything you paste into a delegation — and everything a pane prints back —
 stays resident in your context for the rest of the session and is re-read on
 every later turn. Hand artifacts over as files (see File Handoffs).
+
+**While panes work, you work.** Waiting is not a phase — ledger updates,
+packaging the next review, and reading reports all happen while children run.
+When you are genuinely idle, wait in bounded stretches and reconcile between
+them rather than sitting in one open-ended wait; `using-herdr-sibling-panes`
+holds the mechanics.
 
 ### 1. Delegate the implementer and the test author
 
@@ -322,7 +368,7 @@ orchestrator:
 1. If it is a context problem, provide more context and re-delegate to the same pane
 2. If the task needs more reasoning, escalate the agent type (see Delegation Assignments)
 3. If the task is too large, break it into smaller pieces
-4. If the plan itself is wrong, escalate to the human
+4. If the plan itself is wrong, rule on the correction, ledger it, and re-delegate with the ruling carried in the brief
 
 **No marker, no report:** that is not a status — it is a failed delegation. Diagnose it with `using-herdr-sibling-panes`' "Failure handling" table (crashed / blocked / interrupted / errored / exhausted) before re-delegating anything.
 
@@ -434,10 +480,11 @@ Before the loop starts, two routes leave it immediately:
   before merge. A roll-up nobody reads is a silent discard. Minor findings
   never enter the loop.
 - A finding labeled plan-mandated — or any finding that conflicts with
-  what the plan's text requires — is the human's decision, like any plan
-  contradiction: present the finding and the plan text, ask which governs.
-  Do not dismiss the finding because the plan mandates it, and do not
-  delegate a fix that contradicts the plan without asking.
+  what the plan's text requires — is yours to rule on: weigh the finding
+  against the plan text, decide with the spec as the binding authority, and
+  ledger the ruling before you act on it. Do not dismiss the finding because
+  the plan mandates it, and do not delegate a fix that contradicts the plan
+  without a recorded ruling.
 
 Everything else enters the loop. A fix round is one fix delegation plus one
 scoped re-review. Five rounds maximum per task:
@@ -518,15 +565,17 @@ delegating. Adjudicate each open finding yourself — you hold the plan and
 the cross-task context the reviewer lacks:
 
 - **The reviewer is wrong, or the point is contestable:** park it —
-  `Task <N>: parked — <finding> — ruling: <why the code stands>`. The final
+  `Task <N>: parked — <finding> — Ruling: <why the code stands>`. The final
   review sees both sides.
 - **Real, but nothing downstream builds on it:** park it the same way, with
   a ruling that says it's real and deferred.
 - **Real and load-bearing** — a later task builds on it, or it reveals a
-  plan defect: STOP. Append `Task <N>: BLOCKED — <reason>` and report to
-  your human partner with the finding, the plan text it collides with, and
-  the fix history. Parking a structural failure lets every dependent task
-  build on it and hands the final review a problem it cannot fix either.
+  plan defect: rule on the smallest change that unblocks the dependent work,
+  ledger it as `Task <N>: Ruling: <finding> — <what you decided and why>`,
+  and carry it into the next task's brief. Parking a structural failure
+  silently lets every dependent task build on it and hands the final review a
+  problem it cannot fix either. Stop only when the defect leaves every path
+  forward a guess.
 
 Adjudicate only at the cap. Adjudicating earlier to end a loop is
 pre-judging with a different name. Every adjudication is a ledger entry —
@@ -570,11 +619,22 @@ Then run exactly one scoped re-review of the fix wave
 (`scripts/review-package PLAN_FILE FIX_BASE HEAD`,
 [re-review-brief.md](re-review-brief.md)).
 Adjudicate any residual findings as in the task loop's breaker: park with
-rulings, or stop on load-bearing ones. There is no second fix wave —
-residual load-bearing findings surface to your human partner when
-finishing-a-development-branch presents the options.
+rulings, or rule on the load-bearing ones and ledger what you decided. Only
+the four stop-classes named at the top of this skill stop you here. There is
+no second fix wave — residual load-bearing findings surface to your human
+partner when finishing-a-development-branch presents the options.
 
 ## Finish
+
+Before you delete anything, collect every ledger line containing `Ruling:` —
+preflight rulings, parked findings, breaker adjudications, all of them — into
+your final report under "Rulings I made", in the order you made them, each
+with what it costs if wrong. The list is exhaustive: if the ledger holds a
+ruling, the list holds it. That list is the only place the decisions you took
+on your human partner's behalf reach them — they read it and rework whatever
+you got wrong. A ruling that dies with the workspace was a decision made in
+secret. It goes in the same report that names every assignment the repository
+changed and every disabled gate.
 
 When the final whole-branch review is clean and its fixes are merged,
 delete this plan's workspace (`rm -rf <workspace>`) — the git history is
@@ -641,7 +701,9 @@ artifacts over as files, in both directions:
 | "Reviews slow the loop down" | The loop without reviews is just unverified churn. Reviews are the loop's brakes and steering. |
 | "Ledger bookkeeping is overhead" | The ledger is what survives compaction. Orchestrators without one have re-delegated entire completed task sequences. |
 | "The implementing pane is idle — it can review its own work" | Reuse it after a reset-backed submit. Independence is the fresh session, not a different pane ID. Do not review inside the unreset implementing session. |
-| "The plan mandates it, so the finding is invalid" | Plan-vs-review conflicts are your human partner's call. Present both and ask which governs. |
+| "The plan mandates it, so the finding is invalid" | Plan-vs-review conflicts are yours to rule on, with the spec as the binding authority. Record the ruling — a conflict you never ledgered is a decision made in secret. |
+| "This call is big enough that I should ask first" | Only the four stop-classes stop you. Everything else is a ruling: decide it, ledger it with what it costs if wrong, and keep going. A session parked on a question costs a whole day and buys nothing. |
+| "A delegated pane spun up its own panes — free extra assurance" | A duplicate seat on the same diff; the task review is the gate. Every brief forbids re-delegation, so a pane that did it is a finding to report, not rigor. |
 | "I'll turn the gate off in `.herdrpowers/config.yaml` to get past this loop" | The config is the user's declaration, read once at start. Changing it mid-run to escape a review is falsifying the run's terms. Hit the cap and adjudicate. |
 | "Task review is disabled, so the pane can review its own work" | Disabling a gate removes the review; it never relaxes independence for the gates still on. |
 
@@ -737,7 +799,7 @@ Done! Using finishing-a-development-branch.
   the ledger (and `git log`) after any compaction or resume
 - Read or write another plan's workspace directory
 - Write `.herdrpowers/config.yaml` from inside a run — it is the user's input, resolved once at start; changing an assignment or a gate is an init-workflow decision
-- Finish a run with a disabled gate unnamed in the report
+- Finish a run with a disabled gate, a changed assignment, or a ledgered ruling unnamed in the report
 
 **If a pane fails the task:**
 - Diagnose with `using-herdr-sibling-panes`' failure table first
