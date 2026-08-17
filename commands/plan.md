@@ -27,6 +27,7 @@ Planning and design stay with the orchestrator — the pane the user typed the r
 1. Brainstorming
 Ask the user what they want to build.
 Read the brainstorming SKILL.md.
+Invoking this workflow is the user choosing its ceremony: announce the brainstorming skill's classification, but do not downgrade the workflow — its remaining steps run even for bounded work. If the request is a spike (the output is an answer, not code to keep), say so and confirm with the user before continuing.
 Engage in a design and requirement gathering discussion without writing implementation code.
 Proceed to Step 2 as soon as the last clarifying question has been answered and there are no unresolved design concerns.
 
