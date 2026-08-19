@@ -14,7 +14,7 @@ Skills live in a single tree at `skills/<name>/SKILL.md`. Claude Code, Codex, an
 
 ## Strategic & Planning
 
-- **`brainstorming`** — Turn an idea into an approved design through one-question-at-a-time dialogue. Writes the design to `<DESIGN_DOC_PATH_PATTERN>` (do not commit). Terminal state is invoking `writing-plans`. Includes an optional **visual companion** (browser-based Node.js server in `brainstorming/scripts/`) for mockups, diagrams, and visual comparisons. Inline spec self-review runs before the user-review gate.
+- **`brainstorming`** — Turn an idea into an approved design through one-question-at-a-time dialogue. Classifies every request onto one of three paths before the first question — **spike** (answer a feasibility question, no artifacts kept), **bounded** (short in-chat design for an existing flow, no spec or plan file), **architectural** (full spec process) — with a one-way upgrade ratchet and an approval gate on every path. Architectural designs go to `<DESIGN_DOC_PATH_PATTERN>` (do not commit) and terminate by invoking `writing-plans`; the pack's workflow commands announce the classification but never downgrade their own steps. Includes an optional **visual companion** (browser-based Node.js server in `brainstorming/scripts/`) for mockups, diagrams, and visual comparisons. Inline spec self-review runs before the user-review gate.
 - **`writing-plans`** — Break the approved design into bite-sized, TDD-shaped tasks. Writes the plan to `<PLAN_PATH_PATTERN>` (do not commit). Includes File Structure, Task Right-Sizing, Global Constraints, per-task Interfaces, "No Placeholders" guardrails, and inline self-review. Offers `pane-driven-development` or `executing-plans` as next steps.
 
 ## Operational & Execution
