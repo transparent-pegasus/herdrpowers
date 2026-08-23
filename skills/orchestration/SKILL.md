@@ -21,6 +21,8 @@ Read both at the start of every orchestrated task (the repo file may be absent �
 
 Merging is per key, not per file: a repo config that sets only `assignments.chores.role` keeps every other assignment, every role binding, and every fallback at its default.
 
+**An `assignments:` key that `roles.yaml` does not define is a stale name, not a silent no-op.** Name it in the final report so the repo can fix it, because the task it was meant to configure is otherwise running on the shipped default — which would turn a review the repo deliberately disabled back on without saying so. One rename has shipped: `plan-double-review` became `plan-review` in v1.10.0. Honor a repo config that still uses the old key as `plan-review`, and tell the user to rename it.
+
 **Customize in the repo file, never in `roles.yaml`.** Plugin installations are read-only, so `roles.yaml` is not editable there at all; on checked-in copies, editing it makes the pack diff-dirty against upstream. The rest of this skill refers to roles and task names, never to tool names.
 
 If the repo has no `.herdrpowers/config.yaml` and the user wants to reassign a task, change a mode, or turn a review off, run the init workflow (`/herdrpowers:init`, or `commands/init.md`) — do not edit `roles.yaml`.
@@ -78,7 +80,7 @@ Resolve every task the workflow will touch before its first delegation, not when
 
 | Task | Runs in | Off means |
 |---|---|---|
-| `plan-double-review` | `/plan`, `/full_cycle` | The plan goes straight to the user for approval, unreviewed |
+| `plan-review` | `/plan`, `/full_cycle` | The plan goes straight to the user for approval, unreviewed |
 | `documentation-impact-review` | `/execute`, `/execute_parallel`, `/full_cycle`, `/quick` | No pre-implementation sweep for non-code files |
 | `task-review` | `pane-driven-development` | A task completes on the implementing pane's own report |
 | `fix-round-re-review` | `pane-driven-development` fix loop | Fixes are taken on the fixing pane's word; the round still counts against the five-round cap |
@@ -95,7 +97,7 @@ A role declared with `agents:` (a list) instead of `agent:` runs **one delegatio
 Three rules bind wherever a list role is used:
 
 - **The delegations come from different agent types.** A configuration or a fallback that would put the same type in two slots is not used there: leave that slot unavailable and run with fewer.
-- **Degrade, never block.** An agent type counts as available if any pane of that type exists in the session, even if it is busy — wait for busy panes, never interrupt them. If only one listed type is available, run that one and state that the others were skipped. If none is available, fall back per "Exhaustion and fallback", and state what independence was lost.
+- **Degrade, never block.** An agent type counts as available if any in-scope pane of that type exists, even if it is busy — wait for busy panes, never interrupt them. If only one listed type is available, run that one and state that the others were skipped. If none is available, fall back per "Exhaustion and fallback", and state what independence was lost.
 - **Say which it was.** Full set, degraded set, or single — the report names it, every time.
 
 Compare findings across the returned reviews, resolve disagreements, and only then act. Reviewers advise; the orchestrator decides.
@@ -149,7 +151,7 @@ When this skill drives one of the pack's workflows (`/herdrpowers:execute`, `exe
 * **Tests** → `test-authoring` for the implementation round, `fix-round-test-authoring` for each fix round. Whichever mode they resolve to, say so in the brief and in the report.
 * **Code review** → `task-review` per task, `final-branch-review` at the end.
 * **Chores that come up while executing a plan** → `chores`.
-* **Plan and design** → `plan-and-design`, gated by `plan-double-review`.
+* **Plan and design** → `plan-and-design`, gated by `plan-review`.
 
 Read each one's `role` and `mode` from the resolved configuration; the workflow names every assignment its repo config changed in the final report.
 
@@ -178,9 +180,9 @@ Examples: renaming a symbol, adding a CRUD endpoint that mirrors an existing one
 
 Default when uncertain: `complex-coding`. With the default assignments a misrouted simple task costs little on the Coder, while a complex task misrouted to the Generalist produces subtle breakage. A repo that assigns both task names to the same role makes this distinction moot — that is a legitimate configuration.
 
-## Plan/design double review
+## Plan/design review
 
-Runs when the `plan-double-review` gate is enabled, under "Roles that bind to a list" above — one review per agent type in the resolved role, with that section's different-types, degrade, and say-which-it-was rules.
+Runs when the `plan-review` gate is enabled, under "Roles that bind to a list" above — one review per agent type in the resolved role, with that section's different-types, degrade, and say-which-it-was rules.
 
 Draft the plan in the orchestrator pane, then run the reviews through `using-herdr-sibling-panes` (one per agent type in the resolved role, in separate panes when the list has multiple entries), wait for all of them to complete, compare the findings, resolve disagreements, and only then act or report. Reviewers are reviewers, not substitutes for the orchestrator's final judgment.
 

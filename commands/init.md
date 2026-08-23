@@ -85,7 +85,7 @@ Review tasks — same two knobs plus `enabled`, which turns the gate off entirel
 
 | Delegation task | Turning it off means |
 |---|---|
-| `plan-double-review` | Plans go to the user for approval unreviewed (`/plan`, `/full_cycle`) |
+| `plan-review` | Plans go to the user for approval unreviewed (`/plan`, `/full_cycle`) |
 | `documentation-impact-review` | No pre-implementation sweep for non-code files the change invalidates |
 | `task-review` | Each task completes on the implementing pane's own report (`pane-driven-development`) |
 | `fix-round-re-review` | Fix rounds are taken on the fixing pane's word; the five-round cap still applies |
@@ -94,6 +94,7 @@ Review tasks — same two knobs plus `enabled`, which turns the gate off entirel
 Rules to state while proposing:
 - Say plainly what each `enabled: false` costs before the user confirms it. Disabling a gate is the user's call; presenting it as free is not. Mention that `/strict_full_cycle` runs every gate anyway, so a disabled one is skipped by default but reachable on demand.
 - Work tasks are never disabled. To stop delegating one, set `mode: orchestrator`.
+- A config file written before v1.10.0 holds `plan-double-review` where the table now says `plan-review`. Rename the key while rewriting the file and tell the user: left as it was, the old key configures nothing and the gate runs on the shipped default, so a review the repo had turned off comes back silently.
 - **A review task assigned to a role that binds to a list of agent types runs once per entry.** Assigning `task-review` or `fix-round-re-review` to such a role multiplies pane usage per task by the list length. Say the arithmetic out loud before the user confirms it.
 - `test-authoring` and `fix-round-test-authoring` decide who writes tests. `mode: delegate` puts them in a pane that never sees the implementation, which costs an extra pane and a throwaway worktree per task; `mode: implementer` collapses them onto the pane whose behavior they cover, leaving the reviewers as the only check on that test code. Either is legitimate; state the trade before the user chooses, because the workflow reports which one ran.
 - Two pack invariants are not configurable — state them if the user asks for either: review independence is the reset session (not pane identity; same physical pane OK after a reset-backed submit), and reviews from a list role come from different agent types.
@@ -197,7 +198,7 @@ assignments:
     mode: <delegate|orchestrator>
 
   # review tasks — `enabled: false` removes the gate entirely
-  plan-double-review:
+  plan-review:
     role: <role>
     mode: <delegate|orchestrator>
     enabled: <true|false>

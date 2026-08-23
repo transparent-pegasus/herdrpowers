@@ -1,6 +1,6 @@
 # Development Cycle Guide
 
-This guide describes the 7-phase herdrpowers development cycle. The full cycle is driven by the `/full_cycle` workflow — or by `/strict_full_cycle`, which runs the same phases with every review gate forced on regardless of the repository's configuration; `/plan`, `/execute`, and `/execute_parallel` run structured subsets, and `/quick` runs every phase but the written plan and its double review.
+This guide describes the 7-phase herdrpowers development cycle. The full cycle is driven by the `/full_cycle` workflow — or by `/strict_full_cycle`, which runs the same phases with every review gate forced on regardless of the repository's configuration; `/plan`, `/execute`, and `/execute_parallel` run structured subsets, and `/quick` runs every phase but the written plan and its review.
 
 Every phase that delegates work does so through the `orchestration` skill to a **herdr sibling agent pane**. Nothing here uses in-process subagents, except a review task whose resolved mode is `orchestrator`, which the orchestrator runs in a fresh spawned subagent instead of inline. Outside herdr, each phase degrades to inline execution and the final report says which independence was lost.
 
@@ -16,13 +16,13 @@ The agent asks what you want to build and engages in a design and requirements d
 
 ---
 
-### Phase 2: Plan Creation and Double Review
+### Phase 2: Plan Creation and Review
 
-The orchestrator breaks the approved design into small, achievable tasks — then sends the plan out for **independent double review** before anyone touches code. Two different agent types review the same self-contained request in separate panes, with no shared draft opinion. The orchestrator resolves the findings and presents the resolved plan for approval.
+The orchestrator breaks the approved design into small, achievable tasks — then sends the plan out for **independent review** before anyone touches code. Each agent type in the resolved Reviewer role gets the same self-contained request, in its own pane, with no shared draft opinion; a role bound to more than one agent type is what makes that a double review. The orchestrator resolves the findings and presents the resolved plan for approval.
 
 - **Purpose**: Create a clear, actionable roadmap, and catch its defects while they are still cheap.
 - **Outcome**: A reviewed, resolved, approved plan at `<PLAN_PATH_PATTERN>` (not committed), carrying a `## Tracks` table — which tasks can run concurrently, and which files each track owns — because Phase 5 runs those tracks in parallel by default.
-- **Skill**: `writing-plans`. **Roles**: orchestrator (drafts), Reviewer ×2 (review).
+- **Skill**: `writing-plans`. **Roles**: orchestrator (drafts), Reviewer (one review per agent type the role binds).
 
 A plan is not complete when it is written. It is complete when it is reviewed, resolved, and approved.
 

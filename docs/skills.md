@@ -9,7 +9,7 @@ Skills live in a single tree at `skills/<name>/SKILL.md`. Claude Code, Codex, an
 ## Herdr & Orchestration
 
 - **`herdr`** — Control herdr itself: workspaces, tabs, panes, agent lifecycle states, IDs, and caller context. The vendored official skill from the herdr project (Apache-2.0). Requires `HERDR_ENV=1`.
-- **`orchestration`** — Routes every task that arrives directly from the user through the pane that received it. Owns task routing, the complex-coding boundary, plan double review, the delegation contract, and exhaustion fallbacks. Routing resolves from the repo's `.herdrpowers/config.yaml` over the shipped [`roles.yaml`](../skills/orchestration/roles.yaml) defaults: a role list plus a role assigned to every delegation task. Every task is reassignable, every review individually togglable, and any non-default assignment or disabled review is named in the final report.
+- **`orchestration`** — Routes every task that arrives directly from the user through the pane that received it. Owns task routing, the complex-coding boundary, the plan review gate, the delegation contract, and exhaustion fallbacks. Routing resolves from the repo's `.herdrpowers/config.yaml` over the shipped [`roles.yaml`](../skills/orchestration/roles.yaml) defaults: a role list plus a role assigned to every delegation task. Every task is reassignable, every review individually togglable, and any non-default assignment or disabled review is named in the final report.
 - **`using-herdr-sibling-panes`** — The delegation transport: composer-safe submission via `composer-submit.sh`, the completion-marker task contract, report-file handoffs, failure handling, and a probe that verifies a new agent CLI can be driven at all.
 
 ## Strategic & Planning
