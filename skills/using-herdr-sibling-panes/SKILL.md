@@ -88,7 +88,7 @@ Exit codes: `0` submitted and running, `2` bad usage (embedded newline, or a bar
 
 ### Verified keys
 
-Verified 2026-07-25 against codex 0.145.0, cursor-agent 2026.07.23-e383d2b, and grok 0.2.112 with `scripts/probe-composer.sh`. All three agree, so the helper uses one sequence:
+Verified 2026-07-25 against codex 0.145.0, cursor-agent 2026.07.23-e383d2b, and grok 0.2.112 with `scripts/probe-composer.sh`, and re-verified 2026-08-24 against grok 1.0.5. All agree, so the helper uses one sequence:
 
 | purpose | key / text | notes |
 | --- | --- | --- |
@@ -97,6 +97,8 @@ Verified 2026-07-25 against codex 0.145.0, cursor-agent 2026.07.23-e383d2b, and 
 | dismiss popup | `esc` | keeps composer text, closes slash/mention popup |
 | submit | `enter` | |
 | interrupt a running task | `esc` | |
+
+The grok 1.0.5 re-verification covers clear, reset, popup-dismiss, and submit at 44 columns and again at 39: `esc` closes the slash popup leaving the composer text untouched, and `enter` submits at both widths. It does not cover the interrupt row — that account hit its weekly usage limit mid-probe, which leaves the pane `blocked` on an upgrade prompt `esc` does not clear.
 
 Two keys that look plausible and are wrong:
 
