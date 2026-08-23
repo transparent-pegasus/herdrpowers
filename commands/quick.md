@@ -25,7 +25,7 @@ Do not edit workflow files unless the user's current request explicitly asks to 
 Resolve the repository's assignments and review gates as `orchestration` describes before the first delegation: `.herdrpowers/config.yaml` first, then `orchestration/roles.yaml` for anything it omits. A gate set to `enabled: false` is skipped and named in the final report.
 
 Routing comes from `assignments:`, not from this file, and the resolved YAML is the source of truth for every default. The scoped implementation may run in the orchestrator pane — the change is small by definition — or go to the pane its `complex-coding` / `simple-coding` assignment names. `test-authoring`, `chores`, and `verification` follow their assignments. The `final-branch-review` assignment resolves to any idle pane of its role's agent type(s) via a reset-backed submit — once per entry when its role binds to a list of agent types.
-- In-process subagents are not used. Do not dispatch the Agent tool for workflow work.
+- In-process subagents are not used for workflow work, and the Agent tool is not dispatched for it — with one exception: a review task whose resolved mode is `orchestrator` runs in a fresh subagent the orchestrator spawns.
 
 **Every delegation** states the worktree's absolute path (and requires the pane to confirm it is there first), the exact scope, the edit policy, the report-file path under `<REPORT_DIRECTORY>`, a unique completion marker, and the prohibition on re-delegating. Read results from the report file, not from pane scrollback.
 

@@ -20,7 +20,7 @@ Do not edit workflow files unless the user's current request explicitly asks to 
 
 ## Orchestration
 
-Planning and design stay with the orchestrator — the pane the user typed the request into. Only the reviews are delegated, through the `orchestration` skill with `using-herdr-sibling-panes` as the transport. Read both before the first delegation, and resolve the repository's assignments and review gates as `orchestration` describes: `.herdrpowers/config.yaml` first, then `orchestration/roles.yaml` for anything it omits. Every gate this workflow would run is resolved up front; a gate set to `enabled: false` is skipped and named in the final report. In-process subagents are not used.
+Planning and design stay with the orchestrator — the pane the user typed the request into. Only the reviews are delegated, through the `orchestration` skill with `using-herdr-sibling-panes` as the transport. Read both before the first delegation, and resolve the repository's assignments and review gates as `orchestration` describes: `.herdrpowers/config.yaml` first, then `orchestration/roles.yaml` for anything it omits. Every gate this workflow would run is resolved up front; a gate set to `enabled: false` is skipped and named in the final report. In-process subagents are not used for workflow work, with one exception: a review task whose resolved mode is `orchestrator` runs in a fresh subagent the orchestrator spawns.
 
 ## Execution Steps
 

@@ -1,6 +1,6 @@
 # herdrpowers
 
-**herdrpowers** is a development framework for AI coding agents running inside [herdr](https://herdr.dev). It layers structured skills and multi-phase workflows on top of any repository, and delegates the work — implementation, test authoring, code review — to **idle sibling agent panes**, not to in-process subagents.
+**herdrpowers** is a development framework for AI coding agents running inside [herdr](https://herdr.dev). It layers structured skills and multi-phase workflows on top of any repository, and delegates the work — implementation, test authoring, code review — to **idle sibling agent panes**, not to in-process subagents (the single exception: a review whose configured mode is `orchestrator`, which the orchestrator spawns a fresh subagent for).
 
 The development cycle derives from [obra/superpowers](https://github.com/obra/superpowers) — brainstorming, plan writing, TDD, systematic debugging, worktrees, review — restructured so every dispatch goes through a pane, and wrapped in a command-driven workflow layer. See [What Changed from Superpowers](#what-changed-from-superpowers).
 
@@ -73,7 +73,7 @@ Plugin files are read-only, so repo-specific values are never written into the p
 ```yaml
 roles:                                        # role -> agent type(s)
   coder:      { agent: codex }
-  generalist: { agent: cursor }
+  generalist: { agent: orchestrator }        # the pane the user typed into
   reviewer:   { agents: [codex, cursor] }     # a list role: one delegation per entry
 
 delegation:
@@ -82,14 +82,14 @@ delegation:
 
 assignments:                                  # task -> role + where it runs
   complex-coding:      { role: coder,      mode: delegate }
-  chores:              { role: generalist, mode: delegate }
+  chores:              { role: generalist, mode: orchestrator }
   test-authoring:      { role: coder,      mode: delegate }     # a pane that never sees the code
-  verification:        { role: generalist, mode: delegate }
+  verification:        { role: generalist, mode: orchestrator }
   task-review:         { role: reviewer,   mode: delegate, enabled: true }   # two reviews, one per agent type
   fix-round-re-review: { role: reviewer,   mode: delegate, enabled: false }  # off: named in the report
 ```
 
-`mode` is `delegate` (a fresh pane of that role), `orchestrator` (this pane, nothing delegated), or `implementer` (the pane that already owns the task). Reviews also take `enabled`; work tasks are never disabled — `mode: orchestrator` is how one stops being delegated.
+`mode` is `delegate` (a fresh pane of that role), `orchestrator` (this pane — a work task inline, a review in a fresh subagent the orchestrator spawns), or `implementer` (the pane that already owns the task). Reviews also take `enabled`; work tasks are never disabled — `mode: orchestrator` is how one stops being delegated.
 
 Re-run `/init` any time to change them. Two things stay fixed regardless: review independence is the reset session (not pane identity), and every non-default assignment or disabled review is named in the final report.
 

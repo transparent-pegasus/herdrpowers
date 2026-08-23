@@ -12,7 +12,8 @@ Rules:
 1. Tasks that arrive directly from the user are routed through the pane that
    received them (the orchestrator) via the `orchestration` skill. A task
    delegated from another pane is executed in place and never re-delegated.
-   In-process subagents are not used.
+   In-process subagents are not used, except a review task whose
+   resolved mode is `orchestrator`, which runs in a fresh spawned subagent.
 2. Independence comes from a reset session on each reset-backed delegation:
    the same physical pane may later review work it previously wrote after a
    reset. A review task assigned to a role that binds to a list of agent

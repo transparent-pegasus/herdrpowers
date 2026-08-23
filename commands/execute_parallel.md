@@ -24,7 +24,7 @@ Every dispatch in this workflow goes through the `orchestration` skill, with `us
 
 Routing comes from `assignments:`, not from this file, and the resolved YAML is the source of truth for every default — read each task's `role` and `mode` there rather than recalling one. This workflow touches implementation tracks (`complex-coding` / `simple-coding`), `test-authoring`, `fix-round-test-authoring`, `review-fixes`, `chores`, `verification`, `documentation-impact-review`, `task-review`, `fix-round-re-review`, and `final-branch-review`. A review task whose role binds to a list of agent types runs once per entry.
 - Track extraction, integration, and final synthesis stay with the orchestrator.
-- In-process subagents are not used. Do not dispatch the Agent tool for workflow work.
+- In-process subagents are not used for workflow work, and the Agent tool is not dispatched for it — with one exception: a review task whose resolved mode is `orchestrator` runs in a fresh subagent the orchestrator spawns.
 
 **Parallelism is bounded by panes and worktrees, not by ambition.** One implementation pane per worktree, one worktree per track — and count the whole writer set a track needs, not one pane per track: with `test-authoring` in `mode: delegate` a track occupies two panes of the resolved role at once (implementer plus test author, each in its own worktree), and the reviews that follow need idle panes of the review role (reset-backed; may reuse a writer pane after it finishes).
 
