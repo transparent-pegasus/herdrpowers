@@ -1,6 +1,6 @@
 # Roles
 
-herdrpowers has no in-process subagents and no named agent personas. Work is delegated to **sibling agent panes inside herdr**, and roles bind to *agent types*, not to reserved panes or specific tools. Any idle pane of the right type can take any task; a pane that just finished a review can take a coding task next.
+herdrpowers has no named agent personas, and work is delegated to **sibling agent panes inside herdr** rather than to in-process subagents — the one exception is a review task whose resolved mode is `orchestrator`, which the orchestrator runs in a fresh spawned subagent instead of inline. Roles bind to *agent types*, not to reserved panes or specific tools. Any idle pane of the right type can take any task; a pane that just finished a review can take a coding task next.
 
 Routing resolves from two files, in order:
 
@@ -18,7 +18,7 @@ Customize the repo file, not `roles.yaml` — plugin installs are read-only, and
 
 ## Delegation Tasks
 
-`assignments:` is the routing table: every unit of work the pack hands out has an entry, so nothing is hard-coded to a role. Each entry takes the same knobs — `role` (from the role list), `mode` (`delegate` = a fresh pane of that role, `orchestrator` = the orchestrator pane itself, `implementer` = the pane that already owns the task), and for reviews `enabled`.
+`assignments:` is the routing table: every unit of work the pack hands out has an entry, so nothing is hard-coded to a role. Each entry takes the same knobs — `role` (from the role list), `mode` (`delegate` = a fresh pane of that role, `orchestrator` = the orchestrator pane itself — inline for a work task, a fresh spawned subagent for a review, `implementer` = the pane that already owns the task), and for reviews `enabled`.
 
 **The YAML is the source of truth for who does what.** These tables say what each task covers; for the shipped role and mode, read [`roles.yaml`](../skills/orchestration/roles.yaml) — it changes across releases, and no prose copy of it is authoritative.
 

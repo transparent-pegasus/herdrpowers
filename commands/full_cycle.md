@@ -23,7 +23,7 @@ Do not edit workflow files unless the user's current request explicitly asks to 
 Every dispatch in this workflow goes through the `orchestration` skill, with `using-herdr-sibling-panes` as the transport. Read both before the first delegation, and resolve the repository's assignments and review gates as `orchestration` describes: `.herdrpowers/config.yaml` first, then `orchestration/roles.yaml` for anything it omits. Every gate this workflow would run is resolved up front; a gate set to `enabled: false` is skipped and named in the final report.
 
 Routing comes from `assignments:`, not from this file, and the resolved YAML is the source of truth for every default — read each task's `role` and `mode` there rather than recalling one. This workflow touches `plan-and-design`, `complex-coding` / `simple-coding`, `test-authoring`, `fix-round-test-authoring`, `review-fixes`, `chores`, `verification`, and every review gate from `plan-double-review` through `final-branch-review`. A review task whose role binds to a list of agent types runs once per entry.
-- In-process subagents are not used. Do not dispatch the Agent tool for workflow work.
+- In-process subagents are not used for workflow work, and the Agent tool is not dispatched for it — with one exception: a review task whose resolved mode is `orchestrator` runs in a fresh subagent the orchestrator spawns.
 
 Resolve `delegation:` in the same pass, before Step 2 — both keys change what this workflow does:
 - **`delegation.pane_scope`** confines every delegation to eligible panes. Under its default, `tab`, a pane in another tab is not a candidate for any step of this workflow. An agent type with no in-scope pane is unavailable, and the workflow degrades around it rather than reaching across tabs.

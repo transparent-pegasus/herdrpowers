@@ -58,13 +58,13 @@ Present each role and the agent type(s) it binds to, with the shipped default be
 | `planning-design` | one agent type, or `orchestrator` | Who plans and designs; `orchestrator` means the pane the user typed into |
 | `reviewer` | a **list** of agent types | Independent review. A list role runs **one delegation per entry**, so its length sets how many reviews each review task assigned to it runs |
 | `coder` | one agent type | The heavier-judgment role: complex coding, test authoring, whole-branch review |
-| `generalist` | one agent type | Simple coding, search, file inspection, tests, lint, routine operations |
+| `generalist` | one agent type, or `orchestrator` | Simple coding, search, file inspection, tests, lint, routine operations |
 | `fallbacks.<agent>` | a list of agent types | Ordered substitutes for an agent that hits a usage limit or has no usable pane |
 
 A repo may add a role beyond these four and assign tasks to it. Say so if the user asks.
 
 4. Assign a Role to Each Delegation Task
-Present every delegation task with its assigned role and mode. This is the routing table — the pack reads it instead of assuming implementation goes to the Coder. Each task takes `role` (from the list above) and `mode` (`delegate` = a fresh pane of that role, `orchestrator` = the orchestrator pane itself, `implementer` = the pane that already owns the task).
+Present every delegation task with its assigned role and mode. This is the routing table — the pack reads it instead of assuming implementation goes to the Coder. Each task takes `role` (from the list above) and `mode` (`delegate` = a fresh pane of that role, `orchestrator` = the orchestrator pane itself — a work task runs inline, a review task runs in a fresh subagent the orchestrator spawns, `implementer` = the pane that already owns the task).
 
 **Read the shipped defaults out of `skills/orchestration/roles.yaml` and propose those values** — that file is the source of truth for what the pack ships, and it changes across releases. Do not propose defaults from memory or from this file; the tables below say only what each task covers.
 
@@ -155,7 +155,7 @@ roles:
   coder:
     agent: <agent type>
   generalist:
-    agent: <agent type>
+    agent: <agent type, or `orchestrator` for the pane the user typed into>
 
 fallbacks: # agent -> ordered substitutes, tried left to right
   <agent type>: [<agent type>]

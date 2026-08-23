@@ -38,7 +38,7 @@ roles:
     agent: codex
   generalist:
     description: Simple coding, search, file inspection, tests, lint, routine operations
-    agent: cursor
+    agent: orchestrator
 
 # Substitutes for an agent that cannot take work right now — usage/rate limit
 # reached, no pane of that type in the session, or every pane of that type
@@ -81,7 +81,10 @@ delegation:
 #   mode     — where it runs:
 #                delegate     a fresh idle pane of `role`, via
 #                             using-herdr-sibling-panes
-#                orchestrator the orchestrator pane itself; nothing delegated
+#                orchestrator the orchestrator pane itself. A work task runs
+#                             inline there; a REVIEW task runs in a fresh
+#                             in-process subagent the orchestrator spawns, so
+#                             it never reviews its own session's work
 #                implementer  the pane that already owns the task does it
 #   enabled  — review tasks only: `false` removes the gate entirely.
 #              Work tasks are mandatory; to stop delegating one, set
@@ -105,11 +108,11 @@ assignments:
   simple-coding:
     description: Localized, pattern-following edits under that same boundary
     role: generalist
-    mode: delegate
+    mode: orchestrator
   chores:
     description: Lookups, file moves, log gathering, mechanical edits, lint/format runs
     role: generalist
-    mode: delegate
+    mode: orchestrator
   test-authoring:
     description: >-
       Writing a task's tests for the implementation round. `mode: delegate`
@@ -144,9 +147,11 @@ assignments:
     description: >-
       Running the repo's baseline and supplemental verification commands. A
       delegated run is a claim: the orchestrator accepts it on the quoted
-      output in the report file, or re-runs the decisive command itself.
+      output in the report file, or re-runs the decisive command itself. With
+      `mode: orchestrator` the orchestrator runs the commands in its own pane
+      and its own output is the evidence.
     role: generalist
-    mode: delegate
+    mode: orchestrator
 
   # --- review tasks (optional; `enabled: false` removes the gate) ---
 
@@ -158,7 +163,7 @@ assignments:
   documentation-impact-review:
     description: Pre-implementation sweep for non-code files the change will invalidate
     role: generalist
-    mode: delegate
+    mode: orchestrator
     enabled: true
   task-review:
     description: Per-task gate in pane-driven-development — spec compliance + code quality

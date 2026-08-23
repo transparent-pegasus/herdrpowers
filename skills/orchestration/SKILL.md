@@ -56,7 +56,7 @@ Under `parallel`, plans are written with tracks declared up front (see `writing-
 `assignments:` is the routing table. **The resolved YAML is the source of truth for every route and every default** — read it, never recall a default from prose. The tables below name what each task covers; who performs it and where comes from the merged configuration, and the knobs are the same for all of them.
 
 - **`role`** — which role from `roles:` performs the task.
-- **`mode`** — where it runs: `delegate` (a fresh idle pane of that role), `orchestrator` (the orchestrator pane itself, nothing delegated), or `implementer` (the pane that already owns the task does it).
+- **`mode`** — where it runs: `delegate` (a fresh idle pane of that role), `orchestrator` (the orchestrator pane itself — a work task runs inline there, a review task runs in a fresh in-process subagent the orchestrator spawns; see "Reviews in `mode: orchestrator`"), or `implementer` (the pane that already owns the task does it).
 - **`enabled`** — review tasks only. `false` removes the gate entirely. Work tasks are mandatory: to stop delegating one, set `mode: orchestrator` — never `enabled: false`.
 
 Resolve every task the workflow will touch before its first delegation, not when you reach it.
@@ -100,9 +100,22 @@ Three rules bind wherever a list role is used:
 
 Compare findings across the returned reviews, resolve disagreements, and only then act. Reviewers advise; the orchestrator decides.
 
+### Reviews in `mode: orchestrator`
+
+A **review** task whose resolved mode is `orchestrator` is the pack's one exception to "no in-process subagents": the orchestrator does not run it inline in its own session — it spawns a fresh in-process subagent and gives it the same self-contained review brief a delegated pane would receive (scope, diff or paths, the repository's standards, where to write the report). The subagent's fresh context is what makes the review independent, the same property a reset pane provides.
+
+Rules for it:
+
+- **Never inline.** An orchestrator that reviews its own session's work product is not a review. If no subagent can be spawned, the review has degraded — say so in the report rather than grading your own work.
+- **The brief is the same brief.** Self-contained, no reliance on the orchestrator's conversation context; the review reads the code, not the story of how it was written.
+- **Work tasks are not affected.** `mode: orchestrator` on a work task means the orchestrator does it inline, as before.
+- **The report names it.** A review that ran in a spawned subagent is named as such, next to which panes ran the delegated ones.
+
+A role bound to a list still means one review per entry; with `mode: orchestrator` those become one spawned subagent per entry, and the different-agent-types rule no longer applies because the agent type is the orchestrator's own.
+
 ### What no assignment can change
 
-- **Review independence is the reset session, not pane ID.** A `mode: delegate` review may use any idle pane of the resolved role's agent type(s), including the pane that implemented, because submission resets the session. Do not apply a prefer-different-type heuristic. An unreset continuing session must not review its own work product; disabling a review removes it rather than converting one into that kind of self-review. If a config tries to turn a still-on review into an in-session self-review, honor the reset rule, ignore that part of the config, and say so in the report.
+- **Review independence is the reset session, not pane ID.** A `mode: delegate` review may use any idle pane of the resolved role's agent type(s), including the pane that implemented, because submission resets the session. Do not apply a prefer-different-type heuristic. An unreset continuing session must not review its own work product; disabling a review removes it rather than converting one into that kind of self-review, and a review resolved to `mode: orchestrator` gets its fresh context from a spawned subagent rather than running inline. If a config tries to turn a still-on review into an in-session self-review, honor the reset rule, ignore that part of the config, and say so in the report.
 - **Reviews from a list role come from different agent types.** A config that would put the same type in two slots is overridden the same way.
 - **The report names which pane wrote the tests**, whatever `test-authoring` and `fix-round-test-authoring` resolve to. With `mode: delegate` the tests come from a pane that never saw the implementation; with `mode: implementer` they come from the pane whose behavior they cover, and the reviewers auditing that test code are the only remaining check on it. Both are legitimate; a report that does not say which one ran is not.
 - **`review-fixes` escalates regardless of mode.** Fix-loop rounds 4-5 go to a fresh pane of an escalated agent type even when the mode is `implementer`, per "Escalation is a type swap".
@@ -124,7 +137,7 @@ Use `using-herdr-sibling-panes` for every delegation. Submit through its bundled
 Routing is two steps: name the delegation task, then read its assignment.
 
 1. **Name the task.** Classify the work against the task list above: design work is `plan-and-design`; coding splits into `complex-coding` and `simple-coding` at the boundary below; lookups, moves, log gathering, and lint/format runs are `chores`; running verification commands is `verification`. When a piece of work spans tasks, use the heavier one (`plan-and-design` > `complex-coding` > `simple-coding` > `chores`).
-2. **Read its assignment.** Take `role` and `mode` from `assignments:`. `mode: delegate` → any idle pane of that role's agent type. `mode: orchestrator` → do it here, in this pane. Do not substitute your own judgment for the configured route; a repo that sent `simple-coding` to the Coder role meant it.
+2. **Read its assignment.** Take `role` and `mode` from `assignments:`. `mode: delegate` → any idle pane of that role's agent type. `mode: orchestrator` → do it here, in this pane, except a review task: spawn a fresh in-process subagent for that, per "Reviews in `mode: orchestrator`". Do not substitute your own judgment for the configured route; a repo that sent `simple-coding` to the Coder role meant it.
 
 Every delegation must satisfy the "Delegation contract" below.
 
