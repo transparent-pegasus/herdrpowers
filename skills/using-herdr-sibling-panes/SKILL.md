@@ -166,6 +166,10 @@ finished. A pane back at `idle` or `done` with no marker and no report has
 already failed — diagnosing it now costs minutes instead of the rest of the
 session.
 
+**A long brief can be pasted and never submitted, and the helper still exits `0`.** Composers split a large paste: an instruction beyond a few hundred characters can land in the composer as `[Pasted Content 1024 chars] #2 #3` and sit there unsent. The helper still returns `0`, because the pane flickers to `working` while the paste lands and passes the `started()` `working|blocked` check — so you wait on a delegation that never began. Observed 2026-08-22 at roughly 3000 characters. Put a long brief in a file under `<REPORT_DIRECTORY>` (or the worktree's scratch directory) and submit a single line pointing at it: `Read <absolute path> and carry out exactly what it says, starting by confirming the worktree it names.` And never take exit `0` as evidence of completion: a few minutes in, confirm real movement with `git status` in the worktree or the report file the brief named, and if nothing has changed, `pane read` the pane and look at the composer.
+
+**Write a brief as the defender's invariant, not as an attack.** Work that hardens your own code against resource exhaustion is refused when the brief reads as an attack recipe: the delegated pane prints a cybersecurity policy message and stops. Observed 2026-08-22 on a codex pane. "A request whose body never finishes must not hold a worker thread indefinitely; give the socket a read deadline" passes where "a client can declare gigabytes, dribble bytes, and pin a thread" does not. The same applies to denial of service generally — state the invariant ("never hold indefinitely", "discard past a cap", "measure by idle time") rather than laying out the attacker's viewpoint as reproduction steps. When a pane does refuse, look at the worktree before discarding anything: the refusal can land after the work is done — observed with 374 lines of tests already written and only the commit-and-report step refused. This is not exhaustion. Do not send it to a fallback; reword the brief and re-delegate to the same pane.
+
 ```bash
 PANE=w2:p18
 INSTRUCTION="Execute rtk make lint in /path/to/repo. Make no edits. Report the command, exit code, and errors. End with LINT_OK immediately followed by _7F3A."
@@ -197,11 +201,13 @@ Helper exits `2` and `4` mean the delegation never started. Do not call `herdr w
 | **finished** | marker matched | read the result, integrate it |
 | **too narrow** | helper exits `4` after its zoom attempt | the 40-column floor is conservative, not a measured cliff — resubmit to the same pane with a lower floor (`HERDR_COMPOSER_MIN_COLS=24 rtk "$COMPOSER_SUBMIT" ...`; codex has submitted down to 4 columns, cursor has not) before touching the layout. Layout retry only — never exhaustion or fallback |
 | **did not submit** | helper exits `3` | check for the marker first — a very fast task can finish before the status poll sees it. Otherwise re-run the helper once; a second `3` means the keys are wrong for this CLI, so run the probe |
+| **submitted but idle** | helper exited `0`, the composer still shows `[Pasted Content ...]`, no tree change | the paste was split — put the brief in a file and send a one-line pointer |
 | **crashed** | `pane read` shows a shell prompt; `pane get` may or may not still name an `agent`; the helper exits `2` naming the shell pid | restart it in place with the argv from `pane process-info` taken *before* the crash, then re-delegate once |
 | **stalled on an approval** | `pane read` shows `Run this MCP tool?` / `Run (once) (y)`; `agent_status` may be `blocked` **or** `idle` | report the pane and the prompt to the user; do not answer a shell approval yourself — see "A delegated pane can stall on its own approval prompt" |
 | **blocked** | `agent_status: blocked` | the agent is waiting on an approval or input prompt. Do not answer it blindly — report it to the user. Confirm it against `pane read` first: a cursor pane reporting `blocked` at an empty composer is a false positive from the echoed instruction, not a prompt — see below |
 | **interrupted** | pane idle, no marker, output ends mid-task | re-delegate once to the same pane. A second interruption is a failure, not a retry loop |
 | **errored** | pane idle, no marker, output ends in an error | report the error verbatim; do not paper over it with a retry |
+| **refused on policy** | the pane prints a cybersecurity policy message and stops; not a usage limit | reword the brief as the defender's invariant and resend — do not treat it as exhaustion |
 | **exhausted** | usage/rate-limit message in the output, or the pane refuses work while idle | see below |
 
 ### A delegated pane can stall on its own approval prompt
