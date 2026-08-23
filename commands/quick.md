@@ -4,7 +4,7 @@ description: Interactive workflow for a shortened development cycle from brainst
 
 # /quick Workflow
 
-This command runs a shortened development cycle for small-scoped changes in this repository. It keeps the `/full_cycle` flow's brainstorming, workspace isolation, documentation, implementation, verification, review, and integration phases while omitting the separate plan creation and its double review. Follow these steps and require explicit user confirmation before advancing to the next stage.
+This command runs a shortened development cycle for small-scoped changes in this repository. It keeps the `/full_cycle` flow's brainstorming, workspace isolation, documentation, implementation, verification, review, and integration phases while omitting the separate plan creation and its review. Follow these steps and require explicit user confirmation before advancing to the next stage.
 
 ## Deliverable Saves
 

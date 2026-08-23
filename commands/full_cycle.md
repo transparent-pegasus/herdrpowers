@@ -22,7 +22,7 @@ Do not edit workflow files unless the user's current request explicitly asks to 
 
 Every dispatch in this workflow goes through the `orchestration` skill, with `using-herdr-sibling-panes` as the transport. Read both before the first delegation, and resolve the repository's assignments and review gates as `orchestration` describes: `.herdrpowers/config.yaml` first, then `orchestration/roles.yaml` for anything it omits. Every gate this workflow would run is resolved up front; a gate set to `enabled: false` is skipped and named in the final report.
 
-Routing comes from `assignments:`, not from this file, and the resolved YAML is the source of truth for every default — read each task's `role` and `mode` there rather than recalling one. This workflow touches `plan-and-design`, `complex-coding` / `simple-coding`, `test-authoring`, `fix-round-test-authoring`, `review-fixes`, `chores`, `verification`, and every review gate from `plan-double-review` through `final-branch-review`. A review task whose role binds to a list of agent types runs once per entry.
+Routing comes from `assignments:`, not from this file, and the resolved YAML is the source of truth for every default — read each task's `role` and `mode` there rather than recalling one. This workflow touches `plan-and-design`, `complex-coding` / `simple-coding`, `test-authoring`, `fix-round-test-authoring`, `review-fixes`, `chores`, `verification`, and every review gate from `plan-review` through `final-branch-review`. A review task whose role binds to a list of agent types runs once per entry.
 - In-process subagents are not used for workflow work, and the Agent tool is not dispatched for it — with one exception: a review task whose resolved mode is `orchestrator` runs in a fresh subagent the orchestrator spawns.
 
 Resolve `delegation:` in the same pass, before Step 2 — both keys change what this workflow does:
@@ -42,12 +42,12 @@ Invoking this workflow is the user choosing its ceremony: announce the brainstor
 Engage in a design and requirement gathering discussion without writing implementation code.
 Proceed to Step 2 as soon as the last clarifying question has been answered and there are no unresolved design concerns.
 
-2. Plan Creation and Double Review
+2. Plan Creation and Review
 Inform the user that you will create an implementation plan.
 Read and use the writing-plans skill to break the design into small achievable tasks.
 Under `delegation.execution: parallel`, the plan must carry writing-plans' `## Tracks` table and a track tag on every task — Step 5 executes that partition instead of deriving one. A plan whose work genuinely does not partition declares one `main` track and says why; that is a complete plan, not a missing table.
 Save the plan to `<PLAN_PATH_PATTERN>`.
-Gate: `assignments.plan-double-review`. When it is disabled, skip the review and say the plan is going to approval unreviewed.
+Gate: `assignments.plan-review`. When it is disabled, skip the review and say the plan is going to approval unreviewed.
 Otherwise the plan is not complete when it is written. Delegate the same self-contained review request to one idle pane of each Reviewer agent type in the merged configuration, independently and in separate panes (reset-backed; the drafting pane is fine after a reset). Degrade to one review, or to a critical self-review, when Reviewer agents are unavailable — and say which happened.
 Resolve every finding, present the resolved plan with the findings and their resolutions, and ask the user to approve.
 Proceed to Step 3 only after the user approves the resolved plan. Code is not touched before that.

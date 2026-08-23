@@ -19,7 +19,7 @@ Use when: the pack was just installed (plugin or checked-in copy), or the repo's
 
 ### `/full_cycle`
 
-The full development cycle for a new feature or sizeable change, and the pack's default procedure for a task that arrives directly from the user: brainstorm → plan → **independent double review of the plan** → approval → isolate → documentation impact review → pane-delegated implementation with TDD → documentation update → repository verification → final review via a reset-backed submit → stop and present the integration candidates (merge locally / push and open a PR / push only / keep) for the user to pick.
+The full development cycle for a new feature or sizeable change, and the pack's default procedure for a task that arrives directly from the user: brainstorm → plan → **independent review of the plan** → approval → isolate → documentation impact review → pane-delegated implementation with TDD → documentation update → repository verification → final review via a reset-backed submit → stop and present the integration candidates (merge locally / push and open a PR / push only / keep) for the user to pick.
 
 Implementation runs **in parallel by default** (`delegation.execution` in the resolved configuration): the plan carries a `## Tracks` table with owned files per track, and the confirmed tracks run in per-track worktrees off a coordination branch. Setting `delegation.execution: serial` runs the plan's tasks one at a time instead. Either way the report names which ran and how much parallelism was actually achieved.
 
@@ -33,7 +33,7 @@ Use when: the branch must clear every gate the pack defines regardless of how th
 
 ### `/plan`
 
-Brainstorming, plan creation, and the plan's independent double review. Stops after the resolved plan is approved.
+Brainstorming, plan creation, and the plan's independent review. Stops after the resolved plan is approved.
 
 Use when: you want the design and the reviewed implementation plan, but intend to execute later (often in a different session with `/execute`).
 
@@ -51,7 +51,7 @@ Use when: the approved plan has tasks that truly can be implemented in parallel 
 
 ### `/quick`
 
-A shortened cycle for small-scoped changes. Keeps brainstorming, workspace isolation off `<BASE_BRANCH>`, documentation impact review, implementation with TDD, documentation update, verification, an independent final review, and the integration handoff. Skips only the separate plan creation and its double review.
+A shortened cycle for small-scoped changes. Keeps brainstorming, workspace isolation off `<BASE_BRANCH>`, documentation impact review, implementation with TDD, documentation update, verification, an independent final review, and the integration handoff. Skips only the separate plan creation and its review.
 
 Use when: the change is small enough to land without a separate written plan. If scope grows, stop and switch to `/full_cycle`.
 

@@ -1,10 +1,10 @@
 ---
-description: Interactive workflow for brainstorming, plan creation, and independent double review
+description: Interactive workflow for brainstorming, plan creation, and independent review
 ---
 
 # /plan Workflow
 
-This command runs only the discovery and planning stages of the development cycle. The plan is **not** complete when it is written — it is complete after independent double review, resolution of the findings, and the user's approval.
+This command runs only the discovery and planning stages of the development cycle. The plan is **not** complete when it is written — it is complete after independent review, resolution of the findings, and the user's approval.
 
 ## Deliverable Saves
 
@@ -37,17 +37,17 @@ Read and use the writing-plans skill to break the design into small achievable t
 Save the plan to `<PLAN_PATH_PATTERN>`.
 Proceed directly to Step 3 — do not ask for approval yet.
 
-3. Independent Double Review
-Gate: `assignments.plan-double-review`. When it is disabled, skip this step, tell the user the plan is going to approval unreviewed, and go to Step 4.
+3. Independent Review
+Gate: `assignments.plan-review`. When it is disabled, skip this step, tell the user the plan is going to approval unreviewed, and go to Step 4.
 Inform the user that the plan goes to independent review before approval.
 Resolve the Reviewer role from the merged configuration and delegate the **same self-contained review request** to one idle pane of each Reviewer agent type, in separate panes, with no shared draft opinion between them. The number of reviews is the length of the resolved `roles.reviewer.agents` list.
 Each review request states: the plan file path, the design doc path, the absolute repository path, that the review is read-only, the report-file path under `<REPORT_DIRECTORY>`, a unique completion marker, and that the recipient must execute the review itself and must not re-delegate.
-Wait for both to finish, read both report files, and compare the findings.
+Wait for every review to finish, read each report file, and compare the findings.
 Each review is a reset-backed submit — the drafting pane is fine after a reset.
 Degrade instead of blocking: with only one Reviewer agent type available, run a single review and say so; with none available, critically review the plan yourself and state that no independent review happened.
 
 4. Resolution and Approval
-Resolve every finding: fix the plan, or record why the finding does not apply. Where the two reviews disagree, decide and state the reasoning — reviewers advise, the orchestrator judges.
+Resolve every finding: fix the plan, or record why the finding does not apply. Where reviews disagree, decide and state the reasoning — reviewers advise, the orchestrator judges.
 Present the resolved plan, the findings, and their resolutions to the user, and ask for approval.
 
 ## Execution Requirements

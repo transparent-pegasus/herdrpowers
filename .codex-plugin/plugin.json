@@ -1,6 +1,6 @@
 {
   "name": "herdrpowers",
-  "version": "1.9.0",
+  "version": "1.10.0",
   "description": "Multi-pane development framework for herdr: structured skills and multi-phase workflows that delegate implementation, testing, and review to idle sibling agent panes instead of in-process subagents.",
   "author": {
     "name": "transparent-pegasus",
@@ -28,7 +28,7 @@
   "interface": {
     "displayName": "Herdrpowers",
     "shortDescription": "Herdr multi-pane orchestration for the whole development cycle",
-    "longDescription": "Route every task that arrives from the user through the pane that received it, plan and double-review before touching code, then delegate implementation, test authoring, and code review to idle sibling agent panes in herdr. Covers brainstorming, planning, TDD, systematic debugging, parallel execution across worktrees, review, and finishing a branch — with no in-process subagents and a fallback agent when one is exhausted.",
+    "longDescription": "Route every task that arrives from the user through the pane that received it, plan and independently review before touching code, then delegate implementation, test authoring, and code review to idle sibling agent panes in herdr. Covers brainstorming, planning, TDD, systematic debugging, parallel execution across worktrees, review, and finishing a branch — with no in-process subagents and a fallback agent when one is exhausted.",
     "developerName": "transparent-pegasus",
     "category": "Developer Tools",
     "capabilities": [

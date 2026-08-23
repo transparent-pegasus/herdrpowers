@@ -155,7 +155,7 @@ assignments:
 
   # --- review tasks (optional; `enabled: false` removes the gate) ---
 
-  plan-double-review:
+  plan-review:
     description: Independent review of a plan or design before approval (/plan, /full_cycle)
     role: reviewer
     mode: delegate

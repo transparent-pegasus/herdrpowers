@@ -39,7 +39,7 @@ Review tasks — same knobs plus `enabled`, which removes the gate:
 
 | Task | Runs in | Off means |
 |---|---|---|
-| `plan-double-review` | `/plan`, `/full_cycle` | Plans reach the user for approval unreviewed |
+| `plan-review` | `/plan`, `/full_cycle` | Plans reach the user for approval unreviewed |
 | `documentation-impact-review` | `/execute`, `/full_cycle`, `/quick` | No pre-implementation sweep for non-code files |
 | `task-review` | `pane-driven-development` | A task completes on the implementing pane's own report |
 | `fix-round-re-review` | the fix loop | Fix rounds close on the fixing pane's word; the five-round cap still applies |
@@ -143,7 +143,7 @@ Before an agent CLI is used as a delegation target for the first time — and ag
 
 Skills that wrap delegation:
 
-- `orchestration` — routing, the complex-coding boundary, plan double review, fallbacks
+- `orchestration` — routing, the complex-coding boundary, the plan review gate, fallbacks
 - `using-herdr-sibling-panes` — the transport: composer-safe submission, markers, failure handling
 - `pane-driven-development` — the per-task loop over panes
 - `requesting-code-review` + `receiving-code-review` — the review request and how to process its findings
