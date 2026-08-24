@@ -113,7 +113,12 @@ fi
 marker_head=PROBE_OK
 marker_tail=_5E1B
 marker=$marker_head$marker_tail
-instruction="Reply with exactly one line: the name of the current git branch. Make no edits and run no commands. End your reply with $marker_head immediately followed by $marker_tail."
+# "run no commands" is deliberately NOT used here: herdr's cursor rules mark a
+# pane `blocked` on any recent-scrollback line beginning with "run ", and the
+# echoed instruction wraps — a pin this probe cannot clear, because the helper
+# refuses `blocked` panes. See "A wrapped `run ` line pins a cursor pane at
+# `blocked`" in SKILL.md.
+instruction="Reply with exactly one line: the name of the current git branch. Make no edits and execute no shell commands. End your reply with $marker_head immediately followed by $marker_tail."
 
 submit_rc=0
 "$submit" "$pane_id" "$instruction" >/dev/null 2>&1 || submit_rc=$?

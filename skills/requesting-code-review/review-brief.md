@@ -8,8 +8,8 @@ The review runs in a **sibling pane via a reset-backed submit** — any idle pan
 
 ```bash
 INSTRUCTION="Work in /abs/path/to/worktree — confirm you are there before anything else. Review-only task: make no edits and do not mutate the working tree, index, HEAD, or branch state. Read /abs/path/to/review-brief.md for your review contract and the diff package path. Write your review to /abs/path/to/review.md and reply with the verdict and that path. Execute this request yourself, directly; re-delegating to other panes or orchestrating is prohibited. End your reply with REVIEW_OK immediately followed by _<4-hex>."
-rtk "$COMPOSER_SUBMIT" "$PANE" "$INSTRUCTION"
-rtk herdr wait output "$PANE" --match "REVIEW_OK_<4-hex>" --timeout 900000
+"$COMPOSER_SUBMIT" "$PANE" "$INSTRUCTION"
+herdr wait output "$PANE" --match "REVIEW_OK_<4-hex>" --timeout 900000
 ```
 
 ## 2. The review contract (write to the brief file)
