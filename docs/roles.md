@@ -40,7 +40,7 @@ Review tasks — same knobs plus `enabled`, which removes the gate:
 | Task | Runs in | Off means |
 |---|---|---|
 | `plan-review` | `/plan`, `/full_cycle` | Plans reach the user for approval unreviewed |
-| `documentation-impact-review` | `/execute`, `/full_cycle`, `/quick` | No pre-implementation sweep for non-code files |
+| `documentation-impact-review` | `/execute`, `/execute_parallel`, `/full_cycle`, `/quick` | No pre-implementation sweep for non-code files |
 | `task-review` | `pane-driven-development` | A task completes on the implementing pane's own report |
 | `fix-round-re-review` | the fix loop | Fix rounds close on the fixing pane's word; the five-round cap still applies |
 | `final-branch-review` | `/execute`, `/execute_parallel`, `/full_cycle`, `/quick` | The branch reaches the integration decision unreviewed |

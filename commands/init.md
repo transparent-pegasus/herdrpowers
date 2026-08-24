@@ -241,5 +241,5 @@ List the files written and the final values: the placeholder keys, the role list
 - Block and require user confirmation before writing either deliverable. Do not write unconfirmed guesses.
 - Preserve every byte of pre-existing instruction-file content outside the upserted section.
 - Never propose an agent type that does not appear in `roles.yaml`'s defaults or in this session's `herdr pane list` without saying it is unverified.
-- Do not write a config that puts the same agent type in both Reviewer slots, or that routes a review to the role that implements the work. Those are pack invariants; the workflow would override the config at runtime anyway.
+- Do not write a config that puts the same agent type in two Reviewer slots — that is a pack invariant, and the workflow would override the config at runtime anyway. Routing a review to the role that implements the work is legitimate and needs no warning: independence is the reset session, not role or pane identity.
 - Adding a role beyond the shipped four is allowed — define it under `roles:` and reference it from the assignments that should use it. Never reference a role no `roles:` entry defines.

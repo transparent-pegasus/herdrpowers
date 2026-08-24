@@ -48,7 +48,6 @@ When extracting tracks:
 - split any mixed-scope item such as `implementation + docs update` into one implementation track plus a post-integration follow-up task
 - require each track to define a goal, owned files, dependencies, expected verification, and documentation impact
 - name tracks by module or behavior, not by generic phase labels such as `implementation` or `documentation update`
-- produce one explicit post-integration update list covering `<REPO_INSTRUCTION_FILES>`, any affected files under `docs/`, any agent-instruction directories present (such as `.claude/`, `.agents/`, `commands/`), example env/config files, and CI/deploy definitions
 
 Parallelize only tracks that satisfy all of the following:
 - no ordering dependency between tasks
@@ -66,7 +65,13 @@ Ensure every parallel track starts from the same approved base and has a clearly
 Record each track's absolute worktree path — the track's delegation brief must carry its own path and no other.
 Proceed directly to Step 3 after setup completes.
 
-3. Parallel Implementation and Testing
+3. Documentation Impact Review
+Gate: `assignments.documentation-impact-review`. When it is disabled, skip this step and name the skipped gate in the final report — the tracks then run with no update list, and Step 5 has nothing to apply. Route it by its resolved role and mode: `delegate` runs the sweep in a fresh pane that reports back, `orchestrator` runs it in this pane.
+Inform the user that the sweep will identify every file that must be updated if the implementation changes behavior, contracts, prompts, schema, or workflow instructions.
+Produce one explicit post-integration update list covering `<REPO_INSTRUCTION_FILES>`, any affected files under `docs/`, any agent-instruction directories present (such as `.claude/`, `.agents/`, `commands/`), example env/config files, and CI/deploy definitions. The list is post-integration by construction: documentation is never a parallel track, so nothing here is owned by one.
+Proceed to Step 4 only after the update target list is explicit.
+
+4. Parallel Implementation and Testing
 Inform the user that parallel implementation and testing will begin.
 Read and use the pane-driven-development skill for the per-track task loop.
 For each confirmed implementation track:
@@ -84,12 +89,12 @@ After all parallel tracks complete:
 - resolve conflicts before proceeding
 - stop if integration reveals that the original post-integration update list is incomplete, then revise the list before moving on
 
-4. Documentation Update
+5. Documentation Update
 Inform the user that post-integration documentation and workflow updates are starting.
-Apply every deferred update identified in Step 1 that still matters after integration, using the update-docs skill for files under `docs/`.
-Proceed to Step 5 only after the repository instructions and relevant docs are aligned with the integrated result.
+Apply every deferred update identified in Step 3 that still matters after integration, using the update-docs skill for files under `docs/`.
+Proceed to Step 6 only after the repository instructions and relevant docs are aligned with the integrated result.
 
-5. Repository Verification
+6. Repository Verification
 Inform the user that repository verification is starting on the integrated result.
 Verification runs inside the coordination worktree, not in the primary checkout.
 If only documentation, workflow, or agent-instruction files changed, note that no repository-wide quality command is required and proceed.
@@ -99,18 +104,18 @@ If any non-documentation file changed, run repository verification:
 If `<BASELINE_VERIFICATION_COMMAND>` or `<SUPPLEMENTAL_VERIFICATION_COMMANDS>` are not declared in the repository's `Herdrpowers Configuration` section, stop and run the pack's init workflow (`/herdrpowers:init` on Claude Code plugin installs; `commands/init.md` otherwise) before proceeding.
 A delegated verification run is a claim: read the quoted output in the report file, or re-run the decisive command yourself, before accepting it.
 If a required verification command cannot run because Docker, gcloud, or another external dependency is unavailable, report the blocker explicitly and stop until the user decides whether to skip that check.
-Proceed to Step 6 only when verification evidence is fresh and successful.
+Proceed to Step 7 only when verification evidence is fresh and successful.
 
 If any task is discovered to be coupled, conflicting, or blocked on another track, stop parallel execution for that task and continue it sequentially.
 
-6. Final Code Review
-Gate: `assignments.final-branch-review`. When it is disabled, skip this step and tell the user the branch is reaching the integration decision unreviewed.
+7. Final Code Review
+Gate: `assignments.final-branch-review`. When it is disabled, skip to Step 8 and tell the user the branch is reaching the integration decision unreviewed.
 Inform the user that the final review is starting.
 Read and use the requesting-code-review skill to delegate a whole-branch review via a reset-backed submit over the fully integrated changeset on the coordination branch.
 Fix any critical or important issues reported — one fix delegation carrying the complete findings list, not one pane per finding.
-Proceed to Step 7 only when the review assesses it as Ready to merge.
+Proceed to Step 8 only when the review assesses it as Ready to merge.
 
-7. Integration and Cleanup
+8. Integration and Cleanup
 Inform the user that the implementation is complete and ready for integration.
 Stop and wait for the user's instruction. Additional implementation happens only on an explicit instruction.
 When the user instructs cleanup, read and use the finishing-a-development-branch skill on the coordination branch: present its options — merge locally into `<BASE_BRANCH>`, push and open a pull request, push only, or keep the branch as-is — and wait for the user to pick one. Discarding the work is not on the menu; it happens only if the user explicitly asks for it.

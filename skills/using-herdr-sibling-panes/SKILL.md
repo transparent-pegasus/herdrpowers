@@ -49,7 +49,7 @@ The scope comes from `delegation.pane_scope` in the merged configuration (`.herd
 Filter before selecting anything. Under the default scope, this prints every eligible pane and its agent type:
 
 ```bash
-rtk herdr pane list | jq -r --arg tab "$HERDR_TAB_ID" --arg self "$HERDR_PANE_ID" '
+herdr pane list | jq -r --arg tab "$HERDR_TAB_ID" --arg self "$HERDR_PANE_ID" '
   .result.panes[]
   | select(.tab_id == $tab and .pane_id != $self)
   | select(.agent != null and (.agent_status == "idle" or .agent_status == "done"))
@@ -82,7 +82,7 @@ Therefore, never submit `/clear` or delegated prompts to an agent pane with `pan
 ```bash
 SKILL_DIR=<directory containing this SKILL.md>
 COMPOSER_SUBMIT="$SKILL_DIR/scripts/composer-submit.sh"
-rtk "$COMPOSER_SUBMIT" "$PANE" "$INSTRUCTION"
+"$COMPOSER_SUBMIT" "$PANE" "$INSTRUCTION"
 ```
 
 Exit codes: `0` submitted and running, `2` bad usage (embedded newline, or a bare `/word` slash trigger in the instruction) or the pane is not a usable idle agent pane — including a pane whose agent has exited and left it at a shell prompt, `3` the instruction did not submit, `4` the pane remained too narrow after a zoom attempt.
@@ -109,21 +109,21 @@ Two keys that look plausible and are wrong:
 If the helper is unavailable, this is the same sequence by hand. Do not remove the settle points — and understand what you give up: the hand sequence skips the shell-prompt check, the width floor, and the started confirmation, so it will happily type a delegated instruction onto a bare command line. Before the first `send-text`, `pane read` the target and confirm you can see a composer (`›`, `→ Add a follow-up`) and not a shell prompt (`%`, `$`). Send lowercase `enter` as a key; a literal `Enter` string is text, and it silently accumulates in the composer instead of submitting.
 
 ```bash
-rtk herdr pane send-keys "$PANE" ctrl+u
-rtk sleep 0.40
-rtk herdr pane send-text "$PANE" "/clear"
-rtk sleep 0.40
-rtk herdr pane send-keys "$PANE" esc
-rtk sleep 0.40
-rtk herdr pane send-keys "$PANE" enter
-rtk sleep 1.20
-rtk herdr pane send-keys "$PANE" ctrl+u
-rtk sleep 0.40
-rtk herdr pane send-text "$PANE" "$INSTRUCTION"
-rtk sleep 0.40
-rtk herdr pane send-keys "$PANE" esc
-rtk sleep 0.40
-rtk herdr pane send-keys "$PANE" enter
+herdr pane send-keys "$PANE" ctrl+u
+sleep 0.40
+herdr pane send-text "$PANE" "/clear"
+sleep 0.40
+herdr pane send-keys "$PANE" esc
+sleep 0.40
+herdr pane send-keys "$PANE" enter
+sleep 1.20
+herdr pane send-keys "$PANE" ctrl+u
+sleep 0.40
+herdr pane send-text "$PANE" "$INSTRUCTION"
+sleep 0.40
+herdr pane send-keys "$PANE" esc
+sleep 0.40
+herdr pane send-keys "$PANE" enter
 ```
 
 Use `pane run` normally for shells and other terminal programs; this workaround is specifically for agent composers.
@@ -133,7 +133,7 @@ Use `pane run` normally for shells and other terminal programs; this workaround 
 Before an agent type is used as a delegation target for the first time, and again after that CLI is upgraded, run the probe against one idle pane of that type:
 
 ```bash
-rtk "$SKILL_DIR/scripts/probe-composer.sh" "$PANE"
+"$SKILL_DIR/scripts/probe-composer.sh" "$PANE"
 ```
 
 It checks, in order: the pane is an idle agent pane; the pane meets the conservative composer-width floor; leftover composer text clears without killing the TUI; `/clear` resets the session and the TUI survives; an instruction submits and the pane starts working; the split completion marker is not matched by the prompt echo; the marker is matched when the task finishes; a running task can be interrupted and the pane returns to idle; and the agent process is the same one it was before the probe.
@@ -175,20 +175,20 @@ session.
 
 ```bash
 PANE=w2:p18
-INSTRUCTION="Execute rtk make lint in /path/to/repo. Make no edits. Report the command, exit code, and errors. End with LINT_OK immediately followed by _7F3A."
+INSTRUCTION="Execute make lint in /path/to/repo. Make no edits. Report the command, exit code, and errors. End with LINT_OK immediately followed by _7F3A."
 COMPOSER_SUBMIT="$SKILL_DIR/scripts/composer-submit.sh"
 submit_rc=0
-rtk "$COMPOSER_SUBMIT" "$PANE" "$INSTRUCTION" || submit_rc=$?
+"$COMPOSER_SUBMIT" "$PANE" "$INSTRUCTION" || submit_rc=$?
 case "$submit_rc" in
   0) ;;
   4) echo "composer submission needs a wider layout; fix it and retry" >&2; exit 4 ;;
   *) echo "composer submission failed with exit $submit_rc; diagnose it before waiting" >&2; exit "$submit_rc" ;;
 esac
-rtk herdr wait output "$PANE" --match "LINT_OK_7F3A" --timeout 300000
-rtk herdr pane list
+herdr wait output "$PANE" --match "LINT_OK_7F3A" --timeout 300000
+herdr pane list
 # If the target is still working:
-rtk herdr wait agent-status "$PANE" --status idle --timeout 300000
-rtk herdr pane read "$PANE" --source recent --lines 120
+herdr wait agent-status "$PANE" --status idle --timeout 300000
+herdr pane read "$PANE" --source recent --lines 120
 ```
 
 Re-read pane ids after panes close because ids can compact. Do not send work to `working` or `blocked` panes, and do not rely on a single terminal status name for completion.
@@ -202,7 +202,7 @@ Helper exits `2` and `4` mean the delegation never started. Do not call `herdr w
 | state | how it looks | what to do |
 | --- | --- | --- |
 | **finished** | marker matched | read the result, integrate it |
-| **too narrow** | helper exits `4` after its zoom attempt | the 40-column floor is conservative, not a measured cliff — resubmit to the same pane with a lower floor (`HERDR_COMPOSER_MIN_COLS=24 rtk "$COMPOSER_SUBMIT" ...`; codex has submitted down to 4 columns, cursor has not) before touching the layout. Layout retry only — never exhaustion or fallback |
+| **too narrow** | helper exits `4` after its zoom attempt | the 40-column floor is conservative, not a measured cliff — resubmit to the same pane with a lower floor (`HERDR_COMPOSER_MIN_COLS=24 "$COMPOSER_SUBMIT" ...`; codex has submitted down to 4 columns, cursor has not) before touching the layout. Layout retry only — never exhaustion or fallback |
 | **did not submit** | helper exits `3` | check for the marker first — a very fast task can finish before the status poll sees it. Otherwise re-run the helper once; a second `3` means the keys are wrong for this CLI, so run the probe |
 | **submitted but idle** | helper exited `0`, the composer still shows `[Pasted Content ...]`, no tree change | the paste was split — put the brief in a file and send a one-line pointer |
 | **crashed** | `pane read` shows a shell prompt; `pane get` may or may not still name an `agent`; the helper exits `2` naming the shell pid | restart it in place with the argv from `pane process-info` taken *before* the crash, then re-delegate once |
