@@ -36,6 +36,8 @@ Report with branch state:
 - On a branch: "Already in isolated workspace at `<path>` on branch `<name>`."
 - Detached HEAD: "Already in isolated workspace at `<path>` (detached HEAD, externally managed). Branch creation needed at finish time."
 
+If this task's design doc or plan sits untracked in the primary checkout, carry it over now (Step 1c).
+
 **If `GIT_DIR == GIT_COMMON` (or in a submodule):** You are in a normal repo checkout.
 
 Has the user already indicated their worktree preference in your instructions? If not, ask for consent before creating a worktree:
@@ -104,6 +106,32 @@ pwd   # absolute path — every delegation brief must carry it
 
 **Sandbox fallback:** If `git worktree add` fails with a permission error (sandbox denial), tell the user the sandbox blocked worktree creation and you're working in the current directory instead. Then run setup and baseline tests in place.
 
+### 1c. Carry the Task's Design and Plan Docs (both mechanisms)
+
+The design doc and the implementation plan are usually written before the worktree exists, so they sit **untracked in the primary checkout**. Once the worktree is ready, move them into it so they land in the feature branch's commits and the primary checkout stays clean.
+
+1. Locate the primary checkout and check only this task's docs — the paths the invoking workflow wrote under `<DESIGN_DOC_PATH_PATTERN>` / `<PLAN_PATH_PATTERN>`:
+
+   ```bash
+   MAIN=$(git worktree list --porcelain | head -1 | sed 's/^worktree //')
+   git -C "$MAIN" status --porcelain -- "<design-doc-path>" "<plan-path>"
+   ```
+
+2. Move **only `??` (untracked) entries**. A tracked file stays put: moving it would dirty the primary checkout — the opposite of the point — and if it is already committed on `<BASE_BRANCH>`, the worktree has it via the branch.
+
+   ```bash
+   mkdir -p "<worktree>/<docs-dir>"   # target directory may not exist in the worktree yet
+   mv "$MAIN/<docs-dir>/<file>" "<worktree>/<docs-dir>/"
+   ```
+
+   `git mv` cannot cross worktrees (each working tree has its own index) — use plain `mv`, then `git add` and commit inside the worktree. A docs-only commit before implementation starts is fine.
+
+3. **Several worktrees in one run** (a coordination worktree plus per-track ones): the docs go into the **coordination worktree only**. Per-track delegation briefs reference them by the coordination worktree's absolute path.
+
+4. Report the new absolute paths. Every later delegation brief and review request must cite the new location — the old path no longer exists.
+
+Move only this task's docs — never sweep the whole plans directory; other tasks' drafts stay where they are. If nothing matches untracked (a workflow with no plan phase, docs already committed, or working in place after declined consent / sandbox fallback), skip silently.
+
 ## Step 2: Project Setup
 
 Auto-detect and run appropriate setup:
@@ -170,6 +198,9 @@ Ready to implement <feature-name>
 | No package.json/Cargo.toml | Skip dependency install |
 | Main checkout has `.codegraph/` | `codegraph init` in the worktree (Step 2) |
 | Main checkout not indexed | Skip codegraph — user's decision |
+| Design/plan docs untracked in primary checkout | `mv` into the worktree + commit there (Step 1c) |
+| Docs already tracked/committed | Leave them — the branch carries them |
+| Coordination + per-track worktrees | Docs into the coordination worktree only |
 
 ## Common Rationalizations
 
@@ -179,4 +210,5 @@ Ready to implement <feature-name>
 | "`git worktree add` is quicker than hunting for a native tool" | A native tool (e.g. `EnterWorktree`) owns placement, branching, and cleanup. Bypassing it is the #1 mistake — it creates phantom state your harness can't see or manage. |
 | "The worktree directory is surely ignored already" | Run `git check-ignore`. An unignored worktree directory commits the whole tree into the repo. |
 | "Any directory name works" | Explicit instructions beat an existing project-local directory, which beats the `.worktrees/` default. |
+| "Panes can read the plan from the main checkout anyway" | They can, but then the plan never lands in the branch's history and the primary checkout stays dirty. Carry it over (Step 1c) and cite the new path. |
 | "The workspace is fresh — baseline tests can wait" | A dirty baseline makes every later failure ambiguous. Run the tests now; proceeding past failures is your human partner's call. |
