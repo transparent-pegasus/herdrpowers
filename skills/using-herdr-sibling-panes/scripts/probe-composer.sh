@@ -5,7 +5,10 @@ set -uo pipefail
 # composer-submit.sh. Run this ONCE per agent CLI (and after any CLI upgrade)
 # before that agent is used as a delegation target.
 #
-# usage: probe-composer.sh <pane-id>
+# usage: probe-composer.sh <pane-id> [<model>]
+#
+# <model> is the model half of an `agent@model` entry the pane should serve;
+# steps 4-5 then submit through the helper's model check.
 #
 # Checks, in order:
 #   1. pane runs an agent and is idle
@@ -19,12 +22,21 @@ set -uo pipefail
 #      word it was given before the reset
 #   9. a running task can be interrupted and the pane returns to idle
 #  10. the agent process is still the same one it was at step 1
+#  11. the footer model line is still readable after the probe's resets
+#      (and, with <model>, still contains it)
+#  12. a submission pinned to a model the pane does not run is refused with
+#      exit 5 and the pane stays idle
+# Steps 11-12 SKIP for an agent kind with no model-line rule.
 #
 # exit 0 all checks passed — the agent is safe to delegate to
 # exit 1 at least one check failed — resolve the reported failure before delegating
 
 pane_id=${1:-}
-[[ -n $pane_id ]] || { echo "usage: probe-composer.sh <pane-id>" >&2; exit 1; }
+model=${2-}
+if [[ -z $pane_id || $# -gt 2 || ($# -eq 2 && -z $model) ]]; then
+  echo "usage: probe-composer.sh <pane-id> [<model>]" >&2
+  exit 1
+fi
 
 here=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 submit=$here/composer-submit.sh
@@ -102,6 +114,10 @@ if ((cols < composer_min_cols)); then
 fi
 ok "2 pane meets the composer width floor ($cols cols, floor $composer_min_cols)"
 
+# Read before any key is sent; step 11 compares it with the line after the resets.
+model_before_rc=0
+model_before=$(bash "$here/pane-model.sh" "$pane_id" ${model:+"$model"} 2>/dev/null) || model_before_rc=$?
+
 # 3. leftover text must clear without ctrl+c (ctrl+c quits some TUIs)
 herdr pane send-text "$pane_id" "PROBE_LEFTOVER_TEXT" >/dev/null; sleep 0.6
 herdr pane send-keys "$pane_id" ctrl+u >/dev/null; sleep 0.6
@@ -126,7 +142,7 @@ probe_word=PERIWINKLE
 instruction="Reply with exactly one line: the name of the current git branch. The probe word for this conversation is $probe_word. Make no edits and execute no shell commands. End your reply with $marker_head immediately followed by $marker_tail."
 
 submit_rc=0
-bash "$submit" "$pane_id" "$instruction" >/dev/null 2>&1 || submit_rc=$?
+bash "$submit" "$pane_id" "$instruction" ${model:+"$model"} >/dev/null 2>&1 || submit_rc=$?
 if [[ $submit_rc -eq 0 ]]; then
   ok "4 session reset sent and the TUI survived"
   ok "5 instruction submitted and the pane started working"
@@ -212,6 +228,32 @@ if [[ -n $(pane_field agent) && $argv_after == "$argv_before" ]]; then
   ok "10 agent survived the probe ($argv_after)"
 else
   bad "10 agent died or restarted during the probe (before='$argv_before' after='$argv_after')"
+fi
+
+# 11. the resets must leave the footer model line readable, and still matching
+# the pinned model.
+if [[ $model_before_rc -eq 3 ]]; then
+  printf 'SKIP  %s\n' "11 no model-line rule for '$agent'"
+  printf 'SKIP  %s\n' "12 no model-line rule for '$agent'"
+else
+  model_after_rc=0
+  model_after=$(bash "$here/pane-model.sh" "$pane_id" ${model:+"$model"} 2>/dev/null) || model_after_rc=$?
+  if [[ $model_before_rc -eq 0 && $model_after_rc -eq 0 ]]; then
+    ok "11 model line read before and after the resets ('$model_before' / '$model_after')"
+  else
+    bad "11 model line before the probe '$model_before' (exit $model_before_rc), after it '$model_after' (exit $model_after_rc)"
+  fi
+
+  # 12. a pin to a model the pane does not run must be refused before any key
+  # is sent. The instruction is harmless in case the refusal fails.
+  pin_rc=0
+  bash "$submit" "$pane_id" "Reply with OK. Make no edits and execute no shell commands." PROBE-NO-SUCH-MODEL >/dev/null 2>&1 || pin_rc=$?
+  status_after=$(pane_field agent_status)
+  if [[ $pin_rc -eq 5 && ($status_after == idle || $status_after == done) ]]; then
+    ok "12 a submission pinned to another model was refused (exit 5) and the pane stayed $status_after"
+  else
+    bad "12 a submission pinned to another model exited $pin_rc and left the pane '$status_after'; expected exit 5 and an idle pane"
+  fi
 fi
 
 echo

@@ -3,7 +3,11 @@ set -euo pipefail
 
 # Reset an agent pane's session and submit exactly one instruction to it.
 #
-# usage: composer-submit.sh <pane-id> <instruction>
+# usage: composer-submit.sh <pane-id> <instruction> [<model>]
+#
+# With <model> (the model half of an `agent@model` entry), the pane's footer
+# model line must contain it before any key is sent and again after the reset;
+# see pane-model.sh.
 #
 # exit 0  instruction submitted and the pane started working
 # exit 2  bad usage (including an instruction holding a bare "/word" slash
@@ -12,14 +16,23 @@ set -euo pipefail
 #         agent CLI, or the pane stopped responding) — before retrying, check
 #         whether the task already finished by matching its completion marker
 # exit 4  pane is too narrow even after a zoom attempt
+# exit 5  the pane's model line does not contain <model>: before the reset
+#         nothing was sent; after it, the session was reset but no
+#         instruction was sent
 
-if [[ $# -ne 2 ]]; then
-  echo "usage: composer-submit.sh <pane-id> <instruction>" >&2
+if [[ $# -lt 2 || $# -gt 3 ]]; then
+  echo "usage: composer-submit.sh <pane-id> <instruction> [<model>]" >&2
   exit 2
 fi
 
 pane_id=$1
 instruction=$2
+model=${3-}
+if [[ $# -eq 3 && ( -z $model || $model == *$'\n'* ) ]]; then
+  echo "model must be one non-empty line" >&2
+  exit 2
+fi
+pane_model=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/pane-model.sh
 input_settle_seconds=${HERDR_COMPOSER_INPUT_SETTLE_SECONDS:-0.40}
 clear_settle_seconds=${HERDR_COMPOSER_CLEAR_SETTLE_SECONDS:-1.20}
 confirm_timeout_seconds=${HERDR_COMPOSER_CONFIRM_TIMEOUT_SECONDS:-10}
@@ -106,6 +119,12 @@ fi
 if [[ $status != idle && $status != done ]]; then
   echo "pane $pane_id is '$status' — never submit to a working or blocked pane" >&2
   exit 2
+fi
+
+model_matches() { bash "$pane_model" "$pane_id" "$model" >/dev/null; }
+if [[ -n $model ]] && ! model_matches; then
+  echo "pane $pane_id is not running '$model'; nothing was sent" >&2
+  exit 5
 fi
 
 # herdr's zoom is one slot per tab. Two submissions into the same tab would
@@ -246,6 +265,19 @@ else
   submit_line "/clear"
 fi
 sleep "$clear_settle_seconds"
+
+# A reset redraws the screen, so give the footer time to come back.
+if [[ -n $model ]]; then
+  deadline=$((SECONDS + confirm_timeout_seconds))
+  until model_matches 2>/dev/null; do
+    if ((SECONDS >= deadline)); then
+      model_matches || true
+      echo "pane $pane_id is not running '$model' after the reset; the session was reset and no instruction was sent" >&2
+      exit 5
+    fi
+    sleep 0.5
+  done
+fi
 
 submit_line "$instruction"
 sleep "$input_settle_seconds"

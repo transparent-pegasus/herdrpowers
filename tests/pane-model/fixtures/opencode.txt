@@ -1,0 +1,13 @@
+                                                  ▄
+                 █▀▀█ █▀▀█ █▀▀█ █▀▀▄ █▀▀▀ █▀▀█ █▀▀█ █▀▀█
+                 █  █ █  █ █▀▀▀ █  █ █    █  █ █  █ █▀▀▀
+                 ▀▀▀▀ █▀▀▀ ▀▀▀▀ ▀▀▀▀ ▀▀▀▀ ▀▀▀▀ ▀▀▀▀ ▀▀▀▀
+
+  ┃
+  ┃  Ask anything… "Fix a TODO in the codebase"
+  ┃
+  ┃  Build · GPT-6.1 Sol OpenAI · max
+  ╹▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
+                                           tab agents  ctrl+p commands
+
+  /home/repos/herdrpowers:main  ⊙ 1 MCP /status            1.18.35

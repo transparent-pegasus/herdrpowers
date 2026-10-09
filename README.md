@@ -81,6 +81,7 @@ roles:                                        # role -> agent type(s)
   coder:      { agent: codex }
   generalist: { agent: orchestrator }        # the pane the user typed into
   reviewer:   { agents: [codex, cursor] }     # a list role: one delegation per entry
+  # reviewer: { agents: [codex, cursor@Grok 4.7, cursor@Muse Spark 1.3] }  # agent@model pins a model
 
 delegation:
   pane_scope: tab                             # never delegate outside the orchestrator's tab
@@ -117,7 +118,7 @@ The payload is a single tree at the repository root, discovered by each platform
 | **OpenCode** | `skills/` (registered by the plugin) | `commands/` as namespaced slash commands, registered by the plugin |
 | **Aider / Gemini CLI / others** | read `skills/<name>/SKILL.md` directly | read `commands/<name>.md` directly |
 
-Roles bind to **agent types**, not to platforms: the orchestrator can be any agent CLI, and Coder / Generalist / Reviewer resolve to whatever the repo's `.herdrpowers/config.yaml` says, falling back to `skills/orchestration/roles.yaml`. Reassign any delegation task, change where it runs, or turn a review off in the repo file — the pack's defaults stay untouched.
+Roles bind to **agent types**, not to platforms: the orchestrator can be any agent CLI, and Coder / Generalist / Reviewer resolve to whatever the repo's `.herdrpowers/config.yaml` says, falling back to `skills/orchestration/roles.yaml`. Reassign any delegation task, change where it runs, or turn a review off in the repo file — the pack's defaults stay untouched. An agent type can also be pinned to a model as `agent@model` (`cursor@Muse Spark 1.3`): herdr reports a pane's agent type but not its model, so the pack reads the model from the footer the CLI draws, and two panes of one CLI on different models count as different reviewers.
 
 ## Repository Structure
 
