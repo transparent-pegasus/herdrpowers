@@ -4,7 +4,7 @@ Skills are structured reference guides — procedures, flowcharts, and anti-patt
 
 ## Where Skills Live
 
-Skills live in a single tree at `skills/<name>/SKILL.md`. Claude Code, Codex, and Cursor all discover this directory through the pack's plugin manifests; other tools read the files directly.
+Skills live in a single tree at `skills/<name>/SKILL.md`. Claude Code, Codex, and Cursor discover this directory through the pack's plugin manifests, and the OpenCode plugin registers it at startup; other tools read the files directly.
 
 ## Herdr & Orchestration
 
