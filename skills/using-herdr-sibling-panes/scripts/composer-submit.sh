@@ -235,7 +235,16 @@ started() {
   return 1
 }
 
-submit_line "/clear"
+if [[ $agent == opencode ]]; then
+  # OpenCode's esc closes the slash popup and wipes the composer with it, so a
+  # typed /clear submits an empty line and the session is never reset. Its
+  # new-session keybind (leader ctrl+x, then n) needs no popup.
+  herdr pane send-keys "$pane_id" ctrl+x
+  sleep "$input_settle_seconds"
+  herdr pane send-keys "$pane_id" n
+else
+  submit_line "/clear"
+fi
 sleep "$clear_settle_seconds"
 
 submit_line "$instruction"
