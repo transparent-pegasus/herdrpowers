@@ -31,7 +31,7 @@ Delegate the review to a **herdr sibling pane via a reset-backed submit** to cat
 ```bash
 BASE_SHA=$(git merge-base <BASE_BRANCH> HEAD)   # or the commit recorded before the task
 HEAD_SHA=$(git rev-parse HEAD)
-../pane-driven-development/scripts/review-package "$PLAN_FILE" "$BASE_SHA" "$HEAD_SHA"   # prints the path
+bash ../pane-driven-development/scripts/review-package "$PLAN_FILE" "$BASE_SHA" "$HEAD_SHA"   # prints the path
 ```
 `PLAN_FILE` scopes the package to that plan's workspace. In plan-less flows (`/quick`, ad-hoc reviews) pass `-`.
 The package never enters your own context — you pass the path, the pane reads the file.
@@ -53,6 +53,7 @@ Write the review contract from [review-brief.md](review-brief.md) to a file, the
 - Fix Critical issues immediately
 - Fix Important issues before proceeding
 - Note Minor issues for later
+- Rule on every line of the reviewer's "Declined to judge" list: each set-aside behavior either stands, with your reason, or becomes a finding. None is dropped silently
 - Push back if the reviewer is wrong (with reasoning) — see `receiving-code-review`
 
 ## Example

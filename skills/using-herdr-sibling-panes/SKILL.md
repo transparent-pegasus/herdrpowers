@@ -7,7 +7,7 @@ description: "Use when inside herdr (HERDR_ENV=1), the current pane is acting as
 
 `HERDR_ENV=1` is required. If it is missing, stop.
 
-**Placeholder resolution:** `<KEY>` placeholders in this file (such as `<REPORT_DIRECTORY>`) resolve from the `Herdrpowers Configuration` section of the repository's `CLAUDE.md` / `AGENTS.md`. If that section is missing, initialize it with the pack's init workflow (`/herdrpowers:init` on Claude Code plugin installs; `commands/init.md` otherwise), or fall back to the git-ignored workspace that `pane-driven-development/scripts/pdd-workspace [PLAN_FILE]` prints (per-plan with a plan file, the shared `adhoc` directory without one).
+**Placeholder resolution:** `<KEY>` placeholders in this file (such as `<REPORT_DIRECTORY>`) resolve from the `Herdrpowers Configuration` section of the repository's `CLAUDE.md` / `AGENTS.md`. If that section is missing, initialize it with the pack's init workflow (`/herdrpowers:init` on Claude Code plugin installs; `commands/init.md` otherwise), or fall back to the git-ignored workspace that `bash pane-driven-development/scripts/pdd-workspace [PLAN_FILE]` prints (per-plan with a plan file, the shared `adhoc` directory without one).
 
 For pane layout, read [`herdr`](../herdr/SKILL.md). Use this skill only for multi-pane delegation to idle sibling agent panes.
 
@@ -27,7 +27,7 @@ What to delegate depends on how this skill was entered:
 3. From what remains, select only sibling panes that have an `agent` field and `agent_status: idle` or `done`. A pane with no `agent` field is a plain shell or a crashed agent — see "Failure handling". The `agent` field alone is not proof the agent is alive: it can name a CLI that has since exited, leaving the pane at a shell prompt. The helper checks this before sending anything (it exits `2` when the pane's foreground process is its own shell), so let it — never hand-send text to a pane you have not confirmed.
 4. When more than one candidate remains, confirm the composer is empty before you send: `herdr pane read "$PANE" --source visible`. An empty composer reads as an empty follow-up placeholder (`› `, `→ Add a follow-up`). A pane showing unsent text is not a candidate — another orchestrator is composing there, and `composer-submit.sh` wipes that draft with `ctrl+u` before it resets the session. The helper cannot tell a half-written brief from any other composer content and must not try: this is someone else's work being destroyed, not a failure to recover from. If the only candidate has leftover text, do not send — report the pane to the user.
 5. Distribute independent work items across the available panes, one instruction per pane.
-6. Submit one self-contained instruction per pane with `scripts/composer-submit.sh`. It resets the target session and submits the instruction in one call; do not send `/clear` yourself.
+6. Submit one self-contained instruction per pane with `bash scripts/composer-submit.sh`. It resets the target session and submits the instruction in one call; do not send `/clear` yourself.
 7. Do not send a second prompt such as "Please run the task I just sent." The submitted instruction is already running.
 8. Wait for the instruction's unique completion marker with `herdr wait output`, always with a timeout.
 9. On a marker match, re-read `pane list`. If the pane is still `working`, wait for `idle`; if it is already `idle` or `done`, continue. Agent status lags behind the visible output — the marker is the completion signal, status is not.
@@ -82,7 +82,7 @@ Therefore, never submit `/clear` or delegated prompts to an agent pane with `pan
 ```bash
 SKILL_DIR=<directory containing this SKILL.md>
 COMPOSER_SUBMIT="$SKILL_DIR/scripts/composer-submit.sh"
-"$COMPOSER_SUBMIT" "$PANE" "$INSTRUCTION"
+bash "$COMPOSER_SUBMIT" "$PANE" "$INSTRUCTION"
 ```
 
 Exit codes: `0` submitted and running, `2` bad usage (embedded newline, or a bare `/word` slash trigger in the instruction) or the pane is not a usable idle agent pane — including a pane whose agent has exited and left it at a shell prompt, `3` the instruction did not submit, `4` the pane remained too narrow after a zoom attempt.
@@ -133,7 +133,7 @@ Use `pane run` normally for shells and other terminal programs; this workaround 
 Before an agent type is used as a delegation target for the first time, and again after that CLI is upgraded, run the probe against one idle pane of that type:
 
 ```bash
-"$SKILL_DIR/scripts/probe-composer.sh" "$PANE"
+bash "$SKILL_DIR/scripts/probe-composer.sh" "$PANE"
 ```
 
 It checks, in order: the pane is an idle agent pane; the pane meets the conservative composer-width floor; leftover composer text clears without killing the TUI; `/clear` resets the session and the TUI survives; an instruction submits and the pane starts working; the split completion marker is not matched by the prompt echo; the marker is matched when the task finishes; a running task can be interrupted and the pane returns to idle; and the agent process is the same one it was before the probe.
@@ -178,7 +178,7 @@ PANE=w2:p18
 INSTRUCTION="Execute make lint in /path/to/repo. Make no edits. Report the command, exit code, and errors. End with LINT_OK immediately followed by _7F3A."
 COMPOSER_SUBMIT="$SKILL_DIR/scripts/composer-submit.sh"
 submit_rc=0
-"$COMPOSER_SUBMIT" "$PANE" "$INSTRUCTION" || submit_rc=$?
+bash "$COMPOSER_SUBMIT" "$PANE" "$INSTRUCTION" || submit_rc=$?
 case "$submit_rc" in
   0) ;;
   4) echo "composer submission needs a wider layout; fix it and retry" >&2; exit 4 ;;
@@ -202,7 +202,7 @@ Helper exits `2` and `4` mean the delegation never started. Do not call `herdr w
 | state | how it looks | what to do |
 | --- | --- | --- |
 | **finished** | marker matched | read the result, integrate it |
-| **too narrow** | helper exits `4` after its zoom attempt | the 40-column floor is conservative, not a measured cliff — resubmit to the same pane with a lower floor (`HERDR_COMPOSER_MIN_COLS=24 "$COMPOSER_SUBMIT" ...`; codex has submitted down to 4 columns, cursor has not) before touching the layout. Layout retry only — never exhaustion or fallback |
+| **too narrow** | helper exits `4` after its zoom attempt | the 40-column floor is conservative, not a measured cliff — resubmit to the same pane with a lower floor (`HERDR_COMPOSER_MIN_COLS=24 bash "$COMPOSER_SUBMIT" ...`; codex has submitted down to 4 columns, cursor has not) before touching the layout. Layout retry only — never exhaustion or fallback |
 | **did not submit** | helper exits `3` | check for the marker first — a very fast task can finish before the status poll sees it. Otherwise re-run the helper once; a second `3` means the keys are wrong for this CLI, so run the probe |
 | **submitted but idle** | helper exited `0`, the composer still shows `[Pasted Content ...]`, no tree change | the paste was split — put the brief in a file and send a one-line pointer |
 | **crashed** | `pane read` shows a shell prompt; `pane get` may or may not still name an `agent`; the helper exits `2` naming the shell pid | restart it in place with the argv from `pane process-info` taken *before* the crash, then re-delegate once |
@@ -242,7 +242,7 @@ Two consequences for delegated instructions:
 * **Do not let `run` fall at the start of a wrapped line.** You cannot predict the wrap — the helper zooms the pane wide to submit and restores the layout afterwards, so the transcript reflows at the pane's real width. The reliable move is to avoid the word entirely in instruction prose aimed at a cursor pane: write `execute the test suite`, `invoke`, or name the command directly. Commands inside backticks or code blocks are still subject to the same rule if they wrap onto their own line starting with `run `.
 * **Do not clear a `blocked` pane to unstick it.** The status gate stays strict, because an agent genuinely waiting on an approval prompt must never be reset out from under the user. When a pane reports `blocked` but `pane read` shows an idle composer and no prompt, report it to the user as a false-positive status and name the pane. Do not treat the agent type as exhausted — this is one pane's transcript, not a capacity problem.
 
-The underlying fix is upstream in herdr's cursor detection rules. Keep herdr and the agent CLI integrations current, and re-run `scripts/probe-composer.sh` after either is upgraded.
+The underlying fix is upstream in herdr's cursor detection rules. Keep herdr and the agent CLI integrations current, and re-run `bash scripts/probe-composer.sh` after either is upgraded.
 
 ### Exhaustion and fallback
 

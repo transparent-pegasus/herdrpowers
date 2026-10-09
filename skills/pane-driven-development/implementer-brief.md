@@ -13,7 +13,7 @@ implementer contract tells it to start implementing.
 PANE=w2:p18                                    # idle pane of the Coder agent type
 INSTRUCTION="Work in /abs/path/to/worktree — confirm you are there before anything else. Task N of an approved plan: [one line on where this fits]. Read /abs/path/to/task-N-implementer.md first; it is your contract, and it names the requirements file with the exact values to use verbatim. [Interfaces/decisions from earlier tasks the brief cannot know.] [Your resolution of any ambiguity in the brief.] Write your full report to /abs/path/to/task-N-report.md and reply with status, commits, a one-line test summary, concerns, and the report path. Execute this request yourself, directly; re-delegating to other panes or orchestrating is prohibited. End your reply with TASK_N_OK immediately followed by _<4-hex>."
 COMPOSER_SUBMIT="$SKILL_DIR/scripts/composer-submit.sh"   # using-herdr-sibling-panes
-"$COMPOSER_SUBMIT" "$PANE" "$INSTRUCTION"
+bash "$COMPOSER_SUBMIT" "$PANE" "$INSTRUCTION"
 herdr wait output "$PANE" --match "TASK_N_OK_<4-hex>" --timeout 1800000
 ```
 
@@ -184,7 +184,7 @@ unsure about.
 ## Placeholders
 
 - **worktree path** — REQUIRED, absolute; the pane does not inherit the orchestrator's cwd
-- **requirements file** — REQUIRED: `scripts/task-brief PLAN_FILE N` prints the path (inside the plan's workspace). Read-only; every pane on this task reads it
+- **requirements file** — REQUIRED: `bash scripts/task-brief PLAN_FILE N` prints the path (inside the plan's workspace). Read-only; every pane on this task reads it
 - **contract file** — REQUIRED: this contract written to `task-N-implementer.md` beside it, naming the requirements file. Never appended to the requirements file
 - **report file** — REQUIRED: name it after the brief (`task-N-brief.md` → `task-N-report.md`)
 - **marker** — REQUIRED, unique per delegation, ≤16 chars, split into fragments in the instruction

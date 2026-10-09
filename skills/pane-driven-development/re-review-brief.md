@@ -17,7 +17,7 @@ contract below is **written to a file** the pane reads first.
 PANE=w2:p19                                    # idle pane of the resolved role's agent type(s)
 INSTRUCTION="Work in /abs/path/to/worktree — confirm you are there before anything else. Read /abs/path/to/task-N-rereview-brief.md first; it is your complete contract. Write your verdicts to /abs/path/to/task-N-rereview-R.md and reply with the round verdict, the open findings, and that path. Execute this request yourself, directly; re-delegating to other panes or orchestrating is prohibited. End your reply with RRVW_N_R immediately followed by _<4-hex>."
 COMPOSER_SUBMIT="$SKILL_DIR/scripts/composer-submit.sh"   # using-herdr-sibling-panes
-"$COMPOSER_SUBMIT" "$PANE" "$INSTRUCTION"
+bash "$COMPOSER_SUBMIT" "$PANE" "$INSTRUCTION"
 herdr wait output "$PANE" --match "RRVW_N_R_<4-hex>" --timeout 1800000
 ```
 
@@ -132,7 +132,7 @@ output file path, and the completion marker.
 - `[REPORT_FILE]` — the implementer's report file (fix reports appended)
 - `[FIX_BASE_SHA]` — the head the previous review saw
 - `[HEAD_SHA]` — current commit
-- `[DIFF_FILE]` — the path `scripts/review-package PLAN_FILE FIX_BASE HEAD` printed
+- `[DIFF_FILE]` — the path `bash scripts/review-package PLAN_FILE FIX_BASE HEAD` printed
 - **output file + marker** — REQUIRED, marker unique per round
 
 **Re-reviewer returns:** per-finding verdicts (ADDRESSED / NOT ADDRESSED),
