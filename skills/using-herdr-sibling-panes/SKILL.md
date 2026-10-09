@@ -29,7 +29,7 @@ What to delegate depends on how this skill was entered:
 5. Distribute independent work items across the available panes, one instruction per pane.
 6. Submit one self-contained instruction per pane with `bash scripts/composer-submit.sh`. It resets the target session and submits the instruction in one call; do not send `/clear` yourself.
 7. Do not send a second prompt such as "Please run the task I just sent." The submitted instruction is already running.
-8. Wait for the instruction's unique completion marker with `herdr wait output`, always with a timeout.
+8. Wait for the instruction's unique completion marker with `herdr pane wait-output`, always with a timeout.
 9. On a marker match, re-read `pane list`. If the pane is still `working`, wait for `idle`; if it is already `idle` or `done`, continue. Agent status lags behind the visible output — the marker is the completion signal, status is not.
 10. On anything other than a marker match, go to "Failure handling". Never retype into a composer to "fix" a failed submission.
 11. Read the completed result and integrate it in the orchestrator pane.
@@ -89,7 +89,7 @@ Exit codes: `0` submitted and running, `2` bad usage (embedded newline, or a bar
 
 ### Verified keys
 
-Verified 2026-07-25 against codex 0.145.0, cursor-agent 2026.07.23-e383d2b, and grok 0.2.112 with `scripts/probe-composer.sh`, and re-verified 2026-08-24 against grok 1.0.5. All agree, so the helper uses one sequence:
+Verified 2026-07-25 against codex 0.145.0, cursor-agent 2026.07.23-e383d2b, and grok 0.2.112 with `scripts/probe-composer.sh`, re-verified 2026-08-24 against grok 1.0.5, and re-verified 2026-10-09 against codex 0.162.0 on herdr 0.9.3. All agree, so the helper uses one sequence:
 
 | purpose | key / text | notes |
 | --- | --- | --- |
@@ -142,7 +142,7 @@ Any `FAIL` stops onboarding until it is resolved. A width failure is a layout pr
 
 ## Task contract
 
-Every instruction must include the **absolute working directory** (a pane does not inherit the orchestrator's cwd — when the work happens in a worktree, give the worktree path and require the pane to confirm it is there before doing anything else), the exact command or path, the edit policy, the report format, and a unique final completion marker that `wait output` can match.
+Every instruction must include the **absolute working directory** (a pane does not inherit the orchestrator's cwd — when the work happens in a worktree, give the worktree path and require the pane to confirm it is there before doing anything else), the exact command or path, the edit policy, the report format, and a unique final completion marker that `pane wait-output` can match.
 
 **Reports go to files.** Terminal scrollback is lossy — an agent on the alternate screen loses rows that `pane read` can never recover. Name a report file path in every brief (under `<REPORT_DIRECTORY>`, or the worktree's scratch directory) and require the pane to write its full report there and reply with that path plus the marker. Read the file; do not reconstruct the result from scrollback.
 
@@ -152,19 +152,20 @@ Every instruction must include the **absolute working directory** (a pane does n
 
 **Check the tree before integrating.** A pane whose task file named a dedicated worktree still edited the orchestrator's main worktree, and it surfaced only when `git merge` refused. Before any merge or integration step, `git status --short` in the integration tree and treat every unexpected modification as a scope violation: save it (`git diff > <scratch>/stray-<task>.patch`), restore the file, and surface it to the user as its own decision. Never let it ride along in a merge commit.
 
-**Marker rules.** Keep the marker at 16 ASCII characters or fewer. `wait output` matches against unwrapped output, so a marker split across lines by a narrow pane still matches — the failure mode is the opposite one. The complete marker must not occur verbatim in the submitted prompt, because `wait output` also sees the echoed user text; describe it as two fragments the delegated agent concatenates, and keep those fragments apart in the sentence. Naming them adjacently ("end with PLANREV followed by _A1C7") has rendered them side by side in a narrow pane and fired the match the moment the prompt echoed, before any work happened.
+**Marker rules.** Keep the marker at 16 ASCII characters or fewer. `pane wait-output` matches across soft wraps, so a marker split across lines by a narrow pane still matches — the failure mode is the opposite one. The complete marker must not occur verbatim in the submitted prompt, because `pane wait-output` searches the snapshot as it already stands — echoed user text included — before it polls; describe it as two fragments the delegated agent concatenates, and keep those fragments apart in the sentence. Naming them adjacently ("end with PLANREV followed by _A1C7") has rendered them side by side in a narrow pane and fired the match the moment the prompt echoed, before any work happened.
 
-**On a long delegation, poll for the report file.** The marker is the completion signal for short work. For anything measured in tens of minutes, a `wait output` that times out tells you nothing — the pane may still be working, may have died, or may have finished before the wait started, because `wait output` only scans output emitted after it begins. Poll for the report file the instruction named instead, and require the pane to write it in one final write (or to a temporary path and rename), because a file rewritten in place disappears mid-write and turns an existence check into a false negative. Treat the task as done only when the report file is present *and* the pane reports `idle` or `done`. Keep the instruction on a single line — the helper rejects embedded newlines. Keep bare `/word` tokens out of the text for the same reason: the helper rejects them with exit `2`, because they open the composer's slash popup mid-paste and corrupt the submission. Absolute paths are fine; a step name like `/run` must be reworded or backtick-wrapped. Keep the word `run` out of instruction prose entirely — write `execute`, `invoke`, or name the command — because a wrap that puts `run` at the start of a line pins a cursor pane at `blocked` for the rest of its session; see "A wrapped `run ` line pins a cursor pane at `blocked`".
+**On a long delegation, poll for the report file.** The marker is the completion signal for short work. For anything measured in tens of minutes, a `pane wait-output` that times out tells you nothing — the pane may still be working, may have died, or may have printed its marker on the alternate screen, where a redraw drops rows that never reach herdr's scrollback. Poll for the report file the instruction named instead, and require the pane to write it in one final write (or to a temporary path and rename), because a file rewritten in place disappears mid-write and turns an existence check into a false negative. Treat the task as done only when the report file is present *and* the pane reports `idle` or `done`. Keep the instruction on a single line — the helper rejects embedded newlines. Keep bare `/word` tokens out of the text for the same reason: the helper rejects them with exit `2`, because they open the composer's slash popup mid-paste and corrupt the submission. Absolute paths are fine; a step name like `/run` must be reworded or backtick-wrapped. Keep the word `run` out of instruction prose entirely — write `execute`, `invoke`, or name the command — because a wrap that puts `run` at the start of a line pins a cursor pane at `blocked` for the rest of its session; see "A wrapped `run ` line pins a cursor pane at `blocked`".
 
 **Wait in bounded stretches, and reconcile between them.** Never poll with short
 timeouts, and never sit in one silent open-ended wait either. While you have
 local work — reading a report that already came back, packaging the next
 delegation, updating a ledger — do it; delegated panes finish on their own.
-When you are genuinely idle, replace one long `wait output` with stretches of
+When you are genuinely idle, replace one long `pane wait-output` with stretches of
 five to ten minutes, and between stretches check the report file and re-read
 `pane list` for every live delegation. That between-stretch check is not
-optional: `wait output` only scans output emitted after it starts, so a marker
-landing in the gap is never matched, and the report file is what proves the work
+optional: each stretch searches the snapshot as it stands, and an agent on the
+alternate screen redraws and drops rows, so a marker printed between stretches
+can be gone before the next one looks — the report file is what proves the work
 finished. A pane back at `idle` or `done` with no marker and no report has
 already failed — diagnosing it now costs minutes instead of the rest of the
 session.
@@ -184,10 +185,10 @@ case "$submit_rc" in
   4) echo "composer submission needs a wider layout; fix it and retry" >&2; exit 4 ;;
   *) echo "composer submission failed with exit $submit_rc; diagnose it before waiting" >&2; exit "$submit_rc" ;;
 esac
-herdr wait output "$PANE" --match "LINT_OK_7F3A" --timeout 300000
+herdr pane wait-output "$PANE" --match "LINT_OK_7F3A" --timeout 300000
 herdr pane list
 # If the target is still working:
-herdr wait agent-status "$PANE" --status idle --timeout 300000
+herdr agent wait "$PANE" --until idle --timeout 300000
 herdr pane read "$PANE" --source recent --lines 120
 ```
 
@@ -195,9 +196,9 @@ Re-read pane ids after panes close because ids can compact. Do not send work to 
 
 ## Failure handling
 
-`herdr wait output` exits non-zero on timeout, so every delegation ends in exactly one of these states. Diagnose with `herdr pane get`, `herdr pane read --source recent`, and `herdr pane process-info --pane "$PANE"`.
+`herdr pane wait-output` exits `1` on timeout — and on a server error such as an unknown pane, with JSON on stderr — so every delegation ends in exactly one of these states. An immediate exit `2` is a CLI syntax error, not a timeout: fix the command before reading anything into it. Diagnose with `herdr pane get`, `herdr pane read --source recent`, and `herdr pane process-info --pane "$PANE"`.
 
-Helper exits `2` and `4` mean the delegation never started. Do not call `herdr wait output` after either exit, and never count either one toward the two-pane no-marker exhaustion rule.
+Helper exits `2` and `4` mean the delegation never started. Do not call `herdr pane wait-output` after either exit, and never count either one toward the two-pane no-marker exhaustion rule.
 
 | state | how it looks | what to do |
 | --- | --- | --- |

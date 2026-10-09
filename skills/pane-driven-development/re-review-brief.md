@@ -18,7 +18,7 @@ PANE=w2:p19                                    # idle pane of the resolved role'
 INSTRUCTION="Work in /abs/path/to/worktree — confirm you are there before anything else. Read /abs/path/to/task-N-rereview-brief.md first; it is your complete contract. Write your verdicts to /abs/path/to/task-N-rereview-R.md and reply with the round verdict, the open findings, and that path. Execute this request yourself, directly; re-delegating to other panes or orchestrating is prohibited. End your reply with RRVW_N_R immediately followed by _<4-hex>."
 COMPOSER_SUBMIT="$SKILL_DIR/scripts/composer-submit.sh"   # using-herdr-sibling-panes
 bash "$COMPOSER_SUBMIT" "$PANE" "$INSTRUCTION"
-herdr wait output "$PANE" --match "RRVW_N_R_<4-hex>" --timeout 1800000
+herdr pane wait-output "$PANE" --match "RRVW_N_R_<4-hex>" --timeout 1800000
 ```
 
 ## 2. The re-review contract (write to the brief file)

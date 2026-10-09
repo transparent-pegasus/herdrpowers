@@ -136,7 +136,7 @@ If no substitute is available, the work runs in the orchestrator pane when that 
 
 | Platform | How |
 |---|---|
-| Any agent inside herdr (`HERDR_ENV=1`) | `using-herdr-sibling-panes` → `scripts/composer-submit.sh`, then wait for the completion marker with `herdr wait output`. |
+| Any agent inside herdr (`HERDR_ENV=1`) | `using-herdr-sibling-panes` → `scripts/composer-submit.sh`, then wait for the completion marker with `herdr pane wait-output`. |
 | Outside herdr | No delegation. Skills degrade to inline execution (`executing-plans`), and the report states which steps were not independent. |
 
 Before an agent CLI is used as a delegation target for the first time — and again after that CLI is upgraded — run `bash skills/using-herdr-sibling-panes/scripts/probe-composer.sh "$PANE"` against one idle pane of that type. Composer key bindings differ per CLI and change across releases; any `FAIL` means that agent type is not delegatable yet.

@@ -16,7 +16,7 @@ Agent skill for delegating work from an orchestrator pane to idle sibling agent 
 - Never uses `ctrl+c`: on an idle Codex composer it quits the TUI. `ctrl+u` clears the composer instead. `ctrl+enter` does not submit in Codex; `enter` does.
 - Refuses a pane whose agent has exited to a shell prompt, and a pane too narrow for its composer to accept Enter — zooming it temporarily and restoring the tab's zoom on every exit path.
 - Rejects an instruction carrying an embedded newline or a bare `/word`: the composer's slash popup opens mid-paste and corrupts the submission.
-- Completion is detected by matching a unique marker with `herdr wait output`, split into fragments in the prompt so the marker never matches the prompt itself. Agent status lags the output and is not a completion signal; on long work, poll for the report file and wait in bounded stretches instead.
+- Completion is detected by matching a unique marker with `herdr pane wait-output`, split into fragments in the prompt so the marker never matches the prompt itself. Agent status lags the output and is not a completion signal; on long work, poll for the report file and wait in bounded stretches instead.
 - Every brief carries the absolute working directory (panes do not inherit the orchestrator's cwd) and a report-file path — results are read from that file, never reconstructed from lossy pane scrollback.
 - Delegated panes are forbidden from `git checkout` / `restore` / `stash` / `clean` / `reset`, because sibling edits may be in flight, and the integration tree is checked before any merge.
 - A brief long enough to be pasted as `[Pasted Content …]` never submits even though the helper exits `0` — long briefs go in a file, sent as a one-line pointer.

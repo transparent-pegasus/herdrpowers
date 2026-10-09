@@ -17,7 +17,7 @@ Because the implementing pane wrote its own tests (when `test-authoring` is
 PANE=w2:p19                                    # idle pane of the resolved role's agent type(s)
 INSTRUCTION="Work in /abs/path/to/worktree — confirm you are there before anything else. Review-only task: make no edits and do not mutate the working tree, index, HEAD, or branch state. Read /abs/path/to/task-N-review-brief.md — it holds your review contract and the paths to the task brief, the implementer's report, and the diff package. Write your review to /abs/path/to/task-N-review.md and reply with the two verdicts and the report path. Execute this request yourself, directly; re-delegating to other panes or orchestrating is prohibited. End your reply with REVIEW_N_OK immediately followed by _<4-hex>."
 bash "$COMPOSER_SUBMIT" "$PANE" "$INSTRUCTION"
-herdr wait output "$PANE" --match "REVIEW_N_OK_<4-hex>" --timeout 900000
+herdr pane wait-output "$PANE" --match "REVIEW_N_OK_<4-hex>" --timeout 900000
 ```
 
 ## 2. The review contract (write to the review brief file)
