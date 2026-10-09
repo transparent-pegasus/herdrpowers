@@ -67,7 +67,7 @@ BASE_SHA=a7981ec   # recorded before Task 2's implementer was delegated
 HEAD_SHA=3df7661
 [review-package docs/plans/feature.md a7981ec 3df7661 → /repo/.herdrpowers/pdd/feature/review-a7981ec..3df7661.diff]
 [Write the review contract to /repo/.herdrpowers/pdd/feature/task-2-review-brief.md]
-[composer-submit.sh w2:p19 "<one-line instruction>"; wait output REVIEW_OK_9C4A]
+[composer-submit.sh w2:p19 "<one-line instruction>"; pane wait-output REVIEW_OK_9C4A]
 
 [Read /repo/.herdrpowers/pdd/feature/task-2-review.md]:
   Strengths: Clean architecture, tests assert the requirement

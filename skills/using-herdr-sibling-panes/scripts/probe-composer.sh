@@ -59,7 +59,7 @@ finally:
 print(cols)
 PY
 }
-screen() { herdr pane read "$pane_id" --source recent --lines 60 2>/dev/null; }
+screen() { herdr pane read "$pane_id" --source recent-unwrapped --lines 60 2>/dev/null; }
 ok()   { printf 'PASS  %s\n' "$1"; }
 bad()  { printf 'FAIL  %s\n' "$1"; fails=$((fails + 1)); }
 wait_idle() {
@@ -134,7 +134,10 @@ fi
 
 # 6. the split marker must not match the echoed prompt. composer-submit.sh
 # returns as soon as the pane is working, so a marker visible while the agent
-# is still working can only have come from the echoed prompt.
+# is still working can only have come from the echoed prompt. screen() reads
+# recent-unwrapped because `pane read --source recent` prints soft-wrapped rows
+# split, while `pane wait-output` matches across soft wraps: only the unwrapped
+# read sees what the wait in step 7 would match.
 if screen | grep -q "$marker" && [[ $(pane_field agent_status) == working ]]; then
   bad "6 marker '$marker' visible while still working — the prompt echo matches it"
 else
@@ -142,7 +145,7 @@ else
 fi
 
 # 7. completion is detected by the marker
-if herdr wait output "$pane_id" --match "$marker" --timeout 120000 >/dev/null 2>&1; then
+if herdr pane wait-output "$pane_id" --match "$marker" --timeout 120000 >/dev/null 2>&1; then
   ok "7 completion marker '$marker' matched"
 else
   bad "7 completion marker never appeared within 120s"

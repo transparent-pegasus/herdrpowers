@@ -14,7 +14,7 @@ PANE=w2:p18                                    # idle pane of the Coder agent ty
 INSTRUCTION="Work in /abs/path/to/worktree — confirm you are there before anything else. Task N of an approved plan: [one line on where this fits]. Read /abs/path/to/task-N-implementer.md first; it is your contract, and it names the requirements file with the exact values to use verbatim. [Interfaces/decisions from earlier tasks the brief cannot know.] [Your resolution of any ambiguity in the brief.] Write your full report to /abs/path/to/task-N-report.md and reply with status, commits, a one-line test summary, concerns, and the report path. Execute this request yourself, directly; re-delegating to other panes or orchestrating is prohibited. End your reply with TASK_N_OK immediately followed by _<4-hex>."
 COMPOSER_SUBMIT="$SKILL_DIR/scripts/composer-submit.sh"   # using-herdr-sibling-panes
 bash "$COMPOSER_SUBMIT" "$PANE" "$INSTRUCTION"
-herdr wait output "$PANE" --match "TASK_N_OK_<4-hex>" --timeout 1800000
+herdr pane wait-output "$PANE" --match "TASK_N_OK_<4-hex>" --timeout 1800000
 ```
 
 The marker must not appear verbatim in the instruction — describe it as two

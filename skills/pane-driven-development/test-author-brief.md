@@ -20,7 +20,7 @@ PANE=w2:p19                                    # idle pane of the resolved role'
 INSTRUCTION="Work in /abs/path/to/tests-task-N-worktree — confirm you are there before anything else. You are writing the tests for Task N of an approved plan: [one line on where this fits]. Read /abs/path/to/task-N-tests.md first; it is your contract, and it names the requirements file with the exact values and signatures to use verbatim. [Interfaces/decisions from earlier tasks the brief cannot know.] Write your full report to /abs/path/to/task-N-tests-report.md and reply with status, the commit, the RED command and its result, concerns, and the report path. Execute this request yourself, directly; re-delegating to other panes or orchestrating is prohibited. End your reply with TESTS_N_OK immediately followed by _<4-hex>."
 COMPOSER_SUBMIT="$SKILL_DIR/scripts/composer-submit.sh"   # using-herdr-sibling-panes
 bash "$COMPOSER_SUBMIT" "$PANE" "$INSTRUCTION"
-herdr wait output "$PANE" --match "TESTS_N_OK_<4-hex>" --timeout 1800000
+herdr pane wait-output "$PANE" --match "TESTS_N_OK_<4-hex>" --timeout 1800000
 ```
 
 The marker must not appear verbatim in the instruction — describe it as two
