@@ -30,7 +30,7 @@ What to delegate depends on how this skill was entered:
 6. Submit one self-contained instruction per pane with `bash scripts/composer-submit.sh`. It resets the target session and submits the instruction in one call; do not send `/clear` yourself.
 7. Do not send a second prompt such as "Please run the task I just sent." The submitted instruction is already running.
 8. Wait for the instruction's unique completion marker with `herdr pane wait-output`, always with a timeout.
-9. On a marker match, re-read `pane list`. If the pane is still `working`, wait for `idle`; if it is already `idle` or `done`, continue. Agent status lags behind the visible output — the marker is the completion signal, status is not.
+9. On a marker match, re-read `pane list`. If the pane is still `working`, wait for `idle` or `done` — work that finishes unseen settles at `done`, so a wait for `idle` alone sits out its whole timeout; if it is already `idle` or `done`, continue. Agent status lags behind the visible output — the marker is the completion signal, status is not.
 10. On anything other than a marker match, go to "Failure handling". Never retype into a composer to "fix" a failed submission.
 11. Read the completed result and integrate it in the orchestrator pane.
 
@@ -89,15 +89,17 @@ Exit codes: `0` submitted and running, `2` bad usage (embedded newline, or a bar
 
 ### Verified keys
 
-Verified 2026-07-25 against codex 0.145.0, cursor-agent 2026.07.23-e383d2b, and grok 0.2.112 with `scripts/probe-composer.sh`, re-verified 2026-08-24 against grok 1.0.5, and re-verified 2026-10-09 against codex 0.162.0 on herdr 0.9.3. All agree, so the helper uses one sequence:
+Verified 2026-07-25 against codex 0.145.0, cursor-agent 2026.07.23-e383d2b, and grok 0.2.112 with `scripts/probe-composer.sh`, re-verified 2026-08-24 against grok 1.0.5, and re-verified 2026-10-09 against codex 0.162.0 on herdr 0.9.3. All three agree, so the helper uses one sequence. opencode 1.18.35, verified 2026-10-09 on herdr 0.9.3, differs in the rows that name it:
 
 | purpose | key / text | notes |
 | --- | --- | --- |
 | clear composer | `ctrl+u` | leaves the session intact |
-| reset session | `/clear` + `enter` | all three CLIs have `/clear` |
-| dismiss popup | `esc` | keeps composer text, closes slash/mention popup |
+| reset session | `/clear` + `enter` | codex, cursor, and grok have `/clear`. opencode: `ctrl+x`, then `n` |
+| dismiss popup | `esc` | keeps composer text, closes slash/mention popup. opencode: wipes the composer along with a slash popup |
 | submit | `enter` | |
-| interrupt a running task | `esc` | |
+| interrupt a running task | `esc` | opencode: `esc` twice — the first press only arms "esc again to interrupt" |
+
+opencode's `esc` closes the slash popup and wipes the composer along with it, so the shared reset submits an empty line. Nothing resets, the next instruction lands in the previous conversation, and the helper still exits `0` — the probe passed its reset step that way until it began checking that the reset took effect. The helper resets opencode with its new-session keybind instead. Plain composer text survives `esc`, and a pasted `@` mid-sentence opens no popup, so the instruction itself goes through the shared sequence.
 
 The grok 1.0.5 re-verification covers clear, reset, popup-dismiss, and submit at 44 columns and again at 39: `esc` closes the slash popup leaving the composer text untouched, and `enter` submits at both widths. It does not cover the interrupt row — that account hit its weekly usage limit mid-probe, which leaves the pane `blocked` on an upgrade prompt `esc` does not clear.
 
@@ -126,6 +128,8 @@ sleep 0.40
 herdr pane send-keys "$PANE" enter
 ```
 
+On opencode, send `ctrl+x` and then `n` in place of the `/clear` text and the `esc` and `enter` that follow it.
+
 Use `pane run` normally for shells and other terminal programs; this workaround is specifically for agent composers.
 
 ### Onboarding a new agent CLI
@@ -136,7 +140,7 @@ Before an agent type is used as a delegation target for the first time, and agai
 bash "$SKILL_DIR/scripts/probe-composer.sh" "$PANE"
 ```
 
-It checks, in order: the pane is an idle agent pane; the pane meets the conservative composer-width floor; leftover composer text clears without killing the TUI; `/clear` resets the session and the TUI survives; an instruction submits and the pane starts working; the split completion marker is not matched by the prompt echo; the marker is matched when the task finishes; a running task can be interrupted and the pane returns to idle; and the agent process is the same one it was before the probe.
+It checks, in order: the pane is an idle agent pane; the pane meets the conservative composer-width floor; leftover composer text clears without killing the TUI; the session reset is sent and the TUI survives; an instruction submits and the pane starts working; the split completion marker is not matched by the prompt echo; the marker is matched when the task finishes; the reset really started a fresh conversation, because the agent can no longer name a word it was given before it; a running task can be interrupted and the pane returns to idle; and the agent process is the same one it was before the probe.
 
 Any `FAIL` stops onboarding until it is resolved. A width failure is a layout precondition: widen the pane and re-run. For other failures, find the CLI's real key for the failing step and update the helper before sending it work.
 
@@ -188,7 +192,7 @@ esac
 herdr pane wait-output "$PANE" --match "LINT_OK_7F3A" --timeout 300000
 herdr pane list
 # If the target is still working:
-herdr agent wait "$PANE" --until idle --timeout 300000
+herdr agent wait "$PANE" --until idle --until done --timeout 300000
 herdr pane read "$PANE" --source recent --lines 120
 ```
 

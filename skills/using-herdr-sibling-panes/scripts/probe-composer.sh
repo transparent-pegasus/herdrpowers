@@ -11,12 +11,14 @@ set -uo pipefail
 #   1. pane runs an agent and is idle
 #   2. pane meets the minimum composer width
 #   3. leftover composer text can be cleared without killing the TUI
-#   4. /clear resets the session and the TUI survives it
+#   4. the session reset is sent and the TUI survives it
 #   5. an instruction submits and the pane starts working
 #   6. a split completion marker is not matched by the prompt echo
 #   7. the completion marker is matched when the task finishes
-#   8. a running task can be interrupted and the pane returns to idle
-#   9. the agent process is still the same one it was at step 1
+#   8. the reset starts a fresh conversation: the agent no longer knows a
+#      word it was given before the reset
+#   9. a running task can be interrupted and the pane returns to idle
+#  10. the agent process is still the same one it was at step 1
 #
 # exit 0 all checks passed — the agent is safe to delegate to
 # exit 1 at least one check failed — resolve the reported failure before delegating
@@ -113,17 +115,20 @@ fi
 marker_head=PROBE_OK
 marker_tail=_5E1B
 marker=$marker_head$marker_tail
+# Step 8 asks for this word after the next reset; only a session that was never
+# reset can still answer with it.
+probe_word=PERIWINKLE
 # "run no commands" is deliberately NOT used here: herdr's cursor rules mark a
 # pane `blocked` on any recent-scrollback line beginning with "run ", and the
 # echoed instruction wraps — a pin this probe cannot clear, because the helper
 # refuses `blocked` panes. See "A wrapped `run ` line pins a cursor pane at
 # `blocked`" in SKILL.md.
-instruction="Reply with exactly one line: the name of the current git branch. Make no edits and execute no shell commands. End your reply with $marker_head immediately followed by $marker_tail."
+instruction="Reply with exactly one line: the name of the current git branch. The probe word for this conversation is $probe_word. Make no edits and execute no shell commands. End your reply with $marker_head immediately followed by $marker_tail."
 
 submit_rc=0
 bash "$submit" "$pane_id" "$instruction" >/dev/null 2>&1 || submit_rc=$?
 if [[ $submit_rc -eq 0 ]]; then
-  ok "4 /clear reset the session and the TUI survived"
+  ok "4 session reset sent and the TUI survived"
   ok "5 instruction submitted and the pane started working"
 elif [[ $submit_rc -eq 4 ]]; then
   bad "4-5 composer-submit.sh exited 4 — pane too narrow even after its zoom attempt; widen the pane and re-run"
@@ -153,36 +158,60 @@ else
 fi
 wait_idle 60 || true
 
-# 8. a running task can be interrupted. Status alone is not proof — a CLI can
+# 8. the reset must start a fresh conversation, not merely be sent: a composer
+# can swallow the reset keys and still take the next instruction, and the
+# helper exits 0 either way. The reply tail is random so no earlier run's reply
+# can match, and the reply is read only once the pane is idle again.
+fresh_tail=_$(printf '%04X' "$RANDOM")
+fresh_rc=0
+bash "$submit" "$pane_id" "If an earlier message in this conversation gave you a probe word, end your reply with that word immediately followed by $fresh_tail; if none did, end your reply with NONE immediately followed by $fresh_tail. Make no edits and execute no shell commands." >/dev/null 2>&1 || fresh_rc=$?
+if [[ $fresh_rc -ne 0 ]]; then
+  bad "8 reset-check submission failed (composer-submit.sh exited $fresh_rc)"
+elif ! herdr pane wait-output "$pane_id" --regex "(NONE|$probe_word)$fresh_tail" --timeout 120000 >/dev/null 2>&1; then
+  bad "8 reset-check reply never appeared within 120s"
+else
+  wait_idle 60 || true
+  if screen | grep -q "$probe_word$fresh_tail"; then
+    bad "8 the reset did not start a fresh conversation — the agent still knew the probe word; find this CLI's new-session key"
+  else
+    ok "8 the reset started a fresh conversation"
+  fi
+fi
+
+# 9. a running task can be interrupted. Status alone is not proof — a CLI can
 # report idle while output keeps arriving — so also require the output to stop.
+interrupt_keys=esc
+# OpenCode's first esc only arms "esc again to interrupt".
+[[ $agent == opencode ]] && interrupt_keys="esc esc"
 interrupt_submit_rc=0
 bash "$submit" "$pane_id" "Count slowly from 1 to 400, one number per line, with no other output." >/dev/null 2>&1 || interrupt_submit_rc=$?
 if [[ $interrupt_submit_rc -eq 4 ]]; then
-  bad "8 interrupt-test submission hit the layout floor (composer-submit.sh exited 4); widen the pane and re-run"
+  bad "9 interrupt-test submission hit the layout floor (composer-submit.sh exited 4); widen the pane and re-run"
   exit 1
 elif [[ $interrupt_submit_rc -ne 0 ]]; then
-  bad "8 interrupt-test submission failed (composer-submit.sh exited $interrupt_submit_rc)"
+  bad "9 interrupt-test submission failed (composer-submit.sh exited $interrupt_submit_rc)"
 else
   sleep 2
   if [[ $(pane_field agent_status) != working ]]; then
-    printf 'SKIP  %s\n' "8 task finished before it could be interrupted — rerun to test the interrupt key"
+    printf 'SKIP  %s\n' "9 task finished before it could be interrupted — rerun to test the interrupt key"
   else
-    herdr pane send-keys "$pane_id" esc >/dev/null; sleep 2
+    for key in $interrupt_keys; do herdr pane send-keys "$pane_id" "$key" >/dev/null; sleep 0.3; done
+    sleep 2
     before=$(screen | tail -5); sleep 4; after=$(screen | tail -5)
     if wait_idle 30 && [[ $before == "$after" ]]; then
-      ok "8 esc interrupted the running task and output stopped"
+      ok "9 $interrupt_keys interrupted the running task and output stopped"
     else
-      bad "8 esc did not stop the task — find this CLI's interrupt key"
+      bad "9 $interrupt_keys did not stop the task — find this CLI's interrupt key"
     fi
   fi
 fi
 
-# 9. the TUI must be the same process it was before the probe
+# 10. the TUI must be the same process it was before the probe
 argv_after=$(argv)
 if [[ -n $(pane_field agent) && $argv_after == "$argv_before" ]]; then
-  ok "9 agent survived the probe ($argv_after)"
+  ok "10 agent survived the probe ($argv_after)"
 else
-  bad "9 agent died or restarted during the probe (before='$argv_before' after='$argv_after')"
+  bad "10 agent died or restarted during the probe (before='$argv_before' after='$argv_after')"
 fi
 
 echo
