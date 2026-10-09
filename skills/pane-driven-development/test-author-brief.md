@@ -19,7 +19,7 @@ production code" tells the implementer to stop implementing.
 PANE=w2:p19                                    # idle pane of the resolved role's agent type
 INSTRUCTION="Work in /abs/path/to/tests-task-N-worktree — confirm you are there before anything else. You are writing the tests for Task N of an approved plan: [one line on where this fits]. Read /abs/path/to/task-N-tests.md first; it is your contract, and it names the requirements file with the exact values and signatures to use verbatim. [Interfaces/decisions from earlier tasks the brief cannot know.] Write your full report to /abs/path/to/task-N-tests-report.md and reply with status, the commit, the RED command and its result, concerns, and the report path. Execute this request yourself, directly; re-delegating to other panes or orchestrating is prohibited. End your reply with TESTS_N_OK immediately followed by _<4-hex>."
 COMPOSER_SUBMIT="$SKILL_DIR/scripts/composer-submit.sh"   # using-herdr-sibling-panes
-"$COMPOSER_SUBMIT" "$PANE" "$INSTRUCTION"
+bash "$COMPOSER_SUBMIT" "$PANE" "$INSTRUCTION"
 herdr wait output "$PANE" --match "TESTS_N_OK_<4-hex>" --timeout 1800000
 ```
 
@@ -170,7 +170,7 @@ about.
 ## Placeholders
 
 - **worktree path** — REQUIRED, absolute; the test author's own worktree, **detached**, never on a named branch: `git worktree add --detach <plan-workspace>/tests-task-N BASE` (implementation round) or `--detach <plan-workspace>/tests-task-N-fix-R FIX_BASE` (fix round). `-b` would leave a branch behind that `git worktree remove` does not delete, and the next round, the next parallel track at the same number, and the next plan would all collide with it. Remove the worktree once its commit is cherry-picked in
-- **requirements file** — REQUIRED: `task-N-brief.md`, the same file the implementer reads (`scripts/task-brief PLAN_FILE N`). Read-only for both panes
+- **requirements file** — REQUIRED: `task-N-brief.md`, the same file the implementer reads (`bash scripts/task-brief PLAN_FILE N`). Read-only for both panes
 - **contract file** — REQUIRED: this contract written to `task-N-tests.md`, or `task-N-fix-R-tests.md` for a fix round. Never appended to the requirements file
 - **findings** — fix round only: the open findings this round must cover, in place of the task's requirements
 - **report file** — REQUIRED: `task-N-tests-report.md`, or `task-N-fix-R-tests-report.md`. Separate from the implementer's report — the two panes write concurrently

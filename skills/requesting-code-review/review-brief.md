@@ -8,7 +8,7 @@ The review runs in a **sibling pane via a reset-backed submit** — any idle pan
 
 ```bash
 INSTRUCTION="Work in /abs/path/to/worktree — confirm you are there before anything else. Review-only task: make no edits and do not mutate the working tree, index, HEAD, or branch state. Read /abs/path/to/review-brief.md for your review contract and the diff package path. Write your review to /abs/path/to/review.md and reply with the verdict and that path. Execute this request yourself, directly; re-delegating to other panes or orchestrating is prohibited. End your reply with REVIEW_OK immediately followed by _<4-hex>."
-"$COMPOSER_SUBMIT" "$PANE" "$INSTRUCTION"
+bash "$COMPOSER_SUBMIT" "$PANE" "$INSTRUCTION"
 herdr wait output "$PANE" --match "REVIEW_OK_<4-hex>" --timeout 900000
 ```
 
@@ -41,6 +41,23 @@ herdr wait output "$PANE" --match "REVIEW_OK_<4-hex>" --timeout 900000
     git diff --stat [BASE_SHA]..[HEAD_SHA]
     git diff [BASE_SHA]..[HEAD_SHA]
     ```
+
+    ## The spec is a vision document
+
+    The spec says what the software must do. It does not enumerate every
+    input, environment, or condition the software will meet. For behavior
+    the spec is silent on, judge by what a reasonable person using this
+    software would expect: a reasonable person's expectation is a
+    requirement, and a spec's silence is not permission. Grade such
+    findings by their effect on that person, not by whether the spec
+    mentions the trigger.
+
+    ## Declined to judge
+
+    Before your verdict, list every behavior you considered and set aside
+    as outside the plan or spec, one line each, with the reason. The
+    orchestrator rules on each line; nothing you set aside is dropped
+    silently. An empty list means you set nothing aside.
 
     ## Read-Only Review
 
@@ -183,10 +200,10 @@ herdr wait output "$PANE" --match "REVIEW_OK_<4-hex>" --timeout 900000
 - `[PLAN_OR_REQUIREMENTS]` — what it should do (plan file path, task text, or requirements)
 - `[BASE_SHA]` — starting commit
 - `[HEAD_SHA]` — ending commit
-- `[DIFF_FILE]` — the path printed by `pane-driven-development/scripts/review-package PLAN_FILE BASE HEAD` (`-` for PLAN_FILE in plan-less flows)
+- `[DIFF_FILE]` — the path printed by `bash pane-driven-development/scripts/review-package PLAN_FILE BASE HEAD` (`-` for PLAN_FILE in plan-less flows)
 - **review output file + completion marker** — REQUIRED
 
-**Reviewer returns:** Strengths, Issues (Critical / Important / Minor), Recommendations, Assessment
+**Reviewer returns:** Strengths, Issues (Critical / Important / Minor), Recommendations, Declined to judge, Assessment
 
 ## Example Output
 

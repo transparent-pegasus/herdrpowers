@@ -53,24 +53,25 @@ deciding under them.
 digraph when_to_use {
     "Have implementation plan?" [shape=diamond];
     "Tasks mostly independent?" [shape=diamond];
-    "Inside herdr with idle agent panes?" [shape=diamond];
+    "User chose inline, or no idle agent pane in scope?" [shape=diamond];
     "pane-driven-development" [shape=box];
     "executing-plans" [shape=box];
     "Manual execution or brainstorm first" [shape=box];
 
     "Have implementation plan?" -> "Tasks mostly independent?" [label="yes"];
     "Have implementation plan?" -> "Manual execution or brainstorm first" [label="no"];
-    "Tasks mostly independent?" -> "Inside herdr with idle agent panes?" [label="yes"];
+    "Tasks mostly independent?" -> "User chose inline, or no idle agent pane in scope?" [label="yes"];
     "Tasks mostly independent?" -> "Manual execution or brainstorm first" [label="no - tightly coupled"];
-    "Inside herdr with idle agent panes?" -> "pane-driven-development" [label="yes"];
-    "Inside herdr with idle agent panes?" -> "executing-plans" [label="no - HERDR_ENV unset or no panes"];
+    "User chose inline, or no idle agent pane in scope?" -> "executing-plans" [label="yes - or HERDR_ENV unset"];
+    "User chose inline, or no idle agent pane in scope?" -> "pane-driven-development" [label="no"];
 }
 ```
 
 **vs. Executing Plans (inline):**
-- Fresh pane per task (no context pollution)
-- Review after each task (spec compliance + code quality), broad review at the end
-- Faster iteration (no human-in-loop between tasks)
+- Fresh pane per task (no context pollution) instead of one session doing every task
+- Review after each task (spec compliance + code quality) instead of only at the end
+- Costs a fresh session per task and per review; inline costs one session plus one final review
+- Both are driven from this pane, share the same plan workspace and ledger, and never pause between tasks
 - Requires `HERDR_ENV=1` and at least one idle sibling agent pane inside `delegation.pane_scope` (default: the orchestrator's own tab)
 
 ## The Process
@@ -153,8 +154,8 @@ sequences — the single most expensive failure observed. Track progress in
 a ledger file, not only in todos.
 
 - Each plan owns a workspace: at skill start, run this skill's
-  `scripts/pdd-workspace PLAN_FILE` — it prints the plan's git-ignored
-  directory (`<repo-root>/.herdrpowers/pdd/<plan-basename>/`), home to
+  `bash scripts/pdd-workspace PLAN_FILE` — it prints the plan's git-ignored
+  directory (under `<repo-root>/.herdrpowers/pdd/`), home to
   every artifact for THIS plan: ledger, briefs, reports, review packages.
   Another plan's directory is never yours to read or write.
 - Check for this plan's ledger at `<workspace>/progress.md`. If its first
@@ -290,7 +291,7 @@ holds the mechanics.
 Record BASE (`git rev-parse HEAD`) before delegating — the review package,
 the test author's worktree, and fix-round diffs all need it.
 
-Run `scripts/task-brief PLAN_FILE N` to extract the task's full text into the
+Run `bash scripts/task-brief PLAN_FILE N` to extract the task's full text into the
 plan workspace. Never make a pane read the whole plan file. Exact values
 (numbers, magic strings, signatures, test cases) appear only in the brief.
 
@@ -359,7 +360,7 @@ RED and GREEN. Either way, your final report names which pane wrote the tests.
 
 Implementer panes report one of four statuses. Handle each appropriately:
 
-**DONE:** Generate the review package (`scripts/review-package PLAN_FILE BASE HEAD`, from this skill's directory — it prints the unique file path it wrote; BASE is the commit you recorded before delegating the task — never `HEAD~1`, which silently drops all but the last commit of a multi-commit task), then delegate the task review with the printed path.
+**DONE:** Generate the review package (`bash scripts/review-package PLAN_FILE BASE HEAD`, from this skill's directory — it prints the unique file path it wrote; BASE is the commit you recorded before delegating the task — never `HEAD~1`, which silently drops all but the last commit of a multi-commit task), then delegate the task review with the printed path.
 
 **DONE_WITH_CONCERNS:** The pane completed the work but flagged doubts. Read the concerns before proceeding. If they are about correctness or scope, address them before review. If they are observations (e.g., "this file is getting large"), note them and proceed to review.
 
@@ -422,7 +423,7 @@ required. A pane's self-review never replaces the task review; both are needed.
   open list and deduplicate. Reviews that disagree are yours to adjudicate,
   not to average.
 - Hand the reviewer its diff as a file: run this skill's
-  `scripts/review-package PLAN_FILE BASE HEAD` and pass the reviewer the file
+  `bash scripts/review-package PLAN_FILE BASE HEAD` and pass the reviewer the file
   path it prints (or, without bash: `git log --oneline`, `git diff --stat`,
   and `git diff -U10` for the range, redirected to one uniquely named
   file). The output never enters your own context, and the reviewer sees
@@ -547,7 +548,7 @@ worktree once its commit is in.
 **The re-review is scoped.** Skipped when `assignments.fix-round-re-review` is
 disabled — the round then closes on the fix report's covering tests, command,
 and output, and the cap still counts it. Otherwise: run
-`scripts/review-package PLAN_FILE FIX_BASE HEAD`
+`bash scripts/review-package PLAN_FILE FIX_BASE HEAD`
 where FIX_BASE is the head the previous review saw, and delegate
 [re-review-brief.md](re-review-brief.md) to a fresh pane — one per agent type
 in the resolved role — with the findings list, the brief, the report file, and
@@ -604,7 +605,7 @@ Skipped when the calling workflow's `assignments.final-branch-review` gate is
 disabled; go straight to Finish and say the branch is unreviewed.
 
 The final whole-branch review gets a package too: run
-`scripts/review-package PLAN_FILE MERGE_BASE HEAD` (MERGE_BASE = the commit the
+`bash scripts/review-package PLAN_FILE MERGE_BASE HEAD` (MERGE_BASE = the commit the
 branch started from, e.g. `git merge-base <BASE_BRANCH> HEAD`) and include the
 printed path in the final review brief, so the final reviewer reads
 one file instead of re-deriving the branch diff with git commands. Delegate it
@@ -614,12 +615,18 @@ using `requesting-code-review`'s
 the ledger's deferred-minor and parked lines so it can triage which must be
 fixed before merge.
 
+Rule on every line of the review's "Declined to judge" list as you would a
+plan conflict — `Final: Ruling: <behavior the reviewer set aside> — <why it
+stands, or why it is now a finding> — <cost if wrong>` — so nothing the
+reviewer set aside is dropped silently. One that becomes a finding joins the
+fix wave below.
+
 If the final whole-branch review returns findings, delegate ONE fix pane
 with the complete findings list — not one pane per finding.
 Per-finding fixers each rebuild context and re-run suites; a real
 session's final-review fix wave cost more than all its tasks combined.
 Then run exactly one scoped re-review of the fix wave
-(`scripts/review-package PLAN_FILE FIX_BASE HEAD`,
+(`bash scripts/review-package PLAN_FILE FIX_BASE HEAD`,
 [re-review-brief.md](re-review-brief.md)).
 Adjudicate any residual findings as in the task loop's breaker: park with
 rulings, or rule on the load-bearing ones and ledger what you decided. Only
@@ -653,7 +660,7 @@ that `pane read` can never recover, and everything you paste into a brief
 stays resident in your own context for the rest of the session. Hand
 artifacts over as files, in both directions:
 
-- **Requirements file:** `scripts/task-brief PLAN_FILE N` writes the task's
+- **Requirements file:** `bash scripts/task-brief PLAN_FILE N` writes the task's
   full text into the plan workspace and prints the path. It stays the single
   source of requirements, read by every pane on the task and edited by none —
   role contracts go in their own files beside it (`task-N-implementer.md`,
@@ -717,7 +724,7 @@ You: I'm using Pane-Driven Development to execute this plan.
 
 [Setup: worktree verified]
 [Read plan file once: docs/herdrpowers/plans/feature-plan.md]
-[Resolve workspace: scripts/pdd-workspace docs/herdrpowers/plans/feature-plan.md
+[Resolve workspace: bash scripts/pdd-workspace docs/herdrpowers/plans/feature-plan.md
  → /repo/.herdrpowers/pdd/feature-plan/ — no ledger inside, fresh start]
 [Resolve config: .herdrpowers/config.yaml over orchestration/roles.yaml — all gates enabled]
 [herdr pane list -> w2:p18 (codex, idle), w2:p19 (cursor, idle)]
@@ -795,7 +802,7 @@ Done! Using finishing-a-development-branch.
   brief ("treat it as Minor at most") — the plan's example code is
   a starting point, not evidence that its weaknesses were chosen
 - Delegate a task review or re-review without a diff file — generate it first
-  (`scripts/review-package PLAN_FILE BASE HEAD`) and name the printed path in
+  (`bash scripts/review-package PLAN_FILE BASE HEAD`) and name the printed path in
   the brief
 - Trust "tests pass" without reading the quoted output in the report file
 - Re-delegate a task the progress ledger already marks complete — check

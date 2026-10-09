@@ -16,7 +16,7 @@ Because the implementing pane wrote its own tests (when `test-authoring` is
 ```bash
 PANE=w2:p19                                    # idle pane of the resolved role's agent type(s)
 INSTRUCTION="Work in /abs/path/to/worktree — confirm you are there before anything else. Review-only task: make no edits and do not mutate the working tree, index, HEAD, or branch state. Read /abs/path/to/task-N-review-brief.md — it holds your review contract and the paths to the task brief, the implementer's report, and the diff package. Write your review to /abs/path/to/task-N-review.md and reply with the two verdicts and the report path. Execute this request yourself, directly; re-delegating to other panes or orchestrating is prohibited. End your reply with REVIEW_N_OK immediately followed by _<4-hex>."
-"$COMPOSER_SUBMIT" "$PANE" "$INSTRUCTION"
+bash "$COMPOSER_SUBMIT" "$PANE" "$INSTRUCTION"
 herdr wait output "$PANE" --match "REVIEW_N_OK_<4-hex>" --timeout 900000
 ```
 
@@ -213,12 +213,12 @@ obvious).
 ## Placeholders
 
 - **worktree path** — REQUIRED, absolute
-- `[BRIEF_FILE]` — REQUIRED: the same task brief the implementer worked from (`scripts/task-brief PLAN N`)
+- `[BRIEF_FILE]` — REQUIRED: the same task brief the implementer worked from (`bash scripts/task-brief PLAN N`)
 - `[GLOBAL_CONSTRAINTS]` — binding requirements copied verbatim from the plan's Global Constraints section or the spec: exact values, formats, and stated relationships between components (not process rules — those are in the contract already)
 - `[REPORT_FILE]` — REQUIRED: the file the implementer wrote its detailed report to
 - `[TEST_REPORT_FILE]` — REQUIRED when a separate pane wrote the tests: its report, carrying the RED evidence. Say in the instruction which pane wrote the tests; omit this path only when the implementer wrote them
 - `[BASE_SHA]` / `[HEAD_SHA]` — the recorded task base and the current commit
-- `[DIFF_FILE]` — REQUIRED: the path printed by `scripts/review-package PLAN_FILE BASE HEAD` (the package never enters the orchestrator's context)
+- `[DIFF_FILE]` — REQUIRED: the path printed by `bash scripts/review-package PLAN_FILE BASE HEAD` (the package never enters the orchestrator's context)
 - **review output file + marker** — REQUIRED
 
 **Reviewer returns:** Spec Compliance verdict (✅/❌/⚠️), Strengths, Issues

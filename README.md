@@ -21,7 +21,7 @@ The development cycle derives from [obra/superpowers](https://github.com/obra/su
 Before an agent CLI is used as a delegation target for the first time (and after every upgrade), verify it can be driven at all:
 
 ```bash
-skills/using-herdr-sibling-panes/scripts/probe-composer.sh "$PANE"
+bash skills/using-herdr-sibling-panes/scripts/probe-composer.sh "$PANE"
 ```
 
 Composer key bindings differ per CLI and change across releases: `ctrl+c` quits Codex from an idle composer, and `ctrl+enter` does not submit there at all.
@@ -163,7 +163,7 @@ Superpowers is skill-triggered and subagent-driven: skills fire on their own as 
 
 **Everything degrades honestly.** Outside herdr, or with no idle pane, the work runs inline — and the final report says which steps were not delegated, which independence was lost, and which assignments the repo changed.
 
-Skills dropped from upstream: `dispatching-parallel-agents` and `subagent-driven-development` (replaced by pane delegation and `pane-driven-development`), and `using-superpowers` (the pack's own meta-skill). Added: `herdr`, `orchestration`, `using-herdr-sibling-panes`, `pane-driven-development`, `update-docs`. Upstream's `hooks/`, `scripts/`, `tests/`, and `package.json` are not carried — the payload is skills and commands only.
+Skills dropped from upstream: `dispatching-parallel-agents` and `subagent-driven-development` (replaced by pane delegation and `pane-driven-development`), and `using-superpowers` (the pack's own meta-skill). Not carried yet: `diagnosing-superpowers` (upstream v6.4.1), which needs its own pane-native design. Added: `herdr`, `orchestration`, `using-herdr-sibling-panes`, `pane-driven-development`, `update-docs`. Upstream's `hooks/`, `scripts/`, `tests/`, and `package.json` are not carried — the payload is skills and commands only.
 
 ## Contributing
 

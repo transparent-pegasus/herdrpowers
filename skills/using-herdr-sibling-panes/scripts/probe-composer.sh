@@ -121,7 +121,7 @@ marker=$marker_head$marker_tail
 instruction="Reply with exactly one line: the name of the current git branch. Make no edits and execute no shell commands. End your reply with $marker_head immediately followed by $marker_tail."
 
 submit_rc=0
-"$submit" "$pane_id" "$instruction" >/dev/null 2>&1 || submit_rc=$?
+bash "$submit" "$pane_id" "$instruction" >/dev/null 2>&1 || submit_rc=$?
 if [[ $submit_rc -eq 0 ]]; then
   ok "4 /clear reset the session and the TUI survived"
   ok "5 instruction submitted and the pane started working"
@@ -153,7 +153,7 @@ wait_idle 60 || true
 # 8. a running task can be interrupted. Status alone is not proof — a CLI can
 # report idle while output keeps arriving — so also require the output to stop.
 interrupt_submit_rc=0
-"$submit" "$pane_id" "Count slowly from 1 to 400, one number per line, with no other output." >/dev/null 2>&1 || interrupt_submit_rc=$?
+bash "$submit" "$pane_id" "Count slowly from 1 to 400, one number per line, with no other output." >/dev/null 2>&1 || interrupt_submit_rc=$?
 if [[ $interrupt_submit_rc -eq 4 ]]; then
   bad "8 interrupt-test submission hit the layout floor (composer-submit.sh exited 4); widen the pane and re-run"
   exit 1
