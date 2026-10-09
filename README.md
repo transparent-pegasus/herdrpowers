@@ -50,6 +50,12 @@ cursor-agent plugin marketplace add https://github.com/transparent-pegasus/herdr
 
 Or install from this repository via the Cursor Marketplace ("Import from Repo").
 
+**OpenCode**
+
+```bash
+opencode plugin -g herdrpowers@git+https://github.com/transparent-pegasus/herdrpowers.git
+```
+
 **Any other tool** — check the pack in or vendor it as a submodule, and point the tool at the directories:
 
 ```bash
@@ -108,6 +114,7 @@ The payload is a single tree at the repository root, discovered by each platform
 | **Claude Code** | `skills/` (auto) | `commands/` as namespaced slash commands |
 | **Codex** | `skills/` | `commands/` (surfaced as skills) |
 | **Cursor** | `skills/` (auto) | `commands/` as slash commands (auto) |
+| **OpenCode** | `skills/` (registered by the plugin) | `commands/` as namespaced slash commands, registered by the plugin |
 | **Aider / Gemini CLI / others** | read `skills/<name>/SKILL.md` directly | read `commands/<name>.md` directly |
 
 Roles bind to **agent types**, not to platforms: the orchestrator can be any agent CLI, and Coder / Generalist / Reviewer resolve to whatever the repo's `.herdrpowers/config.yaml` says, falling back to `skills/orchestration/roles.yaml`. Reassign any delegation task, change where it runs, or turn a review off in the repo file — the pack's defaults stay untouched.
@@ -128,6 +135,8 @@ changelogs/      # obra/superpowers refresh history + pack-native release notes
 .claude-plugin/  # Claude Code plugin + marketplace manifests
 .codex-plugin/   # Codex plugin manifest
 .cursor-plugin/  # Cursor plugin manifest
+.opencode-plugin/ # OpenCode plugin: registers skills/ and commands/ at config time
+package.json     # OpenCode package manifest (main → .opencode-plugin/index.mjs)
 .agents/plugins/ # Codex marketplace manifest (fixed location per Codex convention)
 NOTICE           # Third-party attribution (required by Apache-2.0)
 ```

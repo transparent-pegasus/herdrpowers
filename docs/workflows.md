@@ -1,6 +1,6 @@
 # Workflows
 
-Workflows tie roles and skills into end-to-end development procedures. They live in `commands/`, the default command directory of the Claude Code, Codex, and Cursor plugin conventions. Each file carries YAML frontmatter `description: ...` so supporting platforms expose it as a slash command.
+Workflows tie roles and skills into end-to-end development procedures. They live in `commands/`, the default command directory of the Claude Code, Codex, and Cursor plugin conventions; the OpenCode plugin registers them at startup. Each file carries YAML frontmatter `description: ...` so supporting platforms expose it as a slash command.
 
 Every development workflow routes its dispatches through the `orchestration` skill to herdr sibling panes **in the orchestrator's own tab** — `delegation.pane_scope` defaults to `tab`, so a pane in another tab (usually another repository, with its own user mid-task) is never a delegation target unless the repository widens the scope. Outside herdr (`HERDR_ENV` unset, or no in-scope idle agent pane) each workflow degrades to inline execution and reports which steps were not delegated.
 
@@ -74,6 +74,7 @@ All development workflows share the same guardrails:
 |---|---|
 | Claude Code | Type the namespaced slash command (`/herdrpowers:full_cycle`, `/herdrpowers:plan`, …) from the plugin, or the bare command from a checked-in copy of `commands/`. |
 | Cursor | Native slash commands from the plugin's `commands/`. |
+| OpenCode | The plugin registers each workflow under the same namespaced name (`/herdrpowers:full_cycle`, `/herdrpowers:plan`, …), which also leaves OpenCode's own `/init` alone. |
 | Codex | Plugin commands surface as skills — invoke them by name, or read `commands/<name>.md` directly. |
 | Aider / other tools | No native slash commands — read the workflow file directly (e.g. `commands/full_cycle.md`) and instruct the agent to follow it step-by-step. |
 
