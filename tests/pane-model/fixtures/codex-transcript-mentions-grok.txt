@@ -1,0 +1,17 @@
+
+  >_ OpenAI Codex (v0.162.0)
+     /home/repos/herdrpowers
+  permissions: YOLO mode
+
+
+
+
+
+
+
+› Review the cursor@Grok pane setup
+• Grok 4.7 and Muse Spark both look fine.
+› Ask Codex to do anything
+
+  GPT-5.6-Luna medium · weekly 99% left
+  ? for shortcuts                             ⚠ 1 warning · f2 to view

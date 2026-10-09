@@ -27,7 +27,7 @@ Do not edit workflow files unless the user's current request explicitly asks to 
 Inspect the repository to ground a proposal for every key below: build and test tooling (`package.json`, `Makefile`, `pyproject.toml`, `Cargo.toml`, CI workflow files), docs layout, and existing `CLAUDE.md` / `AGENTS.md` content.
 If a `Herdrpowers Configuration` section already exists in an instruction file, load it and treat this run as an update of that section.
 Read the pack's `skills/orchestration/roles.yaml` for the shipped role list, the shipped `delegation:` defaults, and the default role assigned to each delegation task. If `.herdrpowers/config.yaml` already exists, load it too and treat this run as an update of both deliverables — never silently reset a customized assignment or a gate the user turned off.
-If herdr is running (`HERDR_ENV=1`), run `herdr pane list` and note which agent types actually exist in the session, **and which of them share the caller's `tab_id`**. Delegation is confined to the orchestrator's own tab by default, so an agent type that exists only in another tab is not usable by this repository's workflows as configured — flag that, alongside any default assignment naming an agent type this user does not have at all.
+If herdr is running (`HERDR_ENV=1`), run `herdr pane list` and note which agent types actually exist in the session, **and which of them share the caller's `tab_id`**. Delegation is confined to the orchestrator's own tab by default, so an agent type that exists only in another tab is not usable by this repository's workflows as configured — flag that, alongside any default assignment naming an agent type this user does not have at all. Read each in-tab pane's footer model line too (`bash <pack>/skills/using-herdr-sibling-panes/scripts/pane-model.sh <pane-id>`): the shipped defaults pin models as `agent@model`, and a pinned default whose model no pane shows will fall through to its fallbacks — flag those the same way.
 
 2. Propose Values
 Present one proposed value per key with the evidence it was inferred from (file or command).
@@ -60,6 +60,8 @@ Present each role and the agent type(s) it binds to, with the shipped default be
 | `coder` | one agent type | The heavier-judgment role: complex coding, test authoring, whole-branch review |
 | `generalist` | one agent type, or `orchestrator` | Simple coding, search, file inspection, tests, lint, routine operations |
 | `fallbacks.<agent>` | a list of agent types | Ordered substitutes for an agent that hits a usage limit or has no usable pane |
+
+Every agent type in this table — a role's binding, a fallback key, a substitute — may be pinned to a model as `agent@model` (`cursor@Muse Spark 1.3`): only a pane whose footer model line contains that model, case-insensitively, then serves it.
 
 A repo may add a role beyond these four and assign tasks to it. Say so if the user asks.
 
@@ -97,7 +99,7 @@ Rules to state while proposing:
 - A config file written before v1.10.0 holds `plan-double-review` where the table now says `plan-review`. Rename the key while rewriting the file and tell the user: left as it was, the old key configures nothing and the gate runs on the shipped default, so a review the repo had turned off comes back silently.
 - **A review task assigned to a role that binds to a list of agent types runs once per entry.** Assigning `task-review` or `fix-round-re-review` to such a role multiplies pane usage per task by the list length. Say the arithmetic out loud before the user confirms it.
 - `test-authoring` and `fix-round-test-authoring` decide who writes tests. `mode: delegate` puts them in a pane that never sees the implementation, which costs an extra pane and a throwaway worktree per task; `mode: implementer` collapses them onto the pane whose behavior they cover, leaving the reviewers as the only check on that test code. Either is legitimate; state the trade before the user chooses, because the workflow reports which one ran.
-- Two pack invariants are not configurable — state them if the user asks for either: review independence is the reset session (not pane identity; same physical pane OK after a reset-backed submit), and reviews from a list role come from different agent types.
+- Two pack invariants are not configurable — state them if the user asks for either: review independence is the reset session (not pane identity; same physical pane OK after a reset-backed submit), and reviews from a list role come from different agent types, or from one type on different models (`agent@model` entries whose models differ).
 - `review-fixes` escalates to a fresh pane at fix-loop rounds 4-5 whatever its mode says.
 
 5. Propose Delegation Defaults
@@ -145,7 +147,7 @@ Create `.herdrpowers/` at the repository root if it does not exist, and write th
 # key by key. Anything omitted here falls back to those defaults.
 # Written by the herdrpowers init workflow; safe to edit by hand.
 
-# --- role list: role -> agent type(s) ---
+# --- role list: role -> agent type(s); `agent@model` pins a model ---
 roles:
   planning-design:
     agent: <agent type, or `orchestrator` for the pane the user typed into>
@@ -240,6 +242,6 @@ List the files written and the final values: the placeholder keys, the role list
 - `REPORT_DIRECTORY` must be git-ignored. If the proposed directory is not, say so and either add it to `.gitignore` with the user's approval or pick one that already is. `.herdrpowers/config.yaml` is the opposite: it must stay tracked.
 - Block and require user confirmation before writing either deliverable. Do not write unconfirmed guesses.
 - Preserve every byte of pre-existing instruction-file content outside the upserted section.
-- Never propose an agent type that does not appear in `roles.yaml`'s defaults or in this session's `herdr pane list` without saying it is unverified.
-- Do not write a config that puts the same agent type in two Reviewer slots — that is a pack invariant, and the workflow would override the config at runtime anyway. Routing a review to the role that implements the work is legitimate and needs no warning: independence is the reset session, not role or pane identity.
+- Never propose an agent type that does not appear in `roles.yaml`'s defaults or in this session's `herdr pane list` without saying it is unverified. Propose an `agent@model` pin only for a model line read from a pane in this session, or say it is unverified.
+- Do not write a config that puts the same agent type in two Reviewer slots, unless both are `agent@model` entries whose models differ — that is a pack invariant, and the workflow would override the config at runtime anyway. Routing a review to the role that implements the work is legitimate and needs no warning: independence is the reset session, not role or pane identity.
 - Adding a role beyond the shipped four is allowed — define it under `roles:` and reference it from the assignments that should use it. Never reference a role no `roles:` entry defines.

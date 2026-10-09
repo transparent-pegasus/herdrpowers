@@ -24,7 +24,7 @@ What to delegate depends on how this skill was entered:
 
 1. Run `herdr pane list` and identify your own pane (the orchestrator) by `$HERDR_PANE_ID`. Every entry carries `pane_id`, `tab_id`, `workspace_id`, `agent`, `agent_status`, and `cwd`.
 2. Discard every out-of-scope pane first — by default that is every pane outside your own tab. See "Delegation scope" below; it applies before anything else in this list.
-3. From what remains, select only sibling panes that have an `agent` field and `agent_status: idle` or `done`. A pane with no `agent` field is a plain shell or a crashed agent — see "Failure handling". The `agent` field alone is not proof the agent is alive: it can name a CLI that has since exited, leaving the pane at a shell prompt. The helper checks this before sending anything (it exits `2` when the pane's foreground process is its own shell), so let it — never hand-send text to a pane you have not confirmed.
+3. From what remains, select only sibling panes that have an `agent` field and `agent_status: idle` or `done`. For an `agent@model` entry, the pane's footer must also show that model — see "Model-pinned entries". A pane with no `agent` field is a plain shell or a crashed agent — see "Failure handling". The `agent` field alone is not proof the agent is alive: it can name a CLI that has since exited, leaving the pane at a shell prompt. The helper checks this before sending anything (it exits `2` when the pane's foreground process is its own shell), so let it — never hand-send text to a pane you have not confirmed.
 4. When more than one candidate remains, confirm the composer is empty before you send: `herdr pane read "$PANE" --source visible`. An empty composer reads as an empty follow-up placeholder (`› `, `→ Add a follow-up`). A pane showing unsent text is not a candidate — another orchestrator is composing there, and `composer-submit.sh` wipes that draft with `ctrl+u` before it resets the session. The helper cannot tell a half-written brief from any other composer content and must not try: this is someone else's work being destroyed, not a failure to recover from. If the only candidate has leftover text, do not send — report the pane to the user.
 5. Distribute independent work items across the available panes, one instruction per pane.
 6. Submit one self-contained instruction per pane with `bash scripts/composer-submit.sh`. It resets the target session and submits the instruction in one call; do not send `/clear` yourself.
@@ -62,6 +62,45 @@ An out-of-scope pane is not a candidate at all: not a last resort, not a fallbac
 
 An absolute path in the instruction does not make a cross-repository pane safe. That pane's agent loads *its own* repository's instruction files, configuration, and skills before reading your task, so it works your files under someone else's conventions. If the task itself turns out to target a repository other than the one you are working in, confirm the target with the user before delegating or editing — read-only investigation needs no confirmation.
 
+## Model-pinned entries
+
+herdr reports each pane's agent kind (`agent: cursor`) but not the model it runs, so two cursor panes on different models look identical to routing. An entry can pin the model as `agent@model` — `cursor@Muse Spark`. Split it at the first `@`: the left side is the agent kind, the right side the model. A bare kind matches any model.
+
+The model comes from the footer the CLI draws below its composer, read by `scripts/pane-model.sh`. Nothing else is per-pane truth: herdr's JSON has no model field, a CLI's config file is shared by every pane running it, launch arguments go stale after a `/model` switch, and so does the splash header — a grok pane kept `Model · Grok 4.6` in its header after switching to Grok 4.7, and only the footer changed. A pane matches when the model is a case-insensitive substring of its footer model line, that is, when `pane-model.sh "$PANE" "$MODEL"` exits `0`.
+
+| kind | composer anchor | model line | observed |
+| --- | --- | --- | --- |
+| `claude` | `❯` | first text line after the composer's closing border | Claude Code 2.1.295 |
+| `codex` | `›` | first text line after the blank line below the composer | codex 0.162.0 |
+| `cursor` | `→` | first text line after the composer's closing border | cursor-agent 2026.10.01-e373342 |
+| `agy` | `>` | first text line after the composer's closing border | Antigravity CLI 1.3.2 |
+| `grok` | `❯` | first text line after the composer line | grok 1.0.50 |
+| `opencode` | `┃` | the last `┃` line, inside the composer box | opencode 1.18.35 |
+
+Matching fails closed. A kind with no rule (exit `3`), a screen with no composer line, or an open model picker gives no match, and the pane is not a candidate for a pinned entry. claude prints a model line only through a user `statusLine` that outputs the model (for example `.model.display_name`); without one, a `claude@…` entry never matches. A pinned entry whose kind has in-scope panes, none of them showing the model, is **unavailable** — the same as a kind with no pane.
+
+Select for one entry like this (tab scope; widen the topology filter as in "Delegation scope"), then pass the model to the helper as its third argument. The helper re-checks the footer before it sends any key and again after the reset, and exits `5` on a mismatch:
+
+```bash
+entry='cursor@Muse Spark'
+kind=${entry%%@*}
+model=
+[[ $entry == *@* ]] && model=${entry#*@}
+herdr pane list | jq -r --arg tab "$HERDR_TAB_ID" --arg self "$HERDR_PANE_ID" --arg kind "$kind" '
+  .result.panes[]
+  | select(.tab_id == $tab and .pane_id != $self and .agent == $kind)
+  | select(.agent_status == "idle" or .agent_status == "done")
+  | .pane_id' |
+while read -r pane; do
+  [[ -z $model ]] || bash "$SKILL_DIR/scripts/pane-model.sh" "$pane" "$model" >/dev/null || continue
+  echo "$pane"
+done
+# then, for the chosen pane:
+bash "$COMPOSER_SUBMIT" "$PANE" "$INSTRUCTION" ${model:+"$model"}
+```
+
+Routing selects panes by model; it never sends `/model` or otherwise switches one. For every delegation to a pinned entry, name the pane id and its model line in the report.
+
 ## Composer-safe submission
 
 Agent CLIs take input through a composer — a stateful input box with slash-command autocomplete, follow-up suggestions, and message queueing. Composers cannot be driven reliably with `herdr pane run`, regardless of which agent runs in the pane:
@@ -85,11 +124,11 @@ COMPOSER_SUBMIT="$SKILL_DIR/scripts/composer-submit.sh"
 bash "$COMPOSER_SUBMIT" "$PANE" "$INSTRUCTION"
 ```
 
-Exit codes: `0` submitted and running, `2` bad usage (embedded newline, or a bare `/word` slash trigger in the instruction) or the pane is not a usable idle agent pane — including a pane whose agent has exited and left it at a shell prompt, `3` the instruction did not submit, `4` the pane remained too narrow after a zoom attempt.
+Exit codes: `0` submitted and running, `2` bad usage (embedded newline, or a bare `/word` slash trigger in the instruction) or the pane is not a usable idle agent pane — including a pane whose agent has exited and left it at a shell prompt, `3` the instruction did not submit, `4` the pane remained too narrow after a zoom attempt, `5` a third argument named a model the pane's footer does not show — checked before any key is sent and again after the reset, so no instruction was sent (see "Model-pinned entries").
 
 ### Verified keys
 
-Verified 2026-07-25 against codex 0.145.0, cursor-agent 2026.07.23-e383d2b, and grok 0.2.112 with `scripts/probe-composer.sh`, re-verified 2026-08-24 against grok 1.0.5, and re-verified 2026-10-09 against codex 0.162.0 on herdr 0.9.3. All three agree, so the helper uses one sequence. opencode 1.18.35, verified 2026-10-09 on herdr 0.9.3, differs in the rows that name it:
+Verified 2026-07-25 against codex 0.145.0, cursor-agent 2026.07.23-e383d2b, and grok 0.2.112 with `scripts/probe-composer.sh`, re-verified 2026-08-24 against grok 1.0.5, and re-verified 2026-10-09 against codex 0.162.0 on herdr 0.9.3. All three agree, so the helper uses one sequence. On 2026-10-09, herdr 0.9.3, claude (Claude Code 2.1.295), cursor-agent 2026.10.01-e373342, and agy (Antigravity CLI 1.3.2) also passed every probe step with it. grok 1.0.50 takes the same keys, but herdr reports it `idle` for the whole of a task — its detection rule reads the terminal title, which stays `grok` — so the helper's start check exits `3` after a submission that did run. opencode 1.18.35, verified 2026-10-09 on herdr 0.9.3, differs in the rows that name it:
 
 | purpose | key / text | notes |
 | --- | --- | --- |
@@ -134,13 +173,13 @@ Use `pane run` normally for shells and other terminal programs; this workaround 
 
 ### Onboarding a new agent CLI
 
-Before an agent type is used as a delegation target for the first time, and again after that CLI is upgraded, run the probe against one idle pane of that type:
+Before an agent type is used as a delegation target for the first time, and again after that CLI is upgraded, run the probe against one idle pane of that type. Pass the model too when the pane is meant to serve an `agent@model` entry:
 
 ```bash
-bash "$SKILL_DIR/scripts/probe-composer.sh" "$PANE"
+bash "$SKILL_DIR/scripts/probe-composer.sh" "$PANE" [MODEL]
 ```
 
-It checks, in order: the pane is an idle agent pane; the pane meets the conservative composer-width floor; leftover composer text clears without killing the TUI; the session reset is sent and the TUI survives; an instruction submits and the pane starts working; the split completion marker is not matched by the prompt echo; the marker is matched when the task finishes; the reset really started a fresh conversation, because the agent can no longer name a word it was given before it; a running task can be interrupted and the pane returns to idle; and the agent process is the same one it was before the probe.
+It checks, in order: the pane is an idle agent pane; the pane meets the conservative composer-width floor; leftover composer text clears without killing the TUI; the session reset is sent and the TUI survives; an instruction submits and the pane starts working; the split completion marker is not matched by the prompt echo; the marker is matched when the task finishes; the reset really started a fresh conversation, because the agent can no longer name a word it was given before it; a running task can be interrupted and the pane returns to idle; the agent process is the same one it was before the probe; the footer model line is still readable after the resets (and still shows `MODEL`); and a submission pinned to a model the pane does not run is refused with exit `5` while the pane stays idle. The last two skip for a kind with no model-line rule.
 
 Any `FAIL` stops onboarding until it is resolved. A width failure is a layout precondition: widen the pane and re-run. For other failures, find the CLI's real key for the failing step and update the helper before sending it work.
 
@@ -202,12 +241,13 @@ Re-read pane ids after panes close because ids can compact. Do not send work to 
 
 `herdr pane wait-output` exits `1` on timeout — and on a server error such as an unknown pane, with JSON on stderr — so every delegation ends in exactly one of these states. An immediate exit `2` is a CLI syntax error, not a timeout: fix the command before reading anything into it. Diagnose with `herdr pane get`, `herdr pane read --source recent`, and `herdr pane process-info --pane "$PANE"`.
 
-Helper exits `2` and `4` mean the delegation never started. Do not call `herdr pane wait-output` after either exit, and never count either one toward the two-pane no-marker exhaustion rule.
+Helper exits `2`, `4`, and `5` mean the delegation never started. Do not call `herdr pane wait-output` after any of them, and never count one toward the two-pane no-marker exhaustion rule.
 
 | state | how it looks | what to do |
 | --- | --- | --- |
 | **finished** | marker matched | read the result, integrate it |
 | **too narrow** | helper exits `4` after its zoom attempt | the 40-column floor is conservative, not a measured cliff — resubmit to the same pane with a lower floor (`HERDR_COMPOSER_MIN_COLS=24 bash "$COMPOSER_SUBMIT" ...`; codex has submitted down to 4 columns, cursor has not) before touching the layout. Layout retry only — never exhaustion or fallback |
+| **wrong model** | helper exits `5` | the pane's footer does not show the pinned model — before the reset (nothing was sent) or after it (the session was reset, no instruction submitted). Re-read `pane-model.sh` for that pane and pick another pane matching the entry, or treat the entry as unavailable. Never exhaustion |
 | **did not submit** | helper exits `3` | check for the marker first — a very fast task can finish before the status poll sees it. Otherwise re-run the helper once; a second `3` means the keys are wrong for this CLI, so run the probe |
 | **submitted but idle** | helper exited `0`, the composer still shows `[Pasted Content ...]`, no tree change | the paste was split — put the brief in a file and send a one-line pointer |
 | **crashed** | `pane read` shows a shell prompt; `pane get` may or may not still name an `agent`; the helper exits `2` naming the shell pid | restart it in place with the argv from `pane process-info` taken *before* the crash, then re-delegate once |
@@ -251,15 +291,15 @@ The underlying fix is upstream in herdr's cursor detection rules. Keep herdr and
 
 ### Exhaustion and fallback
 
-Treat an agent type as **exhausted** when its output says the usage or rate limit is reached, or when two delegations to two different idle panes of that type both come back with no marker and no completed work. Exhaustion is a property of the agent type, not of one pane — do not retry it on a sibling pane of the same type.
+Treat an agent type as **exhausted** when its output says the usage or rate limit is reached, or when two delegations to two different idle panes of that type both come back with no marker and no completed work. Exhaustion is a property of the agent type, not of one pane — do not retry it on a sibling pane of the same type. For an `agent@model` entry, record it against the entry as written: `cursor@Grok 4.7` exhausted leaves `cursor@Muse Spark 1.3` usable, and the two-pane rule counts panes that matched that entry. A vendor whose limit is account-wide then fails once more on the other entry, which is recorded the same way.
 
 An agent type with no in-scope pane is **unavailable**, not exhausted. Report it as such: it may have plenty of idle panes one tab over, and the fix is a configuration decision by the user, not a retry.
 
-Only submissions for which the helper returned `0` can contribute to the two-pane no-marker rule. Helper exits `2` and `4` never started a delegation and must never count as exhaustion.
+Only submissions for which the helper returned `0` can contribute to the two-pane no-marker rule. Helper exits `2`, `4`, and `5` never started a delegation and must never count as exhaustion.
 
 Do not match vendor error strings; they change with every CLI release. The reliable signal is the outcome: no marker, twice, on two panes.
 
-When exhausted, report it upward. If this skill was entered from the `orchestration` skill, the orchestrator resolves a substitute from that skill's merged `fallbacks:` map (`.herdrpowers/config.yaml` over `roles.yaml`) and re-delegates there. Standalone, run the work in the orchestrator pane and say which agent was skipped and why.
+When exhausted, report it upward. If this skill was entered from the `orchestration` skill, the orchestrator resolves a substitute from that skill's merged `fallbacks:` map (`.herdrpowers/config.yaml` over `roles.yaml`) — looking up the entry as written, then its bare kind — and re-delegates there. Standalone, run the work in the orchestrator pane and say which agent was skipped and why.
 
 Record the exhausted agent type for the rest of the task and stop routing to it, so one exhausted agent does not burn a retry on every subsequent delegation.
 

@@ -9,8 +9,8 @@ Routing resolves from two files, in order:
 
 Both share one schema — a **role list**, a fallback map, and a **role assigned to every delegation task**:
 
-- `roles:` — each role and the agent type(s) it binds to.
-- `fallbacks:` — agent → ordered substitutes for when an agent cannot take work.
+- `roles:` — each role and the agent type(s) it binds to. Any agent type may be pinned to a model as `agent@model`: `cursor@Muse Spark 1.3` is served only by a cursor pane whose footer model line contains `Muse Spark 1.3`, case-insensitively, because herdr reports a pane's agent type but not its model. Wherever this page says a role's agent type, a pinned entry means that type on that model.
+- `fallbacks:` — agent → ordered substitutes for when an agent cannot take work. Keys and substitutes may be pinned too.
 - `delegation:` — defaults applying to every task: `pane_scope` and `execution` (see [Delegation Scope and Execution Strategy](#delegation-scope-and-execution-strategy)).
 - `assignments:` — every delegation task, each with the role that performs it and where it runs.
 
@@ -53,12 +53,12 @@ One workflow overrides this column: `/strict_full_cycle` ignores `enabled` and r
 
 A role declared with `agents:` (a list) rather than `agent:` runs **one delegation per entry**. That is where a double review comes from — the role, not the task — so assigning a review task to a list role multiplies its pane usage by the list length, and assigning it to a single-agent role makes it a single review. A one-entry list is a deliberate single delegation; an empty list is the same as disabling the task.
 
-Wherever a list role is used: the delegations come from different agent types, an unavailable type degrades the set rather than blocking the run, and the report names whether the full set, a degraded set, or a single delegation ran.
+Wherever a list role is used: the delegations come from different agent types — or from one type on different models, as `agent@model` entries whose models differ and neither contains the other — an unavailable type degrades the set rather than blocking the run, and the report names whether the full set, a degraded set, or a single delegation ran.
 
 ### What no assignment changes
 
 - **Review independence is the reset session, not pane ID.** A reset-backed review may reuse any idle pane of the resolved role's agent type(s), including the pane that implemented. Disabling a review removes it; it never converts one into an in-session self-review.
-- **Reviews from a list role come from different agent types.**
+- **Reviews from a list role come from different agent types, or from one type on different models.**
 - **`review-fixes` escalates at fix-loop rounds 4-5** to a fresh pane of an escalated agent type, whatever its mode says.
 - **The report names which pane wrote the tests**, whatever `test-authoring` and `fix-round-test-authoring` resolve to.
 
@@ -94,7 +94,7 @@ Its judgment is final: reviewers advise, the orchestrator decides.
 
 Independent review — of plans and designs before any code is touched, and of implemented code where a review task is assigned to it. It binds to a **list** of agent types, so each review task assigned to it runs once per entry: different agent types review the same self-contained request in separate panes, with no shared draft opinion. The orchestrator compares findings, resolves disagreements, and only then acts.
 
-If applying a fallback would put the same agent type in two Reviewer slots, the slot stays empty and the workflow degrades to fewer reviews instead — two reviews from the same agent type are one review with extra steps.
+If applying a fallback would put the same agent type in two Reviewer slots — other than as two `agent@model` entries on different models — the slot stays empty and the workflow degrades to fewer reviews instead: two reviews from the same agent type on the same model are one review with extra steps.
 
 ### Coder
 
@@ -124,13 +124,13 @@ Whichever runs, the report names the pane that wrote the tests.
 
 ## Exhaustion and Fallback
 
-An agent type is exhausted when its output says the usage or rate limit is reached, or when two delegations to two different idle panes of that type both come back with no completion marker and no work done. Exhaustion is a property of the agent type, not of one pane.
+An agent type is exhausted when its output says the usage or rate limit is reached, or when two delegations to two different idle panes of that type both come back with no completion marker and no work done. Exhaustion is a property of the agent type, not of one pane; an `agent@model` entry is exhausted as written, so `cursor@Grok 4.7` running out leaves `cursor@Muse Spark 1.3` usable.
 
-The orchestrator then takes the first substitute from the resolved `fallbacks:` map that has a usable idle pane, re-delegates the same instruction unchanged, and routes around the exhausted type for the rest of the task. Every fallback is named in the final report.
+The orchestrator then takes the first substitute from the resolved `fallbacks:` map — looking up the entry as written, then its bare type — that has a usable idle pane, re-delegates the same instruction unchanged, and routes around the exhausted type for the rest of the task. Every fallback is named in the final report.
 
 If no substitute is available, the work runs in the orchestrator pane when that is safe, and the report says which independence was lost.
 
-**Escalation is the same mechanism, different trigger.** Exhaustion routes around an agent type that *cannot* work; escalation routes around one that *is not getting there* — a pane reporting BLOCKED for lack of reasoning, or a fix loop still open at round 4. Panes expose no model dial to the orchestrator, so "try something stronger" means a fresh pane of a different agent type: another type eligible for the role, or the substitute in `fallbacks:`. The swap is named in the ledger, same as a fallback is named in the report.
+**Escalation is the same mechanism, different trigger.** Exhaustion routes around an agent type that *cannot* work; escalation routes around one that *is not getting there* — a pane reporting BLOCKED for lack of reasoning, or a fix loop still open at round 4. Panes expose no model dial to the orchestrator, so "try something stronger" means a fresh pane of a different agent type: another type eligible for the role, a pane already running a different model (another `agent@model` entry), or the substitute in `fallbacks:`. Routing selects panes by the model their footer shows; it never switches one. The swap is named in the ledger, same as a fallback is named in the report.
 
 ## Delegating
 

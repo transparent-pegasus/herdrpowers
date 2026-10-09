@@ -14,8 +14,8 @@ Two files answer "who does what, and which reviews run", in this order:
 
 Read both at the start of every orchestrated task (the repo file may be absent — that is normal, and means defaults apply throughout). They share one schema:
 
-- **`roles:`** — the role list: each role and the agent type(s) it binds to.
-- **`fallbacks:`** — agent → ordered substitutes, for when an agent cannot take work.
+- **`roles:`** — the role list: each role and the agent type(s) it binds to. Any agent type there may be pinned to a model as `agent@model` — `cursor@Muse Spark` is a `cursor` pane whose footer shows `Muse Spark`; see "Model-pinned entries" in `using-herdr-sibling-panes`. Wherever this skill says a role's agent type, a pinned entry means that type on that model. `orchestrator` takes no model: `orchestrator@…` is a configuration error — route the role as `orchestrator` and name the error in the report.
+- **`fallbacks:`** — agent → ordered substitutes, for when an agent cannot take work. Keys and substitutes may be pinned too.
 - **`delegation:`** — defaults that apply to every task: `pane_scope` (which panes are eligible at all) and `execution` (parallel or serial by default).
 - **`assignments:`** — every delegation task, each with the role that performs it.
 
@@ -96,7 +96,7 @@ A role declared with `agents:` (a list) instead of `agent:` runs **one delegatio
 
 Three rules bind wherever a list role is used:
 
-- **The delegations come from different agent types.** A configuration or a fallback that would put the same type in two slots is not used there: leave that slot unavailable and run with fewer.
+- **The delegations come from different agent types — or from one type on different models.** Two slots may share an agent type only when both are `agent@model` entries whose models differ, compared case-insensitively, with neither containing the other: `cursor@Grok 4.7` and `cursor@Muse Spark 1.3` are two reviewers, while `cursor` beside `cursor@Grok 4.7` is the same type twice. Each slot takes its own pane. A configuration or a fallback that would break this is not used there: leave that slot unavailable and run with fewer.
 - **Degrade, never block.** An agent type counts as available if any in-scope pane of that type exists, even if it is busy — wait for busy panes, never interrupt them. If only one listed type is available, run that one and state that the others were skipped. If none is available, fall back per "Exhaustion and fallback", and state what independence was lost.
 - **Say which it was.** Full set, degraded set, or single — the report names it, every time.
 
@@ -118,13 +118,15 @@ A role bound to a list still means one review per entry; with `mode: orchestrato
 ### What no assignment can change
 
 - **Review independence is the reset session, not pane ID.** A `mode: delegate` review may use any idle pane of the resolved role's agent type(s), including the pane that implemented, because submission resets the session. Do not apply a prefer-different-type heuristic. An unreset continuing session must not review its own work product; disabling a review removes it rather than converting one into that kind of self-review, and a review resolved to `mode: orchestrator` gets its fresh context from a spawned subagent rather than running inline. If a config tries to turn a still-on review into an in-session self-review, honor the reset rule, ignore that part of the config, and say so in the report.
-- **Reviews from a list role come from different agent types.** A config that would put the same type in two slots is overridden the same way.
+- **Reviews from a list role come from different agent types, or from one type on different models.** A config that would put the same type in two slots any other way is overridden the same way.
 - **The report names which pane wrote the tests**, whatever `test-authoring` and `fix-round-test-authoring` resolve to. With `mode: delegate` the tests come from a pane that never saw the implementation; with `mode: implementer` they come from the pane whose behavior they cover, and the reviewers auditing that test code are the only remaining check on it. Both are legitimate; a report that does not say which one ran is not.
 - **`review-fixes` escalates regardless of mode.** Fix-loop rounds 4-5 go to a fresh pane of an escalated agent type even when the mode is `implementer`, per "Escalation is a type swap".
 
 ## Role assignments
 
 Panes are NOT reserved per role. Roles bind to agent types, not to specific panes: at delegation time, pick any idle pane of the matching agent type that is within `delegation.pane_scope`. A pane that just finished a review can take a coder or generalist task next, and vice versa. When no in-scope pane of the right type is idle, wait or run the work in the orchestrator pane — do not interrupt a working pane, and do not reach outside the scope.
+
+For an `agent@model` entry the pane must also show that model in its footer. Routing selects such a pane; it never sends `/model` or otherwise switches a pane's model. The report names the pane id and its model line for every delegation to a pinned entry.
 
 ## Orchestrator
 
@@ -190,9 +192,9 @@ Two specifics beyond the general rules: each review is a reset-backed delegation
 
 ## Exhaustion and fallback
 
-An agent type is exhausted when `using-herdr-sibling-panes` reports it exhausted — its output says the usage or rate limit is reached, or two delegations to two different idle panes of that type both came back with no marker and no completed work. That skill's "Failure handling" section owns the detection; this skill owns what happens next.
+An agent type is exhausted when `using-herdr-sibling-panes` reports it exhausted — its output says the usage or rate limit is reached, or two delegations to two different idle panes of that type both came back with no marker and no completed work. That skill's "Failure handling" section owns the detection; this skill owns what happens next. An `agent@model` entry is exhausted as written: `cursor@Grok 4.7` exhausted leaves `cursor@Muse Spark 1.3` usable.
 
-1. Look the exhausted agent up in the resolved `fallbacks:` map and take the first substitute that has a usable idle pane **within `delegation.pane_scope`**, subject to the two-reviewer rule above.
+1. Look the exhausted agent up in the resolved `fallbacks:` map — the entry as written, then its bare kind — and take the first substitute that has a usable idle pane **within `delegation.pane_scope`**, subject to the two-reviewer rule above.
 2. Re-delegate the same self-contained instruction to the substitute. Do not rewrite the task to suit it.
 3. If the agent has no `fallbacks:` entry in either file, or every substitute is itself unavailable, degrade: run the work in the orchestrator pane if it is safe to do so, otherwise stop and report.
 4. Remember the exhausted agent type for the rest of the task and route around it from then on.

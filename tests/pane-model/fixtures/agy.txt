@@ -1,0 +1,19 @@
+
+      ▄▀▀▄        Antigravity CLI 1.3.2
+     ▀▀▀▀▀▀       user@example.com (Google AI Pro)
+    ▀▀▀▀▀▀▀▀      Gemini 3.8 Flash (High)
+   ▄▀▀    ▀▀▄     /home/repos/herdrpowers
+  ▄▀▀      ▀▀▄
+
+> /model
+  ⎿  Exited /model command
+
+
+ ┃ Verbosity now defaults to medium
+ ┃ Verbosity is now medium by default, so tool calls and thoughts roll up into summaries. You can change your preferred verbosity anytime in
+ ┃ /config > Verbosity.
+ ┃ esc to dismiss
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+>
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+Gemini 3.8 Flash (High) | 5h: 100% | 7d: 100%

@@ -260,7 +260,7 @@ of its mode.
 
 Panes are not reserved per role — pick any idle pane of the matching agent type **within `delegation.pane_scope`** (default `tab`: the orchestrator's own tab only) at delegation time. When no in-scope pane of the right type is idle, wait; do not interrupt a working pane, and do not reach into another tab. When an agent type is exhausted (usage limit, or two markerless delegations on two panes of that type), take its substitute from the resolved `fallbacks:` map and name the fallback in your final report.
 
-**Escalation is a type swap.** Panes have no model dial you control, so "try something stronger" means a different agent type: a fresh pane of another Coder-eligible type, or the substitute in `fallbacks:`. Use it when a pane reports BLOCKED for lack of reasoning, and at fix-loop rounds 4-5. Name the swap in the ledger line.
+**Escalation is a type swap.** Panes have no model dial you control, so "try something stronger" means a different agent type: a fresh pane of another Coder-eligible type, a pane already running a different model (another `agent@model` entry), or the substitute in `fallbacks:`. Use it when a pane reports BLOCKED for lack of reasoning, and at fix-loop rounds 4-5. Name the swap in the ledger line.
 
 **Never delegate two implementation tasks into the same worktree at once.** One writer per working tree; that is the constraint parallelism has to respect, not the pane count.
 
