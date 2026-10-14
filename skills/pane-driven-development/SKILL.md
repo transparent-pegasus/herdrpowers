@@ -374,7 +374,7 @@ orchestrator:
 3. If the task is too large, break it into smaller pieces
 4. If the plan itself is wrong, rule on the correction, ledger it, and re-delegate with the ruling carried in the brief
 
-**No marker, no report:** that is not a status — it is a failed delegation. Diagnose it with `using-herdr-sibling-panes`' "Failure handling" table (crashed / blocked / interrupted / errored / exhausted) before re-delegating anything.
+**No marker, no report:** that is not a status — it is a failed delegation, unless an agy or grok pane is still running. Diagnose it with `using-herdr-sibling-panes`' "Failure handling" table (crashed / blocked / still running / interrupted / errored / exhausted) before re-delegating anything.
 
 **A delegated test author reports the same four statuses, and they resolve
 before the merge step, not after it.** Both panes' statuses gate the task:
@@ -656,7 +656,7 @@ Use `finishing-a-development-branch`.
 ## File Handoffs
 
 A pane's terminal is lossy: an agent CLI on the alternate screen drops rows
-that `pane read` can never recover, and everything you paste into a brief
+that `pane read` cannot always recover, and everything you paste into a brief
 stays resident in your own context for the rest of the session. Hand
 artifacts over as files, in both directions:
 
