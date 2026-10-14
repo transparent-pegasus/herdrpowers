@@ -7,7 +7,7 @@ under the Apache License, Version 2.0 (see LICENSE).
 --------------------------------------------------------------------------------
 skills/herdr/
 --------------------------------------------------------------------------------
-Vendored from the herdr project (https://github.com/ogulcancelik/herdr),
+Vendored from the herdr project (https://github.com/herdrdev/herdr),
 Copyright the herdr authors, licensed under the Apache License, Version 2.0.
 
   skills/herdr/SKILL.md   — the project's official agent skill, unmodified
