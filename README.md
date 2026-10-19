@@ -148,6 +148,8 @@ NOTICE           # Third-party attribution (required by Apache-2.0)
 - **[Roles](./docs/roles.md)** — Orchestrator, Reviewer, Coder, Generalist; `roles.yaml` and fallbacks.
 - **[Skills](./docs/skills.md)** — Catalog of every skill and when to use it.
 - **[Workflows](./docs/workflows.md)** — `/init`, `/full_cycle`, `/strict_full_cycle`, `/plan`, `/execute`, `/execute_parallel`, `/quick`.
+- **[Security policy](./SECURITY.md)** — Supported versions and vulnerability reporting.
+- **[Plugin scanner](./.github/SCANNER.md)** — Pinned local reproduction commands and rule dispositions.
 
 ## What Changed from Superpowers
 
