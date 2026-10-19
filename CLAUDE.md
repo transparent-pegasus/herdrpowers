@@ -17,9 +17,15 @@ When editing pack behavior, edit `skills/` or `commands/` directly. `docs/` hold
 
 ## Licensing
 
-The pack is Apache-2.0 because `skills/herdr/` is vendored from [herdrdev/herdr](https://github.com/herdrdev/herdr) under that license. Third-party attribution lives in `NOTICE` — update it whenever vendored material is added, removed, or modified. Do not relicense to MIT: Apache-2.0 material cannot be redistributed under it.
+The current pack is MIT-licensed. Keep the MIT copyright and permission notices
+for Superpowers-derived material in `LICENSE` and `NOTICE`; update attribution
+when third-party material changes. Earlier Apache-2.0 snapshots retain their
+original licenses.
 
-`skills/herdr/SKILL.md` is upstream's file, kept unmodified so it can be refreshed cleanly. Its README carries a provenance header and absolute upstream link targets.
+`skills/herdr/` is an original bootstrap for the installed binary's
+`herdr --skill` output. Do not vendor Herdr's skill or README into the payload
+or embed their diffs in current changelogs. Link to the historical snapshot
+when documenting the former vendored files.
 
 ## Maintenance
 
