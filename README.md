@@ -16,6 +16,8 @@ The development cycle derives from [obra/superpowers](https://github.com/obra/su
 
 ## Requirements
 
+Herdr must be installed and support `herdr --skill`. The pack reads its operating guide from the installed binary, so no Herdr repository clone or separate skill installation is needed.
+
 `HERDR_ENV=1` — the delegation skills verify this and stop if it is missing. The planning, TDD, debugging, and verification skills work anywhere; only delegation needs herdr.
 
 Before an agent CLI is used as a delegation target for the first time (and after every upgrade), verify it can be driven at all:
@@ -124,7 +126,7 @@ Roles bind to **agent types**, not to platforms: the orchestrator can be any age
 
 ```
 skills/          # 16 skills (single tree, platform-neutral wording)
-  herdr/                       vendored official herdr skill (Apache-2.0)
+  herdr/                       bootstrap for the installed binary's herdr --skill guide
   orchestration/               routing, roles.yaml defaults, delegation assignments, fallbacks
   using-herdr-sibling-panes/   the delegation transport + composer scripts
   pane-driven-development/     the per-task loop over panes + brief templates
@@ -139,7 +141,7 @@ changelogs/      # obra/superpowers refresh history + pack-native release notes
 .opencode-plugin/ # OpenCode plugin: registers skills/ and commands/ at config time
 package.json     # OpenCode package manifest (main → .opencode-plugin/index.mjs)
 .agents/plugins/ # Codex marketplace manifest (fixed location per Codex convention)
-NOTICE           # Third-party attribution (required by Apache-2.0)
+NOTICE           # Third-party attribution and retained MIT notices
 ```
 
 ## Documentation
@@ -187,4 +189,4 @@ Every refresh from [obra/superpowers](https://github.com/obra/superpowers) is re
 
 ## License
 
-[Apache License 2.0](./LICENSE). This pack bundles the herdr project's official agent skill (Apache-2.0) and material derived from MIT-licensed packs, chiefly [obra/superpowers](https://github.com/obra/superpowers); see [NOTICE](./NOTICE) for the full attribution chain.
+[MIT License](./LICENSE). This pack retains material derived from MIT-licensed packs, chiefly [obra/superpowers](https://github.com/obra/superpowers); see [NOTICE](./NOTICE) for the full attribution chain. Herdr is installed separately, and its official guide is read from `herdr --skill`. Earlier versions that bundled Herdr files retain their Apache-2.0 license.
