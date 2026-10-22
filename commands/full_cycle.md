@@ -38,7 +38,7 @@ Resolve `delegation:` in the same pass, before Step 2 — both keys change what 
 1. Brainstorming
 Ask the user what they want to build.
 Read the brainstorming SKILL.md.
-Invoking this workflow is the user choosing its ceremony: announce the brainstorming skill's classification, but do not downgrade the workflow — its remaining steps run even for bounded work. If the request is a spike (the output is an answer, not code to keep), say so and confirm with the user before continuing.
+Invoking this workflow is the user choosing its ceremony: say the size the brainstorming skill picks, but do not downgrade the workflow — its remaining steps run even for a quick, clear task or a small change, and even when the user skips the questions. If what they want is a spike (a throwaway build to learn from, not code to keep), say so and confirm with the user before continuing. A written design's builder check runs as the `plan-review` gate; the final report names whether it ran, degraded, or was disabled, separately from the plan's review in Step 2.
 Engage in a design and requirement gathering discussion without writing implementation code.
 Proceed to Step 2 as soon as the last clarifying question has been answered and there are no unresolved design concerns.
 
