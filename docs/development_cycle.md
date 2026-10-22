@@ -8,11 +8,11 @@ Every phase that delegates work does so through the `orchestration` skill to a *
 
 ### Phase 1: Brainstorming (Design & Requirements)
 
-The agent asks what you want to build and engages in a design and requirements discussion. No implementation code is written at this stage.
+The agent draws out what you want to build and why, plays its understanding back for you to correct, and sizes the work. No implementation code is written at this stage.
 
-- **Purpose**: Define the feature's purpose, constraints, and success criteria.
-- **Outcome**: An approved architectural design saved to `<DESIGN_DOC_PATH_PATTERN>` (not committed).
-- **Skill**: `brainstorming`. **Role**: orchestrator.
+- **Purpose**: Define the feature's intent, goals, non-goals, and constraints, and which parts of the how you want to decide.
+- **Outcome**: An approved description. For a project, that is a written design saved to `<DESIGN_DOC_PATH_PATTERN>` (not committed) that has been through the builder check: readers routed as the `plan-review` gate read it as its builder and list what they would still need to ask, before you read it.
+- **Skill**: `brainstorming`. **Role**: orchestrator; the builder check follows the `plan-review` assignment.
 
 ---
 
