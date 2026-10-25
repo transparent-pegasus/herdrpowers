@@ -52,11 +52,21 @@ cursor-agent plugin marketplace add https://github.com/transparent-pegasus/herdr
 
 Or install from this repository via the Cursor Marketplace ("Import from Repo").
 
-**OpenCode**
+**OpenCode 2**
+
+```bash
+opencode plugin add git+https://github.com/transparent-pegasus/herdrpowers.git
+```
+
+Use `opencode2` in place of `opencode` if that is the name of your v2 binary.
+The same package also supports **OpenCode 1.18.29+**, using its v1 installer:
 
 ```bash
 opencode plugin -g herdrpowers@git+https://github.com/transparent-pegasus/herdrpowers.git
 ```
+
+Both versions expose all 16 skills and the seven `/herdrpowers:*` workflows.
+See [OpenCode setup](./docs/opencode.md) for local checkout configuration and verification.
 
 **Any other tool** — check the pack in or vendor it as a submodule, and point the tool at the directories:
 
@@ -117,7 +127,7 @@ The payload is a single tree at the repository root, discovered by each platform
 | **Claude Code** | `skills/` (auto) | `commands/` as namespaced slash commands |
 | **Codex** | `skills/` | `commands/` (surfaced as skills) |
 | **Cursor** | `skills/` (auto) | `commands/` as slash commands (auto) |
-| **OpenCode** | `skills/` (registered by the plugin) | `commands/` as namespaced slash commands, registered by the plugin |
+| **OpenCode 1.18.29+ / 2** | `skills/` (registered by the plugin) | `commands/` as namespaced slash commands, registered by the plugin |
 | **Aider / Gemini CLI / others** | read `skills/<name>/SKILL.md` directly | read `commands/<name>.md` directly |
 
 Roles bind to **agent types**, not to platforms: the orchestrator can be any agent CLI, and Coder / Generalist / Reviewer resolve to whatever the repo's `.herdrpowers/config.yaml` says, falling back to `skills/orchestration/roles.yaml`. Reassign any delegation task, change where it runs, or turn a review off in the repo file — the pack's defaults stay untouched. An agent type can also be pinned to a model as `agent@model` (`cursor@Muse Spark 1.3`): herdr reports a pane's agent type but not its model, so the pack reads the model from the footer the CLI draws, and two panes of one CLI on different models count as different reviewers.
@@ -138,7 +148,7 @@ changelogs/      # obra/superpowers refresh history + pack-native release notes
 .claude-plugin/  # Claude Code plugin + marketplace manifests
 .codex-plugin/   # Codex plugin manifest
 .cursor-plugin/  # Cursor plugin manifest
-.opencode-plugin/ # OpenCode plugin: registers skills/ and commands/ at config time
+.opencode-plugin/ # OpenCode plugin: v1 config hook and v2 setup/transforms
 package.json     # OpenCode package manifest (main → .opencode-plugin/index.mjs)
 .agents/plugins/ # Codex marketplace manifest (fixed location per Codex convention)
 NOTICE           # Third-party attribution and retained MIT notices
