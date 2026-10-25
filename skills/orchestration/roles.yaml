@@ -168,7 +168,10 @@ assignments:
   # --- review tasks (optional; `enabled: false` removes the gate) ---
 
   plan-review:
-    description: Independent review of a plan or design before approval (/plan, /full_cycle)
+    description: >-
+      Independent review of a plan or design before approval (/plan,
+      /full_cycle), and brainstorming's builder check on a written design
+      before the user reads it.
     role: reviewer
     mode: delegate
     enabled: true
