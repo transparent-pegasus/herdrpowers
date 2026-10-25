@@ -74,7 +74,7 @@ All development workflows share the same guardrails:
 |---|---|
 | Claude Code | Type the namespaced slash command (`/herdrpowers:full_cycle`, `/herdrpowers:plan`, …) from the plugin, or the bare command from a checked-in copy of `commands/`. |
 | Cursor | Native slash commands from the plugin's `commands/`. |
-| OpenCode | The plugin registers each workflow under the same namespaced name (`/herdrpowers:full_cycle`, `/herdrpowers:plan`, …), which also leaves OpenCode's own `/init` alone. |
+| OpenCode 1.18.29+ / 2 | The plugin registers each workflow under the same namespaced name (`/herdrpowers:full_cycle`, `/herdrpowers:plan`, …), which also leaves OpenCode's own `/init` alone. V2 submits the workflow and any arguments in the current session, preserving attachments and the requested delivery mode. |
 | Codex | Plugin commands surface as skills — invoke them by name, or read `commands/<name>.md` directly. |
 | Aider / other tools | No native slash commands — read the workflow file directly (e.g. `commands/full_cycle.md`) and instruct the agent to follow it step-by-step. |
 
