@@ -36,7 +36,7 @@ Routing comes from `assignments:`, not from this file, and the resolved YAML is 
 1. Brainstorming
 Ask the user what they want to build.
 Read the specific `SKILL.md` for `brainstorming`.
-Invoking this workflow is the user choosing its ceremony: announce the brainstorming skill's classification, but do not downgrade the workflow — its remaining steps run even for bounded work. If the request is a spike (the output is an answer, not code to keep), say so and confirm with the user before continuing.
+Invoking this workflow is the user choosing its ceremony: say the size the brainstorming skill picks, but do not downgrade the workflow — its remaining steps run even for a quick, clear task, and even when the user skips the questions. A project with a written design is more than this workflow carries, because it has no plan step: say so and offer `/full_cycle` before continuing. If what they want is a spike (a throwaway build to learn from, not code to keep), say so and confirm with the user before continuing.
 Engage in a design and requirement gathering discussion without writing implementation code.
 Proceed to Step 2 only after the design is explicit and the user confirms.
 

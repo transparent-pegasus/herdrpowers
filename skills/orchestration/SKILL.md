@@ -80,7 +80,7 @@ Resolve every task the workflow will touch before its first delegation, not when
 
 | Task | Runs in | Off means |
 |---|---|---|
-| `plan-review` | `/plan`, `/full_cycle` | The plan goes straight to the user for approval, unreviewed |
+| `plan-review` | `/plan`, `/full_cycle`, and `brainstorming`'s builder check on a written design | The plan goes straight to the user for approval, unreviewed, and a written design reaches the user without a builder check |
 | `documentation-impact-review` | `/execute`, `/execute_parallel`, `/full_cycle`, `/quick` | No pre-implementation sweep for non-code files |
 | `task-review` | `pane-driven-development` | A task completes on the implementing pane's own report |
 | `fix-round-re-review` | `pane-driven-development` fix loop | Fixes are taken on the fixing pane's word; the round still counts against the five-round cap |
@@ -189,6 +189,8 @@ Runs when the `plan-review` gate is enabled, under "Roles that bind to a list" a
 Draft the plan in the orchestrator pane, then run the reviews through `using-herdr-sibling-panes` (one per agent type in the resolved role, in separate panes when the list has multiple entries), wait for all of them to complete, compare the findings, resolve disagreements, and only then act or report. Reviewers are reviewers, not substitutes for the orchestrator's final judgment.
 
 Two specifics beyond the general rules: each review is a reset-backed delegation (the drafting session's reasoning is not in the reviewer's context), and if no listed agent type is available at all, the orchestrator critically reviews its own plan and states that no independent review happened.
+
+`brainstorming`'s builder check is this gate too, earlier: before the user reads a written design, each reader gets `brainstorming/builder-check-brief.md` and lists what it would still need to ask to plan from the document. The same resolution and rules apply, and brainstorming merges the readers' questions into one round for the user. A workflow that writes a design and then a plan therefore runs this gate twice; both runs count toward the report.
 
 ## Exhaustion and fallback
 
