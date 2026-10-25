@@ -4,31 +4,31 @@ The centralized scan for [awesome-ai-plugins PR #795](https://github.com/hashgra
 scored commit `cf82b3b6517a3ef9aaed931008bcc33c6ae053a5` at 77/100 with
 14 findings. The same result was reproduced locally with `plugin-scanner 3.0.123`.
 
-After the changes below, the repository scan and the separate Claude and
+With `plugin-scanner 3.46.0`, the repository scan and the separate Claude and
 Codex scans each score **95/100**. Seven findings remain: two lockfile findings
 and five informational presentation findings, all documented below.
 
 ## Reproduce
 
-The [scanner workflow](workflows/plugin-security-scan.yml) uses the catalog's
-[SHA-pinned action](https://github.com/hashgraph-online/ai-plugin-scanner-action/tree/caba2e96aa8ad2feb6cf6fca52442b52e22e779f)
-(`v1.2.635`, bundling `plugin-scanner 3.0.123`). It runs on pushes and pull
+The [scanner workflow](workflows/plugin-security-scan.yml) uses a
+[SHA-pinned action](https://github.com/hashgraph-online/ai-plugin-scanner-action/tree/1fb7eef6f7387abd0512e91ee8f336ac8bf07c95)
+(`v1.2.789`, bundling `plugin-scanner 3.46.0`). It runs on pushes and pull
 requests with only `contents: read`, without persisted checkout credentials,
 live probing, repository policy overrides, or automatic comments. A score of
-at least 80 passes; finding severities remain advisory, matching the catalog.
+at least 80 passes; finding severities remain advisory.
 
 Run the same scanner locally with [uv](https://docs.astral.sh/uv/):
 
 ```bash
-uvx --from plugin-scanner==3.0.123 plugin-scanner scan . --format json --output /tmp/herdrpowers-scan.json --min-score 80 --fail-on-severity none
+uvx --from plugin-scanner==3.46.0 plugin-scanner scan . --format json --output /tmp/herdrpowers-scan.json --min-score 80 --fail-on-severity none
 ```
 
 The repository scan detects both supported scanner ecosystems. To reproduce
 their findings separately:
 
 ```bash
-uvx --from plugin-scanner==3.0.123 plugin-scanner scan . --ecosystem claude --min-score 80 --fail-on-severity none
-uvx --from plugin-scanner==3.0.123 plugin-scanner scan . --ecosystem codex --min-score 80 --fail-on-severity none
+uvx --from plugin-scanner==3.46.0 plugin-scanner scan . --ecosystem claude --min-score 80 --fail-on-severity none
+uvx --from plugin-scanner==3.46.0 plugin-scanner scan . --ecosystem codex --min-score 80 --fail-on-severity none
 ```
 
 ## Rule dispositions
@@ -50,9 +50,8 @@ the duplicate lockfile, security policy, and Dependabot findings.
 | `PLUGIN_JSON_INTERFACE_ASSET_LOGO` | Accepted: `logo` is absent; no logo path is declared. |
 | `PLUGIN_JSON_INTERFACE_ASSET_SCREENSHOTS` | Accepted: `screenshots` is absent; no screenshot paths are declared. |
 
-In version 3.0.123, the scanner's `check_interface_assets` checks every listed
-presentation field whenever an `interface` object exists, including absent
-fields. These five informational findings therefore describe omitted metadata.
+The scanner reports absent presentation fields when an `interface` object
+exists. These five informational findings therefore describe omitted metadata.
 No findings are suppressed, and no scanner baseline or policy override is used.
 
 The default scan does not install the optional Cisco skill scanner. Passing
