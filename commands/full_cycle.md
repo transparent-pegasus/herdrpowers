@@ -36,11 +36,10 @@ Resolve `delegation:` in the same pass, before Step 2 — both keys change what 
 ## Execution Steps
 
 1. Brainstorming
-Ask the user what they want to build.
-Read the brainstorming SKILL.md.
-Invoking this workflow is the user choosing its ceremony: say the size the brainstorming skill picks, but do not downgrade the workflow — its remaining steps run even for a quick, clear task or a small change, and even when the user skips the questions. If what they want is a spike (a throwaway build to learn from, not code to keep), say so and confirm with the user before continuing. A written design's builder check runs as the `plan-review` gate; the final report names whether it ran, degraded, or was disabled, separately from the plan's review in Step 2.
+Read the brainstorming SKILL.md and follow its context-first opening. Ask only what the existing project and supplied context leave open.
+Invoking this workflow is the user choosing its ceremony: say the size the brainstorming skill picks, but do not downgrade the workflow — its remaining steps run even for a quick, clear task or a small change, and even when the user skips the questions. If what they want is a spike (a throwaway build to learn from, not code to keep), say so and confirm with the user before continuing. A project's full design gets the builder check through the `plan-review` gate; a small change's short design goes directly to the user without that check. For a project's check, the final report names whether it ran, degraded, or was disabled, separately from the plan's review in Step 2.
 Engage in a design and requirement gathering discussion without writing implementation code.
-Proceed to Step 2 as soon as the last clarifying question has been answered and there are no unresolved design concerns.
+Proceed to Step 2 after the user chooses an approach and approves the short or full design document. If they explicitly opt out of brainstorming, keep the remaining workflow steps.
 
 2. Plan Creation and Review
 Inform the user that you will create an implementation plan.

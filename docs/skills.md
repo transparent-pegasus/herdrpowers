@@ -14,7 +14,7 @@ Skills live in a single tree at `skills/<name>/SKILL.md`. Claude Code, Codex, an
 
 ## Strategic & Planning
 
-- **`brainstorming`** — Draw out what the user actually wants, and why, before anything gets built. Opens by offering to skip the questions and asking one open question, plays each part back in 200-300 words with its guesses marked, and finds out which how-it-gets-made choices (platform, language, libraries) the user wants to own, stating any default it picks. Offers recon (codebase, the user's files, the web), a throwaway spike, and the **visual companion** (browser-based Node.js server in `brainstorming/scripts/`) whenever seeing beats reading. Then sizes the work in plain words — **a quick, clear task** (do it), **a small change** (agreed in chat), **a project with a written design** (a document at `<DESIGN_DOC_PATH_PATTERN>`, not committed, then `writing-plans`) — and steps up a size if the work grows. A written design gets a **builder check** before the user reads it: readers routed as the `plan-review` gate read it as the person who will build it and list what they would still need to ask; brainstorming answers what it can, makes the minor calls itself, and brings the user one round of questions. Nothing gets built until the user approves the full description; the pack's workflow commands say the size but never downgrade their own steps.
+- **`brainstorming`** — Read the existing project and supplied context before asking questions, then clarify what the user wants and why. Detailed requests get a grounded playback and one question about what remains open; an offer to skip the questions appears only when the user did not request brainstorming. Present the viable approaches, recommend one, and let the user choose. Small changes get a short design at `<DESIGN_DOC_PATH_PATTERN>` (not committed); projects get a full design and a **builder check** through `plan-review` before the user reads it. Both documents record the alternatives and choice and need approval before building. Then invoke `writing-plans`, except in an explicitly chosen `/quick`, which preserves its plan omission. Fully specified quick tasks, explicit opt-outs, and approved throwaway spikes retain their existing paths; workflow commands keep their own steps. Recon, the visual companion, and playback remain available when they help.
 - **`writing-plans`** — Break the approved design into bite-sized, TDD-shaped tasks. Writes the plan to `<PLAN_PATH_PATTERN>` (do not commit). A plan records decisions, not a transcript of the code: each step carries the exact signature, test assertions, or command that makes it unambiguous, and the implementer writes the body. Includes File Structure, Task Right-Sizing, Global Constraints, a Review Focus list of spec-implied inputs no task tests yet, per-task Interfaces, and inline self-review with a proportion check. The user reviews the saved plan before anything runs; the handoff offers `pane-driven-development` or `executing-plans` and recommends one for this plan.
 
 ## Operational & Execution
@@ -38,11 +38,11 @@ Skills live in a single tree at `skills/<name>/SKILL.md`. Claude Code, Codex, an
 
 - **`using-git-worktrees`** — Create isolated worktrees with safety verification (`.gitignore`, baseline tests). Detects existing isolation (`GIT_DIR != GIT_COMMON`), prefers harness-native worktree tools, asks consent before creating. Required before implementation starts.
 - **`update-docs`** — Keep root-level `docs/*.md` aligned with the codebase according to the contract in `update-docs/ROOT_DOCS.md`.
-- **`writing-skills`** — Meta-skill for creating new skills with TDD applied to documentation. Bundles `examples/` for reference SKILL patterns.
+- **`writing-skills`** — Meta-skill for creating new skills with TDD applied to documentation. Loads discovery, flowchart, testing, and discipline guidance from `references/` at the step that needs it.
 
 ## How to Use a Skill
 
 1. Read the skill's `SKILL.md` end-to-end before starting the work it describes.
-2. Follow the skill's own process — flowcharts, checklists, and red flags are there for a reason.
+2. Follow the skill's own process. Read each linked reference from disk when the step requires it, including after compaction; the shorter SKILL.md is the entry point, not a substitute for those rules.
 3. If the skill references another skill as a required sub-skill, read that one first too.
 4. Skills are reference guides, not checklists to blindly tick off. When the skill explicitly says "stop and ask", stop and ask.

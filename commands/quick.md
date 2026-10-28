@@ -34,11 +34,10 @@ Routing comes from `assignments:`, not from this file, and the resolved YAML is 
 ## Execution Steps
 
 1. Brainstorming
-Ask the user what they want to build.
-Read the specific `SKILL.md` for `brainstorming`.
-Invoking this workflow is the user choosing its ceremony: say the size the brainstorming skill picks, but do not downgrade the workflow — its remaining steps run even for a quick, clear task, and even when the user skips the questions. A project with a written design is more than this workflow carries, because it has no plan step: say so and offer `/full_cycle` before continuing. If what they want is a spike (a throwaway build to learn from, not code to keep), say so and confirm with the user before continuing.
+Read the specific `SKILL.md` for `brainstorming` and follow its context-first opening. Ask only what the existing project and supplied context leave open.
+Invoking this workflow is the user choosing its ceremony: say the size the brainstorming skill picks, but do not downgrade the workflow — its remaining steps run even for a quick, clear task, and even when the user skips the questions. A project requiring a full design is more than this workflow carries, because it has no plan step: say so and offer `/full_cycle` before continuing. If what they want is a spike (a throwaway build to learn from, not code to keep), say so and confirm with the user before continuing.
 Engage in a design and requirement gathering discussion without writing implementation code.
-Proceed to Step 2 only after the design is explicit and the user confirms.
+For a small change, present the approaches and recommendation, let the user choose, and save a short design at `<DESIGN_DOC_PATH_PATTERN>` without committing it. The short design goes directly to the user without a builder check. Proceed to Step 2 after they approve it, or explicitly opt out of brainstorming. Because the user selected `/quick`, continue with workspace isolation instead of invoking `writing-plans`; the separate plan and its review remain omitted.
 
 2. Workspace Isolation
 Inform the user that you will create an isolated workspace.
