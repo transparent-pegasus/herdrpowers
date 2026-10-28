@@ -19,7 +19,7 @@ for the development cycle, review independence rules, and the file-report and
 absolute-worktree-path clauses in the task contract.
 
 --------------------------------------------------------------------------------
-Other skills, commands/, docs/
+Other skills, commands/, docs/, tests/skill-size/
 --------------------------------------------------------------------------------
 Derived from superpowers-extended
 (https://github.com/transparent-pegasus/superpowers-extended), Copyright

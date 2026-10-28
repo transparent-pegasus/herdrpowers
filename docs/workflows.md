@@ -51,7 +51,7 @@ Use when: the approved plan has tasks that truly can be implemented in parallel 
 
 ### `/quick`
 
-A shortened cycle for small-scoped changes. Keeps brainstorming, workspace isolation off `<BASE_BRANCH>`, documentation impact review, implementation with TDD, documentation update, verification, an independent final review, and the integration handoff. Skips only the separate plan creation and its review.
+A shortened cycle for small-scoped changes. Keeps brainstorming, workspace isolation off `<BASE_BRANCH>`, documentation impact review, implementation with TDD, documentation update, verification, an independent final review, and the integration handoff. Brainstorming records the chosen approach in a short design at `<DESIGN_DOC_PATH_PATTERN>` (not committed), sent directly to the user for approval without a builder check. After approval, this explicitly chosen workflow continues with workspace isolation, omitting the separate plan creation and its review.
 
 Use when: the change is small enough to land without a separate written plan. If scope grows, stop and switch to `/full_cycle`.
 

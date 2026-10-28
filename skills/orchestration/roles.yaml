@@ -170,7 +170,7 @@ assignments:
   plan-review:
     description: >-
       Independent review of a plan or design before approval (/plan,
-      /full_cycle), and brainstorming's builder check on a written design
+      /full_cycle), and brainstorming's builder check on a project's full design
       before the user reads it.
     role: reviewer
     mode: delegate
