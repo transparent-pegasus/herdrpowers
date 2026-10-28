@@ -80,7 +80,7 @@ Resolve every task the workflow will touch before its first delegation, not when
 
 | Task | Runs in | Off means |
 |---|---|---|
-| `plan-review` | `/plan`, `/full_cycle`, and `brainstorming`'s builder check on a written design | The plan goes straight to the user for approval, unreviewed, and a written design reaches the user without a builder check |
+| `plan-review` | `/plan`, `/full_cycle`, and `brainstorming`'s builder check on a project's full design | The plan goes straight to the user for approval, unreviewed, and a project's full design reaches the user without a builder check |
 | `documentation-impact-review` | `/execute`, `/execute_parallel`, `/full_cycle`, `/quick` | No pre-implementation sweep for non-code files |
 | `task-review` | `pane-driven-development` | A task completes on the implementing pane's own report |
 | `fix-round-re-review` | `pane-driven-development` fix loop | Fixes are taken on the fixing pane's word; the round still counts against the five-round cap |
@@ -138,49 +138,21 @@ Use `using-herdr-sibling-panes` for every delegation. Submit through its bundled
 
 ## Task routing
 
-Routing is two steps: name the delegation task, then read its assignment.
-
-1. **Name the task.** Classify the work against the task list above: design work is `plan-and-design`; coding splits into `complex-coding` and `simple-coding` at the boundary below; lookups, moves, log gathering, and lint/format runs are `chores`; running verification commands is `verification`. When a piece of work spans tasks, use the heavier one (`plan-and-design` > `complex-coding` > `simple-coding` > `chores`).
-2. **Read its assignment.** Take `role` and `mode` from `assignments:`. `mode: delegate` → any idle pane of that role's agent type. `mode: orchestrator` → do it here, in this pane, except a review task: spawn a fresh in-process subagent for that, per "Reviews in `mode: orchestrator`". Do not substitute your own judgment for the configured route; a repo that sent `simple-coding` to the Coder role meant it.
-
-Every delegation must satisfy the "Delegation contract" below.
+Before classifying or routing work, read
+[references/routing.md](references/routing.md). Name the delegation task,
+then read its resolved assignment; the same routing applies inside workflows.
 
 ## Development-cycle routing
 
-When this skill drives one of the pack's workflows (`/herdrpowers:execute`, `execute_parallel`, `full_cycle`, `quick`), the same table governs — there is no separate hard-coded mapping. Each kind of work maps to a task name; the resolved assignment says who and where:
-
-* **Implementation tasks** → `complex-coding` / `simple-coding`.
-* **Tests** → `test-authoring` for the implementation round, `fix-round-test-authoring` for each fix round. Whichever mode they resolve to, say so in the brief and in the report.
-* **Code review** → `task-review` per task, `final-branch-review` at the end.
-* **Chores that come up while executing a plan** → `chores`.
-* **Plan and design** → `plan-and-design`, gated by `plan-review`.
-
-Read each one's `role` and `mode` from the resolved configuration; the workflow names every assignment its repo config changed in the final report.
-
-**Review independence** comes from a fresh session on each reset-backed delegation, not from a different pane ID or a different tool: every `composer-submit.sh` call resets the target session, so the reviewing agent never sees the implementing session's reasoning. Pick any idle pane of the resolved role's agent type(s) — including the pane that implemented — and do not apply a prefer-different-type heuristic. Unreset continuing sessions must not review their own work product.
+Read the [workflow mapping](references/routing.md#development-cycle-routing)
+when entering a workflow. Review independence and the configuration above
+still bind every delegation.
 
 ## Complex coding boundary
 
-This boundary decides which task name the work gets — `complex-coding` or `simple-coding` — not which role it goes to. The assignment does that.
-
-Coding work is `complex-coding` when ANY of the following holds:
-
-* **Cross-cutting change**: the change spans 3+ files or 2+ modules/layers whose interactions must stay consistent (e.g. API + client + schema).
-* **Design freedom**: there is no single obvious implementation — data structures, interfaces, or algorithms must be chosen among meaningful alternatives.
-* **Stateful / concurrent logic**: async flows, locking, streaming, retries, caching, or anything where ordering and partial-failure semantics matter.
-* **Non-obvious debugging**: the root cause is unknown and must be inferred from behavior; reproducing or bisecting is part of the work.
-* **Risky refactor**: behavior must be preserved while structure changes, and existing tests do not fully pin the behavior down.
-* **Algorithmic or performance work**: correctness or complexity analysis is required, not just wiring code together.
-
-Coding work is `simple-coding` when ALL of the following hold:
-
-* The change is localized (1–2 files) and the intended edit can be stated precisely up front.
-* It follows an existing pattern in the codebase (add a similar handler, field, test case, config entry).
-* Failure is cheap and visible — a wrong result is caught immediately by tests, types, lint, or a quick run.
-
-Examples: renaming a symbol, adding a CRUD endpoint that mirrors an existing one, writing tests for pinned-down behavior, bumping a dependency, fixing a lint/type error → `simple-coding`. Introducing a new subsystem, reworking the streaming pipeline, fixing a race condition, changing an interface used across modules → `complex-coding`.
-
-Default when uncertain: `complex-coding`. With the default assignments a misrouted simple task costs little on the Coder, while a complex task misrouted to the Generalist produces subtle breakage. A repo that assigns both task names to the same role makes this distinction moot — that is a legitimate configuration.
+Read the [coding boundary](references/routing.md#complex-coding-boundary)
+before choosing `complex-coding` or `simple-coding`. The boundary selects a
+task name; the resolved assignment selects the role and mode.
 
 ## Plan/design review
 
@@ -190,7 +162,7 @@ Draft the plan in the orchestrator pane, then run the reviews through `using-her
 
 Two specifics beyond the general rules: each review is a reset-backed delegation (the drafting session's reasoning is not in the reviewer's context), and if no listed agent type is available at all, the orchestrator critically reviews its own plan and states that no independent review happened.
 
-`brainstorming`'s builder check is this gate too, earlier: before the user reads a written design, each reader gets `brainstorming/builder-check-brief.md` and lists what it would still need to ask to plan from the document. The same resolution and rules apply, and brainstorming merges the readers' questions into one round for the user. A workflow that writes a design and then a plan therefore runs this gate twice; both runs count toward the report.
+`brainstorming`'s builder check is this gate too, earlier: before the user reads a project's full design, each reader gets `brainstorming/builder-check-brief.md` and lists what it would still need to ask to plan from the document. The same resolution and rules apply, and brainstorming merges the readers' questions into one round for the user. A workflow that writes a full project design and then a plan therefore runs this gate twice; both runs count toward the report. A small change's short design skips the builder check; the plan's review still runs when the workflow includes one.
 
 ## Exhaustion and fallback
 

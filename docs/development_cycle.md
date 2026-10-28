@@ -8,10 +8,10 @@ Every phase that delegates work does so through the `orchestration` skill to a *
 
 ### Phase 1: Brainstorming (Design & Requirements)
 
-The agent draws out what you want to build and why, plays its understanding back for you to correct, and sizes the work. No implementation code is written at this stage.
+The agent reads the existing project and supplied context first, draws out what remains unclear, and plays its understanding back for you to correct. It presents the viable approaches and a recommendation before you choose one and it sizes the work. No implementation code is written at this stage.
 
 - **Purpose**: Define the feature's intent, goals, non-goals, and constraints, and which parts of the how you want to decide.
-- **Outcome**: An approved description. For a project, that is a written design saved to `<DESIGN_DOC_PATH_PATTERN>` (not committed) that has been through the builder check: readers routed as the `plan-review` gate read it as its builder and list what they would still need to ask, before you read it.
+- **Outcome**: An approved design at `<DESIGN_DOC_PATH_PATTERN>` (not committed), including the approaches considered and the choice. A small change gets a short document sent directly to you; a project gets the full document and a builder check first: readers routed as the `plan-review` gate list what they would still need to ask to build it. The next step is planning, except when you explicitly chose `/quick`, which keeps its plan omission. Quick, fully specified tasks and an explicit opt-out still follow the calling workflow.
 - **Skill**: `brainstorming`. **Role**: orchestrator; the builder check follows the `plan-review` assignment.
 
 ---

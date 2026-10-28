@@ -255,85 +255,16 @@ mark the todo complete and take the next task.
 
 ## Final Review
 
-Skipped when `assignments.final-branch-review` is disabled — inside a
-workflow, the gate is the workflow's. Write `Final review: disabled by
-configuration` to the ledger, go straight to Finish, and say the branch is
-unreviewed.
-
-Run `bash ../pane-driven-development/scripts/review-package PLAN_FILE MERGE_BASE HEAD`
-(MERGE_BASE = the commit the branch started from, e.g.
-`git merge-base <BASE_BRANCH> HEAD`); the file it prints is the review's
-diff.
-
-**With a reviewer available:** request the review through
-requesting-code-review — it resolves the gate's role and mode, picks the
-reset-backed pane(s), and submits its
-[review-brief.md](../requesting-code-review/review-brief.md) with the
-package path. In `[PLAN_OR_REQUIREMENTS]`, give the plan and spec paths,
-the plan's Review Focus section verbatim if it has one (the input classes
-and failure modes the plan's tests do not exercise — the reviewer checks
-each deliberately), and a pointer to the ledger's `Ruling:` lines so it can
-weigh the calls you made. This is the one fresh session the whole run buys.
-Do not skip it, and do not replace it with your own read of the diff.
-
-**When no reviewer can take it** (typically outside herdr: no pane of the
-gate's agent types in scope, and no substitute): read review-brief.md and
-perform that review yourself against the package, as a separate pass after
-the last task's ledger line. Write `Final review: self-review (no reviewer
-available)` to the ledger, and say so in your final message: a self-review
-by the author is not an independent review, and your human partner decides
-whether that is enough before merge.
-
-Sort the findings before you act on any of them. The reviewer's severity
-labels are advice; the gate is yours. Its "Declined to judge" list is
-yours too: every line there is a ruling you make and ledger, exactly like
-a plan conflict — `Final: Ruling: <behavior the reviewer set aside> —
-<what a reasonable person using this software gets, and why that stands
-or why it is now a finding> — <cost if wrong>`. Re-grade first, by effect:
-the spec is a vision document, and a finding's grade is what a reasonable
-person using this software gets if it ships, not whether the spec names
-the input that triggers it — a reviewer who set a finding at Minor
-because the spec was silent has graded the spec, not the effect. Then:
-
-- **Critical and Important** enter the fix pass.
-- **Minor** goes to the ledger as `Final: minor (deferred): <one-liner>`
-  and to your final message under "Deferred minors". Minors never enter
-  the fix pass, and never become rulings — a ruling is a decision about a
-  conflict, not a note that you declined a polish suggestion.
-
-Fix the Critical and Important findings yourself — you are the
-implementer here — in ONE pass. Each fix is verified by TDD, not by a
-second reviewer: write the test that reproduces the finding, watch it
-fail, make it pass, then run the whole suite. Record each in the ledger as
-`Final: fixed <finding> — <test name> RED→GREEN, suite <N>/<N>`. A fix
-without a test that failed first is not verified; a suite that is not
-green after the pass means the pass is not over. Do not request a
-re-review: it would re-read a diff whose covering tests already answer
-"addressed" and whose suite run already answers "broke nothing".
-
-A finding you decide not to fix is a ruling — `Final: Ruling: <finding> —
-<why the code stands> — <cost if wrong>` — and reaches your human partner
-in the rulings list. There is no second fix pass.
+After every task is complete, read
+[references/final-review.md](references/final-review.md) and follow it. It
+covers the resolved `final-branch-review` gate, its single TDD-verified fix
+pass, and the finish record.
 
 ## Finish
 
-Before you delete anything, collect every ledger line containing
-`Ruling:` into your final message under "Rulings I made", in the order you
-made them, each with what it costs if wrong, and every `minor (deferred)`
-line under "Deferred minors". Both lists are exhaustive. Your final
-message is the only place the decisions you took on your human partner's
-behalf — and the findings you chose not to act on — reach them.
-
-The same message names what inline execution gave up: no per-task review,
-the tests written by this session (the pane that implemented them), and
-how the final review ran — in a fresh session, as a self-review, or not at
-all because the gate is disabled.
-
-When the final review is clean and its fixes are committed, delete this
-plan's workspace directory — the git history is the record now. Sibling
-directories belong to other plans; leave them alone.
-
-Use finishing-a-development-branch.
+Read the [finish instructions](references/final-review.md#finish) before
+deleting the plan workspace, even when the final review is disabled.
+Every ruling and deferred minor must reach the final report.
 
 ## Common Rationalizations
 
@@ -351,57 +282,3 @@ Use finishing-a-development-branch.
 | "The reviewer said Minor, so it's Minor" | The label graded the spec's silence. Grade what the person gets. Re-grade, then gate. |
 | "The fix is obvious, no need for a failing test first" | The failing test is the only proof the finding was real and is now gone. Without it you have a diff and a hope. |
 | "I'll fix the minors too while I'm in there" | Every minor you fix is a test, a fix, and a suite run your human partner did not ask for. Ledger them; they decide. |
-
-## Example Workflow
-
-```
-You: I'm using the executing-plans skill to implement this plan inline.
-
-[Setup: worktree verified]
-[Read plan once: docs/herdrpowers/plans/feature-plan.md; spec read]
-[Resolve workspace: bash ../pane-driven-development/scripts/pdd-workspace docs/herdrpowers/plans/feature-plan.md — no ledger inside, fresh start]
-[Pre-flight scan: 2 shared-interface rows, clean; written to ledger]
-[Create todos for all tasks]
-
-Task 1: Hook installation script
-
-[bash scripts/task-start plan 1 → brief read; BASE a1b2c3d]
-[Step 1: write failing test — written]
-[Step 2: run it — FAIL: install_hook not defined. Matches Expected.]
-[Step 3: implement — written]
-[Step 4: run it — PASS 1/1. Matches Expected.]
-[Step 5: commit — d4e5f6a]
-[Contract: tests ran, output read, no deviations]
-[bash scripts/task-done plan 1 a1b2c3d -- npm test -- hooks → ledger: Task 1: complete (commits a1b2c3d..d4e5f6a, tests: npm test -- hooks → 1/1 pass)]
-
-Task 2: Recovery modes
-
-[bash scripts/task-start plan 2 → brief read; BASE d4e5f6a]
-[Step 2: run failing test — FAIL, but on an import error: Task 1 exported
- installHook, brief consumes install_hook]
-[Ruling: brief's consumer name is a typo against Task 1's Produces block;
- use installHook — Ledger: Task 2: Ruling: install_hook → installHook — matches Task 1 Produces — cost if wrong: one rename]
-[Steps 2-5 as planned; commit b7c8d9e]
-[bash scripts/task-done plan 2 d4e5f6a -- npm test -- recovery → ledger: Task 2: complete (commits d4e5f6a..b7c8d9e, tests: npm test -- recovery → 8/8 pass)]
-
-...
-
-[After all tasks: review-package plan MERGE_BASE HEAD; requesting-code-review → final-branch-review to the reviewer panes, reset-backed]
-Reviewers: One Important finding — progress reporting interval hardcoded. Two Minor. Declined to judge: none.
-[Re-grade: Important stands; minors → ledger as deferred]
-[Fix pass: test_progress_interval_configurable RED → extract PROGRESS_INTERVAL → GREEN; suite 12/12; commit]
-[Ledger: Final: fixed hardcoded interval — test_progress_interval_configurable RED→GREEN, suite 12/12]
-
-Rulings I made:
-- Task 2: install_hook → installHook (brief typo; cost if wrong: one rename)
-
-Deferred minors:
-- README lacks a usage example
-- recovery.js could split verify/repair into two files
-
-Inline execution: no per-task review; tests written by this session; final review by the reviewer panes in fresh sessions.
-
-[Delete this plan's workspace — the record now lives in git]
-
-Using finishing-a-development-branch.
-```

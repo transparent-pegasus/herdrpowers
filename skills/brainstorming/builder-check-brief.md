@@ -4,7 +4,7 @@ The builder check is the `plan-review` gate, resolved through `orchestration` li
 
 **Purpose:** someone who will build from the written design, and cannot talk to its author, lists what they would still need to ask.
 
-**Dispatch after:** the written design exists, before the user reads it.
+**Dispatch after:** a project's full written design exists, before the user reads it. A small change's short design goes directly to the user without this check.
 
 ## 1. The submitted instruction (one line)
 
