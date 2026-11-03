@@ -13,7 +13,7 @@ Coordinates planning, implementation, testing, and review across agent panes.
 
 | | Superpowers | herdrpowers |
 |---|---|---|
-| worker | in-process subagent | idle sibling herdr pane running any agent CLI |
+| worker | in-process subagent | idle sibling herdr pane |
 | task loop | `subagent-driven-development` | `pane-driven-development` |
 | parallel work | `dispatching-parallel-agents` | panes, bounded by idle panes and worktrees |
 | entry point | skills trigger themselves | `commands/` workflows, plus the same skills |

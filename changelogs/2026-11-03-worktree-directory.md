@@ -1,9 +1,14 @@
 ---
 change_type: pack-native
+pack_version: 1.20.0
+previous_pack_version: 1.19.0
 date: 2026-11-03
 ---
 
-# Shared worktree directory configuration
+# v1.20.0 — Shared worktree directory configuration
+
+Advances the pack from 1.19.0 to 1.20.0 across the four versioned plugin and
+marketplace manifests and `package.json`.
 
 `/init` now proposes `WORKTREE_DIRECTORY: .worktrees/` in the repository's
 `Herdrpowers Configuration` section in `CLAUDE.md` and mirrors it into an
