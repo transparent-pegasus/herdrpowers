@@ -85,7 +85,7 @@ Then ask the agent to "follow the workflow in `commands/full_cycle.md`" or "use 
 
 Plugin files are read-only, so repo-specific values are never written into the pack. `/init` detects the repo's tooling, confirms the values with you, and writes two things into the target repo:
 
-- a `Herdrpowers Configuration` section in `CLAUDE.md` / `AGENTS.md` — every skill and command resolves its `<KEY>` placeholders (`<BASE_BRANCH>`, `<REPORT_DIRECTORY>`, `<TARGETED_TEST_COMMAND>`, `<PLAN_PATH_PATTERN>`, …) from there;
+- a `Herdrpowers Configuration` section in `CLAUDE.md` / `AGENTS.md` — every skill and command resolves its `<KEY>` placeholders (`<BASE_BRANCH>`, `<REPORT_DIRECTORY>`, `<WORKTREE_DIRECTORY>`, `<TARGETED_TEST_COMMAND>`, `<PLAN_PATH_PATTERN>`, …) from there;
 - `.herdrpowers/config.yaml` — a **role list**, the **delegation defaults**, plus the **role assigned to every delegation task**. Nothing is hard-coded: implementation, tests, chores, verification, and each of the five reviews are all reassignable, overriding the pack's shipped defaults key by key.
 
 ```yaml

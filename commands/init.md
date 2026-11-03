@@ -38,6 +38,7 @@ Ask the user only about keys that cannot be inferred confidently. Never invent v
 | `REPO_INSTRUCTION_FILES` | The repo's instruction files, such as `README.md`, `AGENTS.md`, `CLAUDE.md`, or equivalent |
 | `BASE_BRANCH` | The branch feature worktrees and pull requests branch from (e.g. `main`, `dev`) |
 | `REPORT_DIRECTORY` | Git-ignored directory where delegated panes write their report files (e.g. `.tmp/`, `.herdrpowers/pdd/<plan>/`) |
+| `WORKTREE_DIRECTORY` | Shared parent directory for the repository's worktrees; propose `.worktrees/` unless the repo declares another preference. Relative paths resolve from the primary checkout, including when an agent is already in a linked worktree |
 | `DESIGN_DOC_PATH_PATTERN` | Where brainstorming design docs are written (e.g. `docs/designs/YYYY-MM-DD-feature.md`) |
 | `PLAN_PATH_PATTERN` | Where implementation plans are written (e.g. `docs/plans/YYYY-MM-DD-feature.md`) |
 | `PLAN_DIRECTORY` | Directory to search first when only a plan filename is given |
@@ -127,6 +128,7 @@ herdrpowers skills and commands resolve `<KEY>` placeholders from this section.
 - `REPO_INSTRUCTION_FILES`: <value>
 - `BASE_BRANCH`: <value>
 - `REPORT_DIRECTORY`: <value>
+- `WORKTREE_DIRECTORY`: <value>
 - `DESIGN_DOC_PATH_PATTERN`: <value>
 - `PLAN_PATH_PATTERN`: <value>
 - `PLAN_DIRECTORY`: <value>
@@ -227,6 +229,7 @@ If the repository already had a `.herdrpowers/config.yaml`, rewrite it in full f
 8. Validate
 Re-read every written file and confirm:
 - the `Herdrpowers Configuration` section exists, every key has a value, and no value is still an angle-bracket placeholder;
+- `WORKTREE_DIRECTORY` resolves to the same absolute parent directory from the primary checkout and from linked worktrees, and is git-ignored when it is inside the repository;
 - `.herdrpowers/config.yaml` parses as YAML, has no angle-bracket placeholders left, carries a `fallbacks:` key, and defines every role that any assignment references;
 - `delegation.pane_scope` is one of `tab`, `workspace`, `session`, and `delegation.execution` is one of `parallel`, `serial`;
 - every delegation task named in `skills/orchestration/roles.yaml` appears under `assignments:` with a `role` that exists in `roles:` and a valid `mode`, and every review task there also has `enabled` — count them from that file rather than from a number written here, which goes stale;
@@ -240,6 +243,7 @@ List the files written and the final values: the placeholder keys, the role list
 
 - Never modify files that belong to the pack itself (the plugin installation directory, or checked-in copies of the pack's `skills/` and `commands/` directories). Assignments and gates are customized in the repository's `.herdrpowers/config.yaml`, never by editing `orchestration/roles.yaml` — that file is read-only on plugin installs and must stay diff-clean on checked-in copies.
 - `REPORT_DIRECTORY` must be git-ignored. If the proposed directory is not, say so and either add it to `.gitignore` with the user's approval or pick one that already is. `.herdrpowers/config.yaml` is the opposite: it must stay tracked.
+- `WORKTREE_DIRECTORY` must be git-ignored when it is inside the repository. Verify the proposed directory itself, not another existing worktree directory; apply the same approval rule as for `REPORT_DIRECTORY` before adding an ignore entry. Preserve an existing declared value on reinitialization.
 - Block and require user confirmation before writing either deliverable. Do not write unconfirmed guesses.
 - Preserve every byte of pre-existing instruction-file content outside the upserted section.
 - Never propose an agent type that does not appear in `roles.yaml`'s defaults or in this session's `herdr pane list` without saying it is unverified. Propose an `agent@model` pin only for a model line read from a pane in this session, or say it is unverified.
