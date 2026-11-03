@@ -7,9 +7,9 @@ description: Use when starting feature work that needs isolation from current wo
 
 ## Overview
 
-Ensure work happens in an isolated workspace. Prefer your platform's native worktree tools. Fall back to manual git worktrees only when no native tool is available.
+Ensure work happens in an isolated workspace under the repository's shared worktree directory. Prefer native worktree tools that can use that directory; otherwise use git worktrees.
 
-**Core principle:** Detect existing isolation first. Then use native tools. Then fall back to git. Never fight the harness.
+**Core principle:** Detect existing isolation first. Resolve one shared directory for all agents, then choose a tool that honors it.
 
 **Announce at start:** "I'm using the using-git-worktrees skill to set up an isolated workspace."
 
@@ -48,55 +48,55 @@ Honor any existing declared preference without asking. If the user declines cons
 
 ## Step 1: Create Isolated Workspace
 
-**You have two mechanisms. Try them in this order.**
+### Shared Directory Selection (both mechanisms)
 
-### 1a. Native Worktree Tools (preferred)
+Read `<WORKTREE_DIRECTORY>` from the **primary checkout's** `Herdrpowers Configuration` section in `CLAUDE.md` / `AGENTS.md`, so stale instruction copies in linked worktrees cannot send agents to different parents. If the key is absent, use `.worktrees/`. An explicit location in the user's current request takes precedence; an existing directory elsewhere does not override the declared value.
 
-The user has asked for an isolated workspace (Step 0 consent). Do you already have a way to create a worktree? It might be a tool with a name like `EnterWorktree`, `WorktreeCreate`, a `/worktree` command, or a `--worktree` flag. If you do, use it and skip to Step 2.
+Resolve relative values against the **primary checkout**, even when creating another workspace from a linked worktree. Keep absolute values unchanged. Store the resolved absolute parent as `LOCATION`:
 
-Native tools handle directory placement, branch creation, and cleanup automatically. Using `git worktree add` when you have a native tool creates phantom state your harness can't see or manage.
+```bash
+MAIN_ROOT=$(git worktree list --porcelain | sed -n '1s/^worktree //p')
+LOCATION="<WORKTREE_DIRECTORY>"
+case "$LOCATION" in
+  /*) ;;
+  *) LOCATION="$MAIN_ROOT/$LOCATION" ;;
+esac
+```
 
-Only proceed to Step 1b if you have no native worktree tool available.
+Use this parent for coordination, track, detached test-author, and temporary review worktrees. Choose unique child paths for concurrent runs and tracks. Record each created worktree's absolute path and that this task created it; delegation and cleanup use that recorded path, never a sibling pane's current directory.
+
+Apply Safety Verification below before either creation mechanism. Already-isolated workspaces from Step 0 stay in place; do not move them or create nested worktrees merely to match the setting.
+
+### 1a. Native Worktree Tools (when they honor the directory)
+
+The user has asked for an isolated workspace (Step 0 consent). If a native tool such as `EnterWorktree`, `WorktreeCreate`, a `/worktree` command, or a `--worktree` flag can create it under the resolved `LOCATION`, use that tool and pass the directory explicitly, then continue at Step 1c.
+
+Native tools then own branch creation and cleanup. If their placement is fixed elsewhere, continue to Step 1b rather than silently changing the shared directory. Report which mechanism and absolute path you used.
 
 ### 1b. Git Worktree Fallback
 
-**Only use this if Step 1a does not apply** — you have no native worktree tool available. Create a worktree manually using git.
-
-#### Directory Selection
-
-Follow this priority order. Explicit user preference always beats observed filesystem state.
-
-1. **Check your instructions for a declared worktree directory preference.** If the user has already specified one, use it without asking.
-
-2. **Check for an existing project-local worktree directory:**
-   ```bash
-   ls -d .worktrees 2>/dev/null     # Preferred (hidden)
-   ls -d worktrees 2>/dev/null      # Alternative
-   ```
-   If found, use it. If both exist, `.worktrees` wins.
-
-3. **If there is no other guidance available**, default to `.worktrees/` at the project root.
+Use this when no native tool can honor the shared directory. Create the worktree manually using git and the resolved `LOCATION`.
 
 #### Safety Verification (project-local directories only)
 
 **MUST verify directory is ignored before creating worktree:**
 
 ```bash
-git check-ignore -q .worktrees 2>/dev/null || git check-ignore -q worktrees 2>/dev/null
+git -C "$MAIN_ROOT" check-ignore -q "$LOCATION/"
 ```
 
-**If NOT ignored:** Add to .gitignore, commit the change, then proceed.
+**If NOT ignored:** Add the selected directory to .gitignore, commit the change, then proceed. Do not treat a different ignored directory as proof that `LOCATION` is ignored.
 
 **Why critical:** Prevents accidentally committing worktree contents to repository.
 
 #### Create the Worktree
 
 ```bash
-# Determine path based on chosen location
-path="$LOCATION/$BRANCH_NAME"
+# LOCATION is the shared absolute parent resolved above
+WORKTREE_PATH="$LOCATION/$BRANCH_NAME"
 
-git worktree add "$path" -b "$BRANCH_NAME" "$BASE_BRANCH"
-cd "$path"
+git worktree add "$WORKTREE_PATH" -b "$BRANCH_NAME" "$BASE_BRANCH"
+cd "$WORKTREE_PATH"
 pwd   # absolute path — every delegation brief must carry it
 ```
 
@@ -186,12 +186,10 @@ Ready to implement <feature-name>
 |-----------|--------|
 | Already in linked worktree | Skip creation (Step 0) |
 | In a submodule | Treat as normal repo (Step 0 guard) |
-| Native worktree tool available | Use it (Step 1a) |
-| No native tool | Git worktree fallback (Step 1b) |
-| `.worktrees/` exists | Use it (verify ignored) |
-| `worktrees/` exists | Use it (verify ignored) |
-| Both exist | Use `.worktrees/` |
-| Neither exists | Check instruction file, then default `.worktrees/` |
+| `WORKTREE_DIRECTORY` declared | Resolve it from the primary checkout and verify ignored |
+| Key absent | Use `.worktrees/` under the primary checkout |
+| Native tool can honor the shared directory | Use it (Step 1a) |
+| No native tool can honor the shared directory | Git worktree fallback (Step 1b) |
 | Directory not ignored | Add to .gitignore + commit |
 | Permission error on create | Sandbox fallback, work in place |
 | Tests fail during baseline | Report failures + ask |
@@ -207,8 +205,8 @@ Ready to implement <feature-name>
 | Excuse | Reality |
 |--------|---------|
 | "I'm obviously not in a worktree — no need to check" | Run Step 0. Harness-created isolation and submodules both fool eyeballing; the detection commands settle it. |
-| "`git worktree add` is quicker than hunting for a native tool" | A native tool (e.g. `EnterWorktree`) owns placement, branching, and cleanup. Bypassing it is the #1 mistake — it creates phantom state your harness can't see or manage. |
+| "`git worktree add` is quicker than hunting for a native tool" | Prefer a native tool when it honors the shared directory; otherwise use the Git fallback explicitly and record that this task owns cleanup. |
 | "The worktree directory is surely ignored already" | Run `git check-ignore`. An unignored worktree directory commits the whole tree into the repo. |
-| "Any directory name works" | Explicit instructions beat an existing project-local directory, which beats the `.worktrees/` default. |
+| "Any directory name works" | All agents use `WORKTREE_DIRECTORY`, resolved from the primary checkout; an existing alternative directory does not override it. |
 | "Panes can read the plan from the main checkout anyway" | They can, but then the plan never lands in the branch's history and the primary checkout stays dirty. Carry it over (Step 1c) and cite the new path. |
 | "The workspace is fresh — baseline tests can wait" | A dirty baseline makes every later failure ambiguous. Run the tests now; proceeding past failures is your human partner's call. |
