@@ -19,7 +19,7 @@ The agent reads the existing project and supplied context first, draws out what 
 
 - **Purpose**: Define the feature's intent, goals, non-goals, and constraints, and which parts of the how you want to decide.
 - **Outcome**: An approved design at `<DESIGN_DOC_PATH_PATTERN>` (not committed), including the approaches considered and the choice. A small change gets a short document sent directly to you; a project gets the full document and a builder check first: readers routed as the `plan-review` gate list what they would still need to ask to build it. The next step is planning, except when you explicitly chose `/quick`, which keeps its plan omission. Quick, fully specified tasks and an explicit opt-out still follow the calling workflow.
-- **Skill**: `brainstorming`. **Role**: orchestrator; the builder check follows the `plan-review` assignment.
+- **Skill**: `brainstorming`. **Routes**: resolved `plan-and-design`; the builder check follows `plan-review`.
 
 ---
 

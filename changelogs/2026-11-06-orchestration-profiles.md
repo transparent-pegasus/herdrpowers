@@ -31,8 +31,11 @@ cannot establish reasoning effort. Concrete targets remain separate workers
 even when their kind/model equals the owner's.
 
 A selected-owner mismatch always asks whether reception is unused or relay
-before explicit handoff or startup. Top-level `allow_agent_lifecycle` is a
-separate strict boolean, false by default. True permits guarded process
+before explicit handoff or startup. Owner fallback uses the same exact
+map as workers: verify the effective substitute, drop primary effort, record
+the change, and retain the reception pane's chosen role and required question.
+Top-level `allow_agent_lifecycle` is a separate strict boolean, false by default.
+True permits guarded process
 management using installed Herdr/CLI help, in-scope available shell panes,
 verified live settings, and cleanup only of idle agents started for this task
 with no pending work. It does not authorize topology destruction.
