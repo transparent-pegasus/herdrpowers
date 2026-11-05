@@ -3,11 +3,11 @@ set -euo pipefail
 
 # Reset an agent pane's session and submit exactly one instruction to it.
 #
-# usage: composer-submit.sh <pane-id> <instruction> [<model>]
+# usage: composer-submit.sh <pane-id> <instruction> [<model> [<effort>]]
 #
-# With <model> (the model half of an `agent@model` entry), the pane's footer
-# model line must contain it before any key is sent and again after the reset;
-# see pane-model.sh.
+# With <model>, the pane's footer must contain it before any key is sent and
+# again after the reset. With <effort>, the same footer must also show that
+# exact semantic effort; see pane-model.sh. Effort requires a model.
 #
 # exit 0  instruction submitted and the pane started working
 # exit 2  bad usage (including an instruction holding a bare "/word" slash
@@ -16,20 +16,25 @@ set -euo pipefail
 #         agent CLI, or the pane stopped responding) — before retrying, check
 #         whether the task already finished by matching its completion marker
 # exit 4  pane is too narrow even after a zoom attempt
-# exit 5  the pane's model line does not contain <model>: before the reset
+# exit 5  the pane's footer does not verify the requested model/effort: before the reset
 #         nothing was sent; after it, the session was reset but no
 #         instruction was sent
 
-if [[ $# -lt 2 || $# -gt 3 ]]; then
-  echo "usage: composer-submit.sh <pane-id> <instruction> [<model>]" >&2
+if [[ $# -lt 2 || $# -gt 4 ]]; then
+  echo "usage: composer-submit.sh <pane-id> <instruction> [<model> [<effort>]]" >&2
   exit 2
 fi
 
 pane_id=$1
 instruction=$2
 model=${3-}
-if [[ $# -eq 3 && ( -z $model || $model == *$'\n'* ) ]]; then
+effort=${4-}
+if [[ $# -ge 3 && ( -z ${model//[[:space:]]/} || $model == *$'\n'* || $model == *$'\r'* ) ]]; then
   echo "model must be one non-empty line" >&2
+  exit 2
+fi
+if [[ $# -eq 4 && ( -z ${effort//[[:space:]]/} || $effort == *$'\n'* || $effort == *$'\r'* ) ]]; then
+  echo "effort must be one non-empty line and requires a model" >&2
   exit 2
 fi
 pane_model=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/pane-model.sh
@@ -121,9 +126,15 @@ if [[ $status != idle && $status != done ]]; then
   exit 2
 fi
 
-model_matches() { bash "$pane_model" "$pane_id" "$model" >/dev/null; }
+model_matches() {
+  local target=("$pane_id" "$model")
+  [[ -z $effort ]] || target+=("$effort")
+  bash "$pane_model" "${target[@]}" >/dev/null
+}
+requested_target=$model
+[[ -z $effort ]] || requested_target+=" (effort: $effort)"
 if [[ -n $model ]] && ! model_matches; then
-  echo "pane $pane_id is not running '$model'; nothing was sent" >&2
+  echo "pane $pane_id is not running '$requested_target'; nothing was sent" >&2
   exit 5
 fi
 
@@ -272,7 +283,7 @@ if [[ -n $model ]]; then
   until model_matches 2>/dev/null; do
     if ((SECONDS >= deadline)); then
       model_matches || true
-      echo "pane $pane_id is not running '$model' after the reset; the session was reset and no instruction was sent" >&2
+      echo "pane $pane_id is not running '$requested_target' after the reset; the session was reset and no instruction was sent" >&2
       exit 5
     fi
     sleep 0.5
