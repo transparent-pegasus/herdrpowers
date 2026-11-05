@@ -225,9 +225,11 @@ in `roles.yaml` and must not be duplicated into profile assets.
 
 ## Init and run record
 
-Follow `commands/init.md` to install only missing shipped templates, preserve
-custom local files and the existing selection on repeat init, and write
-canonical nested role targets plus the separate top-level selection/policy.
+Follow `commands/init.md` to install only missing shipped templates and
+`.herdrpowers/profiles/README.md`. Copy the README only when its local
+destination is absent; preserve an existing local README byte for byte on
+repeat init. Preserve custom local profiles and the existing selection, and
+write canonical nested role targets plus the separate top-level selection/policy.
 Init never selects a profile merely because it installed one. Runtime
 resolution can use a shipped profile before init; a missing selected custom
 profile is still an explicit error.
