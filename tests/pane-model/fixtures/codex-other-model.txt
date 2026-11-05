@@ -1,0 +1,6 @@
+SYNTHETIC: observed Codex footer with a different model and unchanged effort.
+
+› Ask Codex to do anything
+
+  GPT-6-Astra medium · weekly 99% left
+  ? for shortcuts
