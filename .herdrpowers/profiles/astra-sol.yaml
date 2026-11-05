@@ -1,0 +1,9 @@
+orchestrator:
+  codex:
+    model: GPT-6-Astra
+    effort: max
+coder:
+  codex:
+    model: GPT-6.1-Sol
+    effort: max
+reviewers: []

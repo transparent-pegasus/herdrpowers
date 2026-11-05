@@ -1,16 +1,33 @@
 # orchestration
 
-Agent skill that routes every task received directly from the user through the pane that received it (the orchestrator) inside [herdr](../herdr/). Who performs each kind of work, and where, comes from a routing table rather than from prose: the orchestrator resolves that table, delegates through [`using-herdr-sibling-panes`](../using-herdr-sibling-panes/), and names every non-default assignment it ran under in the final report.
+Agent skill for routing direct user tasks inside [herdr](../herdr/). The active
+owner resolves repository assignments and an optional composition profile;
+delegated workers execute in place without re-delegating. Reports identify
+the effective owner, routes, review context, and configuration changes.
 
 ## Files
 
 - [`SKILL.md`](SKILL.md) — the skill: configuration resolution, delegation scope, execution strategy, the delegation-task tables, the complex-coding boundary, the review gates, exhaustion/fallback, and the delegation contract.
 - [`roles.yaml`](roles.yaml) — the pack's **shipped defaults**: the `roles:` list, the `fallbacks:` map of substitutes for exhausted agents, the `delegation:` block (`pane_scope`, `execution`), and the `assignments:` table giving every delegation task a role and a mode.
+- [`references/profiles.md`](references/profiles.md) — required before routing: selection/precedence, nested targets and migration, owner handoff, lifecycle permission, self-target execution, and fallback lookup.
+- [`references/routing.md`](references/routing.md) — task classification, workflow mapping, and the coding boundary.
+- [`../../.herdrpowers/profiles/`](../../.herdrpowers/profiles/) — six shipped composition-only templates, included in npm distribution and installed only when missing during init.
 - [`agents/openai.yaml`](agents/openai.yaml) — interface metadata for OpenAI-compatible agent runners.
 
 ## Configuration
 
-`roles.yaml` is the default layer, not the customization point: plugin installs are read-only, and editing a checked-in copy makes it diff-dirty against the pack. A target repository overrides any key of it in its own `.herdrpowers/config.yaml` (written by the init workflow), which wins key by key. Configuration is input — resolved once before the first delegation, never written from inside a run.
+`roles.yaml` is the default layer. Customize a consumer repo through its own
+`.herdrpowers/config.yaml`, not the plugin installation. Merge config per key,
+then overlay only composition fields present in the selected local profile
+(shipped template is the second lookup). Lists replace; explicit empties do
+not inherit. Invalid/missing selections error explicitly. Freeze configuration
+before routing; do not rewrite it during a run.
+
+Top-level `profile` selects no composition when absent/null/`none`.
+Top-level `allow_agent_lifecycle` is a strict boolean, false by default,
+separate from profiles and delegation. Init writes canonical nested role
+targets and installs missing templates without overwriting local profiles or
+selection. See [`commands/init.md`](../../commands/init.md).
 
 ## Key properties
 
@@ -18,7 +35,11 @@ Agent skill that routes every task received directly from the user through the p
 - Delegation stays inside the orchestrator's own tab unless `delegation.pane_scope` widens it — a pane one tab over is usually another repository's, mid-session, and a submit resets that session. An agent type with no in-scope pane is unavailable, not exhausted.
 - Roles bind to agent types, not reserved panes — any idle in-scope pane of the right type can take any task.
 - A role bound to a list of agent types runs **one delegation per entry**; that, not the task name, is what makes a review a double review.
-- Review independence comes from the reset session, not from a different pane or a different tool. A review whose resolved mode is `orchestrator` runs in a fresh in-process subagent instead of inline — the pack's one exception for review work.
+- Nested targets preserve kind/model/effort strings; effort requires model, and matching uses verified live footer evidence before keys and after reset. Legacy bare kinds/owner aliases remain readable; old non-fallback `kind@model` pins are normalized with deprecation notices.
+- A selected owner must match the receiving pane or prompt for unused versus relay, then receive explicit authority and frozen settings. A relay retains no decision authority. Custom planning-design/generalist targets remain intact; their owner aliases follow the selected owner.
+- Separate review independence comes from reset. With a selected profile, a delegated owner target requires a fresh subagent, including solo tasks and empty reviewers; other owner-session modes may self-review and report that honestly. Without a profile, the legacy fresh-subagent rule for orchestrator-mode reviews remains.
+- Profile empty reviewers choose the owner rather than disable gates; empty coder means no separate coder. Omitted keys preserve roles, including legacy empty-role task disabling. Selection changes neither assignments nor gate enablement.
+- Lifecycle false prohibits start/exit/restart, including handoff and fallback. True requires runtime discovery of supported Herdr operations, in-scope available shell panes, and live verification; only idle task-created agents with no pending work may be ended.
 - Every delegation task is reassignable and every review individually togglable. Any assignment the repo changed, any non-default `delegation:` value, and any disabled review is named in the final report; `/strict_full_cycle` is the only thing that overrides `enabled`, and it touches nothing else.
-- An exhausted agent (usage limit, or two markerless delegations on two panes) is replaced by its substitute from the `fallbacks:` map, and the fallback is named in the report.
+- Fallback lookup uses exact `kind@model` before bare kind only when absent; matched `[]` is authoritative. Substitutes retain string syntax with no effort constraint. Preserve `Calude` and the unequal profile `muse-1.0-wonder` / fallback `muse-wonder-1.0` strings; the report names the fallback and lost constraint.
 - Drives the pack's workflow commands (`/herdrpowers:full_cycle`, `strict_full_cycle`, `plan`, `execute`, `execute_parallel`, `quick`) and the per-task loop in [`pane-driven-development`](../pane-driven-development/).

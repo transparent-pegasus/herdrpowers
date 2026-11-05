@@ -1,5 +1,8 @@
 .worktrees/
 .serena/
-.herdrpowers/
+.herdrpowers/*
+!.herdrpowers/profiles/
+.herdrpowers/profiles/*
+!.herdrpowers/profiles/*.yaml
 docs/herdrpowers/specs/
 docs/herdrpowers/plans/

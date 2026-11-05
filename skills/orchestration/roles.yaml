@@ -6,18 +6,25 @@
 # `.herdrpowers/config.yaml` (written by the init workflow) — that file wins
 # key by key, and anything it omits falls back here. Plugin installations are
 # read-only, so the repo file is the only editable layer on those installs.
-# See "Configuration resolution" in SKILL.md.
+# See "Configuration resolution" in SKILL.md and references/profiles.md.
+
+# Composition selection and process lifecycle are separate from delegation.
+# Init installs missing templates, but selects none unless the user chooses.
+profile: null
+allow_agent_lifecycle: false
 
 # ---------------------------------------------------------------------------
 # Role list. Roles bind to agent types, not to reserved panes: at delegation
 # time, any idle pane of the matching agent type can take the task.
-# `orchestrator` is not an agent type — it means the pane the user typed into.
+# `orchestrator` is an alias for the active owner: the reception pane without
+# a profile, or the owner resolved by the selected profile.
 #
-# `agent@model` pins an agent type to a model: `cursor@Grok 4.7` is served only
-# by a cursor pane whose footer model line contains "Grok 4.7", compared
-# case-insensitively. herdr reports a pane's agent type but not its model; see
-# "Model-pinned entries" in using-herdr-sibling-panes. One type may fill two
-# slots of a list only as pinned entries on different models.
+# Targets use one-key mappings: {kind: {model: <string>, effort: <string>}}.
+# Settings are optional; effort requires model. Preserve their spelling and
+# verify live footer evidence, not config or launch flags. Legacy bare kinds
+# and kind@model role entries remain readable; init writes nested targets
+# (with a deprecation notice for old non-fallback kind@model entries).
+# One type may fill two list slots only on distinct pinned models.
 #
 # `agent:` (singular) binds one agent type: one task, one delegation.
 # `agents:` (a list) binds several, and means ONE DELEGATION PER ENTRY — the
@@ -34,32 +41,45 @@ roles:
       Independent review — plans, designs, and implemented code. Bound to a
       list, so every task assigned to this role runs once per listed entry.
     agents: # one independent review per entry
-      - opencode@GPT-6 Astra
-      - cursor@Gemini 4 Argon
-      - cursor@Grok 4.7
-      - cursor@Muse Spark 1.3
+      - opencode:
+          model: GPT-6 Astra
+      - cursor:
+          model: Gemini 4 Argon
+      - cursor:
+          model: Grok 4.7
+      - cursor:
+          model: Muse Spark 1.3
   coder:
     description: >-
       Complex coding (see "Complex coding boundary" in SKILL.md), test
       authoring, and the whole-branch final review.
-    agent: opencode@GPT-6.1 Sol
+    agent:
+      opencode:
+        model: GPT-6.1 Sol
   generalist:
     description: Simple coding, search, file inspection, tests, lint, routine operations
     agent: orchestrator
 
 # Substitutes for an agent that cannot take work right now — usage/rate limit
 # reached, no pane of that type in the session, or every pane of that type
-# crashed and would not restart. See "Exhaustion and fallback" in SKILL.md.
+# crashed. Lifecycle actions require the separate top-level permission.
+# See "Exhaustion and fallback" in SKILL.md.
 #
 # Tried left to right; the first substitute with a usable idle pane wins.
-# A pinned entry is looked up as written, then by its bare type.
+# Nested kind+model becomes kind@model for lookup, then bare kind only if the
+# exact key is absent. A matched [] is authoritative; lists never concatenate.
+# Fallback keys/substitutes keep string syntax and have no effort constraint.
+# Calude and the two different Wonder spellings are intentional user strings;
+# do not repair them or add fuzzy aliases (see references/profiles.md).
 # An agent with no entry here has no substitute.
 fallbacks:
-  opencode@GPT-6 Astra: [codex@GPT-6-Astra, codex]
-  opencode@GPT-6.1 Sol: [codex@GPT-6.1-Sol, codex]
-  cursor@Gemini 4 Argon: [agy@Gemini 4 Argon, agy]
-  cursor@Grok 4.7: [grok@Grok 4.7, grok]
-  cursor@Muse Spark 1.3: [muse@Muse Spark 1.3, muse]
+  claude@Fable 5.1: [cursor@Calude Fable 5.1]
+  claude@Opus 5.5: [cursor@Calude Opus 5.5, claude]
+  codex@GPT-6-Astra: []
+  codex@GPT-6.1-Sol: [codex]
+  muse@muse-wonder-1.0: [cursor@Muse Wonder]
+  agy@Gemini 4 Argon: [cursor@Gemini 4 Argon, opencode@Gemini 4 Argon]
+  grok@Grok 4.7: [cursor@Grok 4.7, opencode@Grok 4.7]
 
 # ---------------------------------------------------------------------------
 # Delegation defaults that apply to every task and every workflow.
@@ -92,11 +112,11 @@ delegation:
 #   role     — which role from the list above performs it
 #   mode     — where it runs:
 #                delegate     a fresh idle pane of `role`, via
-#                             using-herdr-sibling-panes
+#                             using-herdr-sibling-panes; a selected-profile
+#                             self-target requires a fresh in-process subagent
 #                orchestrator the orchestrator pane itself. A work task runs
-#                             inline there; a REVIEW task runs in a fresh
-#                             in-process subagent the orchestrator spawns, so
-#                             it never reviews its own session's work
+#                             inline. Without a profile, a review uses a fresh
+#                             subagent; with a profile it may be self-review
 #                implementer  the pane that already owns the task does it
 #   enabled  — review tasks only: `false` removes the gate entirely.
 #              Work tasks are mandatory; to stop delegating one, set
