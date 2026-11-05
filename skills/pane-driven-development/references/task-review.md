@@ -30,9 +30,10 @@ self-review, using the same requirements, package, and two verdicts.
   `bash scripts/review-package PLAN_FILE BASE HEAD` and pass the reviewer the file
   path it prints (or, without bash: `git log --oneline`, `git diff --stat`,
   and `git diff -U10` for the range, redirected to one uniquely named
-  file). The output never enters your own context, and the reviewer sees
-  the commit list, stat summary, and full diff with context in one Read
-  call. Use the BASE you recorded before delegating the task —
+  file). A delegated reviewer reads the package without loading its diff into
+  the coordinating session. For permitted owner-session self-review, read it
+  yourself: commit list, stat summary, and full diff with context. Use the BASE
+  you recorded before delegating the task —
   never `HEAD~1`, which silently truncates multi-commit tasks. Never
   delegate a task review without a diff file.
 - **Reviewer inputs:** the task reviewer gets three paths — the requirements
