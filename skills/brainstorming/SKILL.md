@@ -236,15 +236,17 @@ builder check.
 committed (see Git Management above). Otherwise, ask. The user's
 preferences override both.
 
-**Builder check** (for a project): a fresh reader plays the person who'll build from the
+**Builder check** (for a project): a reader plays the person who'll build from the
 document and lists what they'd still need to ask. It is the
 `plan-review` gate: resolve that gate's `role`, `mode`, and `enabled`
-through the `orchestration` skill and route it like any review there —
-one reset-backed pane per entry of the resolved role under
-`mode: delegate`, through `using-herdr-sibling-panes`, or a fresh
-subagent the orchestrator spawns under `mode: orchestrator`. Give every
-reader [builder-check-brief.md](builder-check-brief.md). When you tell
-the user you're writing it up, say a reviewer will read it first and you
+through `orchestration` and its [profiles contract](../orchestration/references/profiles.md).
+Separate delegated readers use reset-backed panes, one per effective list
+entry. With a selected profile, delegated owner targets require fresh
+subagents even with empty reviewers; other owner-session modes permit
+reported self-review and optional subagents. Without a profile, preserve
+legacy independence, including fresh-subagent orchestrator-mode reviews. Give every
+reader [builder-check-brief.md](builder-check-brief.md). When the gate is
+enabled, tell the user how its resolved reader route will run and that you
 may come back once with a few questions. Don't hand over the document
 until every check is back. Merge what the readers ask (the same question
 from two readers is one question), then sort it into three piles:
@@ -261,12 +263,13 @@ document with their answers, then hand it over with a short list of the
 calls you made so they can check those while reading. That's the only
 round of questions the check produces.
 
-When the gate is on but no pane can take it — `HERDR_ENV` unset, or no
+Without a profile, when the gate is on but no delegated pane can take it — `HERDR_ENV` unset, or no
 in-scope pane of the role or its fallbacks — read the document as that
 builder yourself and tell the user the check was not independent, as
-`orchestration` has the plan review do. Under `mode: orchestrator`, a
-subagent you cannot spawn means the check degraded: say so rather than
-reading it yourself. When the gate is disabled, skip the check and tell
+`orchestration` has the plan review do. A mandatory subagent you cannot spawn
+means the check is unavailable: report that instead of reading it inline or
+claiming the gate passed. Profile owner-session self-review is a permitted
+route, not unavailable delegation. When the gate is disabled, skip the check and tell
 the user the document reaches them unchecked; a disabled gate is never
 replaced by your own read.
 

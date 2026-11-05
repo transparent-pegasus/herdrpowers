@@ -1,7 +1,10 @@
 # Test Author Pane Brief Template
 
 Used when `test-authoring` (implementation round) or `fix-round-test-authoring`
-(one fix round) resolves to `mode: delegate`. The pane writes the task's tests
+(one fix round) resolves to `mode: delegate`. Separate targets use reset-backed
+Herdr panes; selected-profile self-targets require fresh subagents with this
+same contract and no re-delegation. The composer example below applies to panes.
+The fresh worker writes the task's tests
 without ever seeing the implementation, in its own worktree off the commit the
 implementation does not exist at — which is where its RED evidence comes from.
 

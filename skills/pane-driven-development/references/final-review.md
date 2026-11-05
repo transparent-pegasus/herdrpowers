@@ -13,9 +13,12 @@ The final whole-branch review gets a package too: run
 `bash scripts/review-package PLAN_FILE MERGE_BASE HEAD` (MERGE_BASE = the commit the
 branch started from, e.g. `git merge-base <BASE_BRANCH> HEAD`) and include the
 printed path in the final review brief, so the final reviewer reads
-one file instead of re-deriving the branch diff with git commands. Delegate it
-to any idle pane of the resolved role's agent type(s) via a reset-backed submit —
-using `requesting-code-review`'s
+one file instead of re-deriving the branch diff with git commands. Route the
+enabled gate through `requesting-code-review` and the canonical profiles
+contract: separate delegated targets use reset-backed panes; selected-profile
+self-target `delegate` requires fresh subagents, while other owner-session
+modes permit reported self-review and optional subagents. Use
+`requesting-code-review`'s
 [review-brief.md](../../requesting-code-review/review-brief.md). Point it at
 the ledger's deferred-minor and parked lines so it can triage which must be
 fixed before merge.
@@ -26,8 +29,9 @@ stands, or why it is now a finding> — <cost if wrong>` — so nothing the
 reviewer set aside is dropped silently. One that becomes a finding joins the
 fix wave below.
 
-If the final whole-branch review returns findings, delegate ONE fix pane
-with the complete findings list — not one pane per finding.
+If the final whole-branch review returns findings, route ONE fix wave through
+`review-fixes` with the complete findings list — not one worker per finding.
+Profile self-targets retain their mode; separate targets use their worker route.
 Per-finding fixers each rebuild context and re-run suites; a real
 session's final-review fix wave cost more than all its tasks combined.
 Then run exactly one scoped re-review of the fix wave

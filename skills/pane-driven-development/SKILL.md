@@ -1,6 +1,6 @@
 ---
 name: pane-driven-development
-description: Use when executing implementation plans with independent tasks by delegating each task to a fresh herdr sibling pane
+description: Use when executing implementation plans with independent tasks and per-task review gates
 ---
 
 # Pane-Driven Development
@@ -9,22 +9,22 @@ description: Use when executing implementation plans with independent tasks by d
 
 ## Delegation Model (READ FIRST)
 
-Every task in this skill is delegated to a **herdr sibling agent pane**, never to an in-process subagent — the sole exception is a review task whose resolved mode is `orchestrator`, which the orchestrator runs in a fresh spawned subagent. The `orchestration` skill decides which role takes a task; `using-herdr-sibling-panes` is the transport that submits it and waits for the completion marker. Read both before delegating anything.
+Read `orchestration`, its [profiles contract](../orchestration/references/profiles.md), and `using-herdr-sibling-panes` before routing work. Resolve the selected composition and each task's role, mode, and gate once. Separate delegated targets use reset-backed Herdr panes, including concrete coder targets matching the owner's kind/model. With a selected profile, `delegate` to the active owner requires a fresh in-process subagent for work and reviews alike; other owner-session modes allow inline work and self-review, with a subagent optional at the owner's judgment. Without a profile, retain legacy pane routing and fresh-subagent orchestrator-mode reviews. Workers never re-delegate.
 
 Two boundaries override anything below:
 
-- **No in-process subagents.** Wherever this document says "dispatch," read "delegate to an idle sibling pane through `using-herdr-sibling-panes`." Named subagent types are not used by this pack, and the Agent tool is dispatched only for a review task whose resolved mode is `orchestrator`, per "Reviews in `mode: orchestrator`" in `orchestration`.
-- **The pane that writes tests owns RED-GREEN-REFACTOR**, and the resolved `test-authoring` / `fix-round-test-authoring` assignments say which pane that is. With `mode: delegate` a separate pane writes them from the task brief alone (see "Parallel test authoring" below); with `mode: implementer` the implementing or fixing pane writes its own per `test-driven-development`. Either way the pane that writes a test produces its RED evidence, and your report names which pane wrote the tests. Review independence itself comes from the *reset session* of each reviewing delegation, not from a named role or a different pane ID, and is never configurable.
+- **Modes and gates stay binding.** Empty profile reviewers select the owner; they do not disable reviews or permit delegated reviews inline. Missing required subagent capability is a reported inability, never a passed gate. Disabled gates stay disabled. Report owner-session self-review as self-review, not independent review.
+- **The test writer owns RED-GREEN-REFACTOR.** Resolve `test-authoring` / `fix-round-test-authoring`: a delegated author gets requirements alone in a fresh pane or required profile self-target subagent, never implementation; an implementing session writes its own tests in `implementer` mode. Record the writer, transport, and RED/GREEN evidence.
 
-Execute the plan by delegating a fresh implementer pane per task, the task's tests per `test-authoring`, a task review (spec compliance + code quality) after each, and a broad whole-branch review at the end.
+Execute each task and its tests through their resolved routes, then run enabled task reviews (spec compliance + code quality) and the enabled broad whole-branch review.
 
 **Why panes:** a delegated pane starts from a reset session — it never inherits your context or history, so you construct exactly what it needs. That keeps it focused and preserves your own context for coordination work.
 
-**Core principle:** Fresh pane per task + task review (spec + quality) + broad final review = high quality, fast iteration
+**Core principle:** Resolved task routes + enabled task reviews + enabled broad final review.
 
 **Narration:** between tool calls, narrate at most one short line — the ledger and the report files carry the record.
 
-**Continuous execution:** Do not pause to check in with your human partner between tasks. Execute all tasks from the plan without stopping. The only reasons to stop are the four named below, or all tasks complete.
+**Continuous execution:** Do not pause for routine check-ins between tasks. Execute the plan under the frozen routing contract, respecting the general stops and required profile-owner reception question below.
 
 **Rulings, not stalls.** A running plan does not wait on a human. Conflicts,
 ambiguities, plan defects, a fix round that ended at the cap — decide them. The
@@ -34,11 +34,12 @@ settles what neither answers. Record every decision in the ledger as
 going. A wrong ruling costs rework your human partner can see and undo; a
 session parked on a question costs their whole day and buys nothing.
 
-Four things stop you, and only these: an irreversible or destructive
+The four general stops are: an irreversible or destructive
 operation; a security-sensitive action; a side effect outside this worktree
 that norms say you ask about first (a merge, a push to a shared branch, a
 publish); and a plan so broken that every path forward is a guess. For those,
-stop and ask.
+stop and ask. Profile-owner mismatch also requires the unused-versus-relay
+answer before handoff or startup; a ruling cannot waive that question.
 
 **A ruling never rewrites the run's terms.** It resolves what the spec and the
 plan left open — it does not raise the five-round cap, re-enable a gate the
@@ -53,26 +54,26 @@ deciding under them.
 digraph when_to_use {
     "Have implementation plan?" [shape=diamond];
     "Tasks mostly independent?" [shape=diamond];
-    "User chose inline, or no idle agent pane in scope?" [shape=diamond];
+    "Inline eligible under resolved profile/modes?" [shape=diamond];
     "pane-driven-development" [shape=box];
     "executing-plans" [shape=box];
     "Manual execution or brainstorm first" [shape=box];
 
     "Have implementation plan?" -> "Tasks mostly independent?" [label="yes"];
     "Have implementation plan?" -> "Manual execution or brainstorm first" [label="no"];
-    "Tasks mostly independent?" -> "User chose inline, or no idle agent pane in scope?" [label="yes"];
+    "Tasks mostly independent?" -> "Inline eligible under resolved profile/modes?" [label="yes"];
     "Tasks mostly independent?" -> "Manual execution or brainstorm first" [label="no - tightly coupled"];
-    "User chose inline, or no idle agent pane in scope?" -> "executing-plans" [label="yes - or HERDR_ENV unset"];
-    "User chose inline, or no idle agent pane in scope?" -> "pane-driven-development" [label="no"];
+    "Inline eligible under resolved profile/modes?" -> "executing-plans" [label="yes - chosen inline or legacy pane shortage"];
+    "Inline eligible under resolved profile/modes?" -> "pane-driven-development" [label="no - preserve required delegation"];
 }
 ```
 
 **vs. Executing Plans (inline):**
-- Fresh pane per task (no context pollution) instead of one session doing every task
+- Task routes follow assignments and the selected profile instead of an inline execution choice
 - Review after each task (spec compliance + code quality) instead of only at the end
-- Costs a fresh session per task and per review; inline costs one session plus one final review
+- Separate delegated tasks cost a reset session each; profile owner-session modes may reuse context
 - Both are driven from this pane, share the same plan workspace and ledger, and never pause between tasks
-- Requires `HERDR_ENV=1` and at least one idle sibling agent pane inside `delegation.pane_scope` (default: the orchestrator's own tab)
+- Herdr transport requires `HERDR_ENV=1` and matching in-scope live agents; profile self-target delegation requires subagent capability instead
 
 ## The Process
 
@@ -162,7 +163,7 @@ pointing back at the requirements:
 
 - If an earlier task parked a finding in the area this task touches, carry
   a pointer to that ledger entry in the delegation.
-- Record the pane ID you delegated to — fix rounds 1-3 go back to that pane.
+- Record the executor and transport — separate-target fix rounds 1-3 return to that pane; profile self-targets retain their mode.
 
 #### Parallel test authoring
 
@@ -185,7 +186,7 @@ Skip only when `assignments.task-review` is disabled; name that in the report.
 Otherwise, read [references/task-review.md](references/task-review.md) before
 each task review. Supply the requirements, report files, and the BASE..HEAD
 review package. Resolve the review assignment through `orchestration`; each
-review has a fresh context, and both spec and quality verdicts are required.
+uses its required transport, and both spec and quality verdicts are required.
 
 ### 4. The fix loop
 
@@ -246,19 +247,19 @@ contract pointer with the absolute worktree path and split marker.
 | Excuse | Reality |
 |--------|---------|
 | "Close enough on spec compliance" | Reviewer found spec gaps = not done. Fix or hit the cap and adjudicate — those are the only exits. |
-| "I'll fix it myself, delegating is overhead" | Orchestrator fixes pollute your context and skip review. Send the findings back to the implementing pane. |
+| "I'll fix it myself, delegating is overhead" | Follow `review-fixes`: separate targets use workers; profile self-targets retain their mode. Convenience cannot replace mandatory delegation. |
 | "One more round will converge" | Past the cap, rounds don't converge — the failure is structural. Adjudicate and route. |
 | "The reviewer will just find something new anyway" | Scoped re-reviews verify fixes; they cannot wander. New findings on untouched code go to the ledger, not the loop. |
 | "This finding is obviously wrong, I'll drop it" | You adjudicate only at the cap, and every ruling is a ledger entry. Silent discards are forbidden. |
 | "The fix was small, skip the re-review" | Unreviewed fixes are how regressions land. Every round ends with a scoped re-review. |
 | "Reviews slow the loop down" | The loop without reviews is just unverified churn. Reviews are the loop's brakes and steering. |
 | "Ledger bookkeeping is overhead" | The ledger is what survives compaction. Orchestrators without one have re-delegated entire completed task sequences. |
-| "The implementing pane is idle — it can review its own work" | Reuse it after a reset-backed submit. Independence is the fresh session, not a different pane ID. Do not review inside the unreset implementing session. |
+| "The implementing pane is idle — it can review its own work" | Separate delegated reviews require reset, even on the same pane. Profile owner-session reviews may be self-review; delegated self-targets require fresh subagents. |
 | "The plan mandates it, so the finding is invalid" | Plan-vs-review conflicts are yours to rule on, with the spec as the binding authority. Record the ruling — a conflict you never ledgered is a decision made in secret. |
 | "This call is big enough that I should ask first" | Only the four stop-classes stop you. Everything else is a ruling: decide it, ledger it with what it costs if wrong, and keep going. A session parked on a question costs a whole day and buys nothing. |
 | "A delegated pane spun up its own panes — free extra assurance" | A duplicate seat on the same diff; the task review is the gate. Every brief forbids re-delegation, so a pane that did it is a finding to report, not rigor. |
 | "I'll turn the gate off in `.herdrpowers/config.yaml` to get past this loop" | The config is the user's declaration, read once at start. Changing it mid-run to escape a review is falsifying the run's terms. Hit the cap and adjudicate. |
-| "Task review is disabled, so the pane can review its own work" | Disabling a gate removes the review; it never relaxes independence for the gates still on. |
+| "Task review is disabled, so the pane can review its own work" | Disabling removes that gate. Every remaining gate keeps its profile/mode requirements. |
 
 ## Red Flags
 
@@ -287,4 +288,4 @@ contract pointer with the absolute worktree path and split marker.
 
 **If a pane fails the task:**
 - Diagnose with `using-herdr-sibling-panes`' failure table first
-- Then re-delegate with what changed — don't fix it yourself (context pollution)
+- Then follow the resolved fix route with the new evidence; do not replace required delegation with an inline fix

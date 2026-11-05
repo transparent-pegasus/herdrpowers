@@ -7,7 +7,10 @@ target repository. Resolve them before invoking a script.
 #### Parallel test authoring
 
 When `test-authoring` resolves to `mode: delegate`, the task's tests come from
-a pane that never sees the implementation. Delegate it per
+a fresh worker that never sees the implementation: a reset-backed pane for
+a separate target, or a mandatory fresh subagent for a selected-profile
+self-target. Missing subagent capability cannot become inline test authoring.
+Delegate it per
 `task-N-tests.md`, from the same requirements file, at the same time as the
 implementer.
 
@@ -24,7 +27,8 @@ implementer.
   commits in its own worktree. It never writes production code, and it is
   never shown the implementation. Its report goes to
   `task-N-tests-report.md` — a separate file from the implementer's, because
-  the two panes write concurrently.
+  the workers may write concurrently. Every worker executes directly and
+  never re-delegates, including subagents.
 - **The brief must pin the interface.** Both panes work from the same text, so
   exact names, signatures, and values have to be in it; if they are not, the
   tests fail on cosmetics rather than behavior. Pin them before delegating —
@@ -47,4 +51,6 @@ implementer.
 
 When `test-authoring` resolves to `mode: implementer`, skip all of this: the
 implementer's contract carries RED-GREEN-REFACTOR and its report carries both
-RED and GREEN. Either way, your final report names which pane wrote the tests.
+RED and GREEN. A selected-profile owner-session route also follows TDD here;
+an optional subagent does not remove test ownership. Either way, your final
+report names the test writer and transport.

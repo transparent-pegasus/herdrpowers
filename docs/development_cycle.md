@@ -2,7 +2,14 @@
 
 This guide describes the 7-phase herdrpowers development cycle. The full cycle is driven by the `/full_cycle` workflow — or by `/strict_full_cycle`, which runs the same phases with every review gate forced on regardless of the repository's configuration; `/plan`, `/execute`, and `/execute_parallel` run structured subsets, and `/quick` runs every phase but the written plan and its review.
 
-Every phase that delegates work does so through the `orchestration` skill to a **herdr sibling agent pane**. Nothing here uses in-process subagents, except a review task whose resolved mode is `orchestrator`, which the orchestrator runs in a fresh spawned subagent instead of inline. Outside herdr, each phase degrades to inline execution and the final report says which independence was lost.
+Every phase routes work through `orchestration` and its [profiles contract](../skills/orchestration/references/profiles.md). Separate delegated targets use reset-backed Herdr panes. With a selected profile, self-target `delegate` requires fresh in-process subagents for work and reviews, even with empty reviewers; other owner-session modes permit inline work/self-review and optional subagents. Missing mandatory subagent capability is inability, never inline substitution or a passed gate. Without a profile, preserve legacy routing, independence, and unavailable-pane degradation. Workers never re-delegate.
+
+Resolve config over shipped roles, then only present profile composition keys.
+Freeze modes, gates, scope, and lifecycle policy. A mismatched reception pane
+always asks unused versus relay before explicit owner handoff or startup.
+Lifecycle false forbids start/exit/restart even in recovery; true grants guarded
+agent-process management, not topology destruction. Report the actual owner,
+transports, live model/effort evidence, self-review, and lifecycle actions.
 
 ## 7 Phases of Development
 
@@ -18,13 +25,17 @@ The agent reads the existing project and supplied context first, draws out what 
 
 ### Phase 2: Plan Creation and Review
 
-The orchestrator breaks the approved design into small, achievable tasks — then sends the plan out for **independent review** before anyone touches code. Each agent type in the resolved Reviewer role gets the same self-contained request, in its own pane, with no shared draft opinion; a role bound to more than one agent type is what makes that a double review. The orchestrator resolves the findings and presents the resolved plan for approval.
+Drafting follows `plan-and-design`; the active owner then runs the enabled
+`plan-review` gate through its effective target and mode. Each separate review
+slot gets the same self-contained request without shared draft opinion. Profile
+owner targets follow the mode rules above. The owner resolves findings and
+presents the plan for approval, naming self-review, disabled gates, or inability.
 
 - **Purpose**: Create a clear, actionable roadmap, and catch its defects while they are still cheap.
 - **Outcome**: A reviewed, resolved, approved plan at `<PLAN_PATH_PATTERN>` (not committed), carrying a `## Tracks` table — which tasks can run concurrently, and which files each track owns — because Phase 5 runs those tracks in parallel by default.
-- **Skill**: `writing-plans`. **Roles**: orchestrator (drafts), Reviewer (one review per agent type the role binds).
+- **Skill**: `writing-plans`. **Routes**: resolved `plan-and-design` and `plan-review` assignments and profile targets.
 
-A plan is not complete when it is written. It is complete when it is reviewed, resolved, and approved.
+A plan reaches approval after its enabled review and findings are resolved; skipped or unavailable reviews remain explicit in the report.
 
 ---
 
@@ -50,18 +61,23 @@ Before implementation, list every non-code file the change will invalidate: inst
 
 ### Phase 5: Implementation (TDD across panes)
 
-The active coding phase. Each task in the plan is delegated to a fresh pane.
+The active coding phase. Each task follows its frozen target and assignment mode.
 
 - **The per-task cycle**:
     1. Extract the task brief to a file; delegate it with the worktree path, report path, and completion marker.
-    2. The task's tests follow the resolved `test-authoring` assignment: a separate pane writing them from the same brief in its own worktree at the pre-implementation commit — where **RED** is structural, because the code genuinely is not there — or the implementing pane writing them itself under RED-GREEN-REFACTOR.
+    2. Tests follow `test-authoring`: a fresh delegated worker (reset-backed pane or profile self-target subagent) gets requirements alone in its own BASE worktree, or the implementing session owns RED-GREEN-REFACTOR. Name the writer and transport.
     3. Each pane writes its full report to a file and replies with status + marker. A delegated test author's commit is cherry-picked into the task worktree and run: passing is **GREEN**, failing is a finding.
-    4. The orchestrator builds the review package and delegates the task review via **reset-backed submits** to idle panes of the review role's agent type(s) — one per listed type: one pass each, two verdicts — **Spec Compliance** and **Task Quality**.
-    5. Critical/Important findings from all reviews merge into one list and enter the fix loop: rounds 1-3 go back to the same implementing pane, rounds 4-5 to a fresh pane of an escalated agent type, the round's covering tests written per `fix-round-test-authoring`, each round closed by a **scoped re-review** of the fix diff only. Five rounds is the cap — then the orchestrator adjudicates each open finding into the ledger: contestable or non-load-bearing ones are parked with a ruling; a load-bearing one gets a ruling on the smallest change that unblocks the dependent work, carried into the next task's brief. It stops only when every path forward is a guess.
+    4. The owner builds a review package and runs enabled task reviews by effective target and mode, once per list entry, with **Spec Compliance** and **Task Quality** verdicts. Permitted owner-session self-review uses the same contract and is reported as self-review.
+    5. Critical/Important findings enter one fix loop. Separate targets and no-profile routing retain rounds 1-3 on the implementing pane and rounds 4-5 on an escalated fresh target; profile self-targets retain their mode throughout. Covering tests follow `fix-round-test-authoring`; enabled scoped re-reviews check only the fix diff. Five rounds remains the cap, followed by ledgered adjudication and rulings carried to dependent tasks.
 - **Skills**: `pane-driven-development`, `test-driven-development`, `systematic-debugging`.
-- **Roles**: as assigned in [`roles.yaml`](../skills/orchestration/roles.yaml) — the pack ships implementation and test authoring on Coder, per-task review on Reviewer, chores on Generalist.
+- **Routes**: read resolved assignments and profile targets; [`roles.yaml`](../skills/orchestration/roles.yaml) supplies defaults rather than this guide.
 
-Independent tracks run concurrently by default — one pane per worktree, never two implementers in one working tree. `/full_cycle` takes the plan's `## Tracks` table, confirms it with you, and runs the tracks in per-track worktrees off a coordination branch; `delegation.execution: serial` runs them one at a time instead. See `/execute_parallel` for the same machinery invoked explicitly.
+`delegation.execution` chooses the attempted strategy. Parallel tracks use
+separate worktrees and available writer capacity (matching panes or required
+profile subagents); owner-session work may serialize. `/full_cycle` confirms
+the plan's `## Tracks` table before creating track worktrees. Serial degradation
+keeps every mode and gate; it cannot replace mandatory delegation with inline
+work. See `/execute_parallel` for the same machinery invoked explicitly.
 
 Every pane a phase delegates to sits in the orchestrator's own tab, unless the repository widened `delegation.pane_scope`.
 
@@ -69,7 +85,7 @@ Every pane a phase delegates to sits in the orchestrator's own tab, unless the r
 
 ### Phase 6: Verification and Final Code Review
 
-Repository verification runs inside the worktree, then a final review of the entire changeset runs via a reset-backed submit.
+Repository verification runs inside the worktree, then the enabled final review checks the entire changeset through its resolved target and mode.
 
 - **Purpose**: Evidence before assertions, then a merge-level judgment on the whole branch.
 - **Outcome**: Verification output quoted from the report file (or re-run), plus a report with Critical / Important / Minor issues.

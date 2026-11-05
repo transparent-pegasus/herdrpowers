@@ -296,7 +296,7 @@ Agent found new rationalization? Add explicit counter. Re-test until bulletproof
 
 Full pressure-scenario runs are the final gate, but they are slow and expensive per iteration. Verify the wording itself first with micro-tests:
 
-1. **One fresh-context sample per call** — a raw API call, or a one-shot delegation to a freshly reset herdr sibling pane (`using-herdr-sibling-panes`) if you don't have API access. This is skill authorship, not the development cycle: the pack's no-in-process-subagent rule still holds, so the fresh context comes from a reset pane or an API call, never the Agent tool. System prompt = the realistic context the guidance will live in (the full skill or prompt template, not the guidance in isolation); user message = a task that tempts the failure.
+1. **One fresh-context sample per call** — a raw API call, or a one-shot delegation to a freshly reset herdr sibling pane (`using-herdr-sibling-panes`) if you don't have API access. Skill-authorship sampling always uses these fresh samples, regardless of development-profile self-review permissions; never replace them with an in-session read or an inherited-context sample. System prompt = the realistic context the guidance will live in (the full skill or prompt template, not the guidance in isolation); user message = a task that tempts the failure.
 2. **Always include a no-guidance control.** If the control doesn't exhibit the failure, there is nothing to fix — stop, don't author the guidance.
 3. **5+ reps per variant.** Single samples lie.
 4. **Manually read every flagged match.** Score programmatically if you like, but template echoes and quoted counter-examples masquerade as hits; automated counts alone overstate both failure and success.

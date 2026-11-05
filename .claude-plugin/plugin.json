@@ -2,7 +2,7 @@
   "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
   "name": "herdrpowers",
   "version": "1.19.0",
-  "description": "Multi-pane development framework for herdr: structured skills and multi-phase workflows that delegate implementation, testing, and review to idle sibling agent panes instead of in-process subagents.",
+  "description": "Development framework for herdr: structured skills and workflows with configurable profiles, model/effort targets, TDD, and explicit work and review routes.",
   "author": {
     "name": "transparent-pegasus",
     "url": "https://github.com/transparent-pegasus"
