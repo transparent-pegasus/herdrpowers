@@ -8,7 +8,8 @@ herdrpowers skills and commands reference repo-specific values through `<KEY>` p
 
 It also writes `.herdrpowers/config.yaml`: the role list, task assignments,
 optional profile selection, and separate lifecycle permission. It installs
-missing shipped composition templates in `.herdrpowers/profiles/`. Read
+missing shipped composition templates and their README in
+`.herdrpowers/profiles/`. Read
 `skills/orchestration/references/profiles.md` before proposing or writing these
 values: that reference owns key-presence precedence, target validation,
 handoff/lifecycle rules, and profile-scoped self-review/subagent routes.
@@ -20,11 +21,11 @@ This workflow has three deliverables:
 
 1. The `Herdrpowers Configuration` section written into the repository's instruction files.
 2. `.herdrpowers/config.yaml` — roles, assignments, delegation defaults, top-level `profile`, and top-level boolean `allow_agent_lifecycle`.
-3. Missing shipped `.herdrpowers/profiles/*.yaml` templates, copied without overwriting existing local profiles.
+3. Missing shipped `.herdrpowers/profiles/*.yaml` templates and `.herdrpowers/profiles/README.md`, copied only when absent, preserving existing local files.
 
 Commit these with the target repository's normal configuration conventions.
-In an initialized consumer repo, config and profile YAML files are tracked,
-not scratch; keep `.herdrpowers/pdd/` ignored. This workflow initializes a
+In an initialized consumer repo, config, profile YAML files, and the directory
+README are tracked, not scratch; keep `.herdrpowers/pdd/` ignored. This workflow initializes a
 consumer repository; editing this upstream plugin's payload is a separate
 maintainer task, not a reason to initialize the plugin checkout itself.
 
@@ -40,8 +41,9 @@ If a `Herdrpowers Configuration` section already exists in an instruction file, 
 Read `skills/orchestration/roles.yaml` for every shipped role, assignment,
 delegation default, and policy. Load an existing `.herdrpowers/config.yaml`
 and local profile files; preserve customized bindings, assignments, gates,
-selection, and templates on repeat init. Inventory shipped profile filenames
-from `<pack>/.herdrpowers/profiles/`; do not reconstruct them from memory.
+selection, templates, and the local profiles README on repeat init. Inventory
+shipped profile filenames from `<pack>/.herdrpowers/profiles/`; do not
+reconstruct them from memory.
 If Herdr is running (`HERDR_ENV=1`), inspect `herdr pane list` and the panes
 inside the resolved scope. Read their live footer model lines with
 `bash <pack>/skills/using-herdr-sibling-panes/scripts/pane-model.sh <pane-id>`.
@@ -299,6 +301,9 @@ with a shipped filename; do not overwrite, merge, or refresh it on repeat
 init. Preserve custom profile filenames too. Profiles contain composition
 only, never assignments, delegation, fallbacks, lifecycle policy, or session
 pane IDs/scope. Installing templates is independent of selecting a profile.
+Copy `<pack>/.herdrpowers/profiles/README.md` to the local profiles directory
+only when `.herdrpowers/profiles/README.md` is absent. Preserve an existing
+local README byte for byte on repeat init; do not overwrite, merge, or refresh it.
 
 8. Validate
 Re-read every written file and confirm:
@@ -309,11 +314,12 @@ Re-read every written file and confirm:
 - new role targets are one-kind mappings with only optional nonempty model/effort strings, effort requires model, and bare `orchestrator` aliases/custom bindings were preserved;
 - profiles contain only the three composition keys with the absent/empty semantics above; original string spelling and reviewer order are intact;
 - all missing shipped templates were installed, every pre-existing profile file is byte-identical, and repeat init preserved the chosen profile, assignments, gate enablement, delegation, and permission;
+- the shipped profiles README was installed only if absent; any pre-existing local README is byte-identical;
 - `delegation.pane_scope` is one of `tab`, `workspace`, `session`, and `delegation.execution` is one of `parallel`, `serial`;
 - every delegation task named in `skills/orchestration/roles.yaml` appears under `assignments:` with a `role` that exists in `roles:` and a valid `mode`, and every review task there also has `enabled` — count them from that file rather than from a number written here, which goes stale;
 - no work task carries `enabled: false` — that is the wrong knob; `mode: orchestrator` is how a work task stops being delegated;
 - `.herdrpowers/config.yaml` is not git-ignored (`git check-ignore -v .herdrpowers/config.yaml` must find no matching rule);
-- installed profile YAML files are likewise trackable in the consumer repo, while the report workspace remains ignored.
+- installed profile YAML files and the directory README are likewise trackable in the consumer repo, while the report workspace remains ignored.
 
 9. Report
 Report files written, templates installed/preserved, profile selection,
@@ -327,7 +333,7 @@ selected composition; installing templates alone does not change routes.
 ## Execution Requirements
 
 - Never modify files that belong to the pack itself (the plugin installation directory, or checked-in copies of the pack's `skills/` and `commands/` directories). Assignments and gates are customized in the repository's `.herdrpowers/config.yaml`, never by editing `orchestration/roles.yaml` — that file is read-only on plugin installs and must stay diff-clean on checked-in copies.
-- `REPORT_DIRECTORY` must be git-ignored. If needed, propose an ignore change or choose an ignored directory. In the consumer repo, config and profile YAML must stay tracked; scratch stays ignored.
+- `REPORT_DIRECTORY` must be git-ignored. If needed, propose an ignore change or choose an ignored directory. In the consumer repo, config, profile YAML, and the directory README must stay tracked; scratch stays ignored.
 - Require approval of the concrete proposed configuration before writing the init deliverables, including installing missing templates. Do not write unconfirmed guesses. Existing authorization to implement upstream plugin behavior is not an invocation of consumer init.
 - Preserve every byte of pre-existing instruction-file content outside the upserted section.
 - Mark proposed kinds/models/efforts unverified unless backed by current pane/footer evidence. Shipped profile strings remain exact even when unavailable; do not rewrite a template to fit the current session.
