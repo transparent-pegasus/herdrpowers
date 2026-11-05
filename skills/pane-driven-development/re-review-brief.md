@@ -1,7 +1,12 @@
 # Scoped Re-Review Pane Brief Template
 
-Use this template when delegating a re-review after a fix round. The
-re-reviewing pane verifies the findings were addressed and checks the fix diff
+Use this template for an enabled re-review after a fix round. Follow
+`orchestration`'s profile/mode rules: separate delegated targets use reset-backed
+panes; profile self-target `delegate` requires fresh subagents; other
+owner-session modes permit reported self-review and optional subagents.
+Without a profile, keep legacy independence. The Herdr submission below is
+one transport; every worker receives the same contract and never re-delegates.
+The reviewer verifies the findings were addressed and checks the fix diff
 for new breakage. It is not a fresh review — the full review already happened.
 
 **Purpose:** Verify each finding from the previous review was addressed, and

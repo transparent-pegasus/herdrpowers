@@ -12,12 +12,17 @@ Assignments) — go straight to §5 with the pane's own report.
 Per-task reviews are task-scoped gates. The broad review happens once, at the
 final whole-branch review. Never skip the task review, and never accept a
 report missing either verdict — spec compliance AND task quality are both
-required. A pane's self-review never replaces the task review; both are needed.
+required. The implementer's preliminary diff check does not discharge this
+gate. A selected profile's owner-session mode may perform the gate as reported
+self-review, using the same requirements, package, and two verdicts.
 
-- Send the review to a **reset-backed pane** — one per agent type in the resolved
-  role, in separate panes when the list has multiple entries, all from the same
-  review package. Any idle pane of those types is fine, including the pane that
-  implemented; do not apply a prefer-different-type heuristic. Wait for every
+- Route through `orchestration` and its [profiles contract](../../orchestration/references/profiles.md).
+  Separate delegated targets use reset-backed panes, one per effective list
+  entry; any matching idle pane is eligible, including the implementer after
+  reset. Selected-profile self-target `delegate` requires a fresh subagent;
+  other owner-session modes permit self-review with an optional subagent.
+  Without a profile, keep legacy review independence. Use the same
+  review package for every route. Wait for every
   review to return before acting on any of them; merge the findings into one
   open list and deduplicate. Reviews that disagree are yours to adjudicate,
   not to average.

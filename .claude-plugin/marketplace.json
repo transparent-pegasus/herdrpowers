@@ -9,7 +9,7 @@
   "plugins": [
     {
       "name": "herdrpowers",
-      "description": "Multi-pane development framework for herdr: structured skills and multi-phase workflows that delegate implementation, testing, and review to idle sibling agent panes instead of in-process subagents.",
+      "description": "Development framework for herdr: structured skills and workflows with configurable profiles, model/effort targets, TDD, and explicit work and review routes.",
       "version": "1.19.0",
       "source": "./",
       "author": {

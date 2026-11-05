@@ -1,6 +1,6 @@
 ---
 name: executing-plans
-description: Use when executing an implementation plan in the current session as the implementer yourself — your human partner chose inline execution, or no herdr sibling pane can take the work (HERDR_ENV unset, or no idle agent pane in scope)
+description: Use when an approved plan can run in the current owner session and inline execution was chosen or legacy pane routing is unavailable
 ---
 
 # Executing Plans
@@ -8,23 +8,32 @@ description: Use when executing an implementation plan in the current session as
 **Placeholder resolution:** `<KEY>` placeholders in this file (such as `<BASE_BRANCH>`) resolve from the `Herdrpowers Configuration` section of the repository's `CLAUDE.md` / `AGENTS.md`. If that section is missing, initialize it with the pack's init workflow (`/herdrpowers:init` on Claude Code plugin installs; `commands/init.md` otherwise).
 
 Execute the plan yourself, task by task, in this session: no implementer
-pane per task, no reviewer per task. One fresh-session review of the whole
-branch at the end.
+pane per task, no reviewer per task. One whole-branch review gate at the end,
+through its resolved profile/mode route.
 
-**Why inline:** Pane-driven development pays for a fresh implementer and
-fresh reviewers on every task, each re-reading the codebase from zero.
-Inline execution pays for one session (yours) plus one review at the end.
+**Why inline:** Separate delegated tasks and reviews each rebuild context.
+Eligible inline execution uses one implementing session plus the final gate.
 What it gives up is a fresh session per task and a second pair of eyes per
 task. This skill keeps what those two things bought, by other means: the
 brief is the spec, the ledger is your memory, TDD is the per-task gate, and
-the final review is the second pair of eyes.
+the final review checks the branch. Its independence depends on its route;
+permitted profile self-review is reported honestly.
 
-**Inline overrides the work routes, never the review gate.** Every task,
+**Without a selected profile, inline overrides work routes, never the review gate.** Every task,
 test, and fix in this plan runs here, whatever `complex-coding`,
 `simple-coding`, `test-authoring`, `review-fixes`, or `chores` resolve to in
 the merged configuration (`.herdrpowers/config.yaml` over
 `orchestration/roles.yaml`) — that is what inline means. The final review
 still resolves from `assignments.final-branch-review`.
+
+**With a selected profile, preserve its resolved modes.** Read
+`orchestration` and its [profiles contract](../orchestration/references/profiles.md)
+before choosing inline execution. Use this skill for work resolved to the
+owner session; only the active owner may choose optional subagents there.
+Required `delegate` routes run through `pane-driven-development` instead:
+separate targets use reset-backed workers, while owner targets require fresh
+subagents, including a solo coder. Missing panes or subagent capability cannot
+turn mandatory delegation into inline work. No worker may re-delegate.
 
 **Core principle:** The plan already did the thinking. Execute it exactly,
 prove each step with a test you watched fail and then pass, and leave a
@@ -45,11 +54,12 @@ as `Ruling: <what you decided> — <why> — <what it costs if wrong>`, and keep
 going. Deviating from the plan without a ledgered ruling is a decision made
 in secret.
 
-Four things stop you, and only these: an irreversible or destructive
+The four general stops are: an irreversible or destructive
 operation; a security-sensitive action; a side effect outside this worktree
 that norms say you ask about first (a merge, a push to a shared branch, a
 publish); and a plan so broken that every path forward is a guess. For
-those, stop and ask.
+those, stop and ask. A profile-owner mismatch also requires the reception
+unused-versus-relay answer before handoff or startup; a ruling cannot waive it.
 
 **A ruling never rewrites the run's terms.** It resolves what the spec and
 the plan left open — it does not re-enable a gate the repository disabled,
@@ -62,15 +72,15 @@ at start.
 - You have a plan from writing-plans and your human partner chose inline
   execution at the handoff.
 - No herdr sibling pane can take the work: `HERDR_ENV` is unset, or no
-  idle agent pane exists inside `delegation.pane_scope`. Never fabricate a
-  delegation; run the plan here.
+  idle agent pane exists inside `delegation.pane_scope`. This legacy
+  no-profile fallback does not override selected-profile delegation.
 - Tasks are mostly independent — the same precondition as
   pane-driven-development.
 
-A fully specified plan makes inline execution transcription plus testing:
-it runs well on a mid-tier session model, and the one place a fresh session
-earns its cost is the final review, which this skill sends out separately.
-Tell your human partner so when they choose inline.
+A fully specified plan makes inline execution transcription plus testing.
+Explain the per-task review it gives up and how the final gate will run under
+the resolved profile/mode; do not promise an independent reviewer for a
+permitted self-review route.
 
 Prefer pane-driven-development when your human partner wants a review gate
 on every task, or when the plan is long enough that its later tasks would
@@ -275,10 +285,10 @@ Every ruling and deferred minor must reach the final report.
 | "I'll run the full suite at the end instead of per step" | Per-step runs are how you learn which step broke it. The end-of-task run is the contract, not a substitute. |
 | "The plan is wrong here, I'll just do the right thing" | Do the right thing and ledger the ruling. Unledgered deviation is a decision made in secret. |
 | "I'll write the ledger lines after a few tasks" | Compaction does not wait for a convenient moment. One line per task, in the same message as the commit. |
-| "Let me check in before the next task" | Inline exists to spend less. Progress prompts spend your human partner's time instead. Only the four stops stop you. |
-| "I read my own diff carefully; the final reviewer is redundant" | Same author, same blind spots. The reviewer is the only fresh session this run buys. |
+| "Let me check in before the next task" | Keep executing between tasks. Respect the four general stops and required profile-owner reception question; routine check-ins do not pause the loop. |
+| "I read my own diff carefully; the final reviewer is redundant" | The enabled final gate still runs through its resolved route. Profile owner-session self-review uses the full review contract and is reported as self-review. |
 | "Tests should pass, the change was trivial" | "Should" is not evidence. The contract requires the command and its output. |
-| "Panes are slow and expensive, I'll skip the final review too" | Inline already removed the per-task reviewers. One review of the whole branch is the floor, not the ceiling. |
+| "Panes are slow and expensive, I'll skip the final review too" | Inline does not disable the final gate or change its mode. A mandatory subagent that cannot spawn is an unavailable review, never a passed one. |
 | "The reviewer said Minor, so it's Minor" | The label graded the spec's silence. Grade what the person gets. Re-grade, then gate. |
 | "The fix is obvious, no need for a failing test first" | The failing test is the only proof the finding was real and is now gone. Without it you have a diff and a hope. |
 | "I'll fix the minors too while I'm in there" | Every minor you fix is a test, a fix, and a suite run your human partner did not ask for. Ledger them; they decide. |

@@ -2,16 +2,17 @@
 
 Workflows tie roles and skills into end-to-end development procedures. They live in `commands/`, the default command directory of the Claude Code, Codex, and Cursor plugin conventions; the OpenCode plugin registers them at startup. Each file carries YAML frontmatter `description: ...` so supporting platforms expose it as a slash command.
 
-Every development workflow routes its dispatches through the `orchestration` skill to herdr sibling panes **in the orchestrator's own tab** — `delegation.pane_scope` defaults to `tab`, so a pane in another tab (usually another repository, with its own user mid-task) is never a delegation target unless the repository widens the scope. Outside herdr (`HERDR_ENV` unset, or no in-scope idle agent pane) each workflow degrades to inline execution and reports which steps were not delegated.
+Every development workflow reads `orchestration` and its [profiles contract](../skills/orchestration/references/profiles.md), resolving repo config over shipped roles and then only present composition slots. Separate delegated targets use reset-backed in-scope Herdr panes. Profile self-target `delegate` requires fresh subagents for work and reviews, even with empty reviewers; other owner-session modes permit inline work/self-review and optional subagents. Without a profile, legacy independence and unavailable-pane degradation remain. Workers never re-delegate. Scope, modes, gates, and lifecycle permission stay frozen.
 
 ## Available Workflows
 
 ### `/init`
 
-One-time repository initialization, re-runnable to update. Detects the repo's tooling, confirms values with the user, and writes two deliverables:
+Repository initialization, re-runnable to update. Detects tooling, confirms a concrete configuration, and writes three deliverables:
 
 - the `Herdrpowers Configuration` section into the repo's `CLAUDE.md` / `AGENTS.md` — the section every other workflow and skill uses to resolve `<KEY>` placeholders (`<BASE_BRANCH>`, `<REPORT_DIRECTORY>`, `<PLAN_PATH_PATTERN>`, `<BASELINE_VERIFICATION_COMMAND>`, …);
-- `.herdrpowers/config.yaml` — the repo's **role list** plus the **role assigned to every delegation task**: implementation, tests, chores, verification, and each of the five reviews. Every task is reassignable, every mode changeable (`delegate` / `orchestrator` / `implementer`), and every review individually togglable, overriding the pack's shipped `roles.yaml` defaults key by key. Tracked, not scratch.
+- `.herdrpowers/config.yaml` — roles, task assignments, delegation, optional `profile`, and separate top-level strict boolean `allow_agent_lifecycle`. New targets use nested kind/model/effort settings; fallback strings remain exact and effort-free;
+- missing shipped `.herdrpowers/profiles/*.yaml` templates. Preserve existing files and selection on repeat init; installing templates selects nothing. Config/profile YAML is tracked; report scratch is ignored.
 
 Pack files themselves are never edited. On Claude Code plugin installs it surfaces as `/herdrpowers:init`. See [Roles](./roles.md) for the schema and the full delegation-task table.
 
@@ -19,7 +20,7 @@ Use when: the pack was just installed (plugin or checked-in copy), or the repo's
 
 ### `/full_cycle`
 
-The full development cycle for a new feature or sizeable change, and the pack's default procedure for a task that arrives directly from the user: brainstorm → plan → **independent review of the plan** → approval → isolate → documentation impact review → pane-delegated implementation with TDD → documentation update → repository verification → final review via a reset-backed submit → stop and present the integration candidates (merge locally / push and open a PR / push only / keep) for the user to pick.
+The full development cycle: brainstorm → plan → configured plan review → approval → isolate → documentation impact review → implementation with TDD → documentation update → repository verification → configured final review → stop and present integration candidates (merge locally / push and open a PR / push only / keep). Enabled gates use their resolved target and mode; self-review and unavailable routes are named explicitly.
 
 Implementation runs **in parallel by default** (`delegation.execution` in the resolved configuration): the plan carries a `## Tracks` table with owned files per track, and the confirmed tracks run in per-track worktrees off a coordination branch. Setting `delegation.execution: serial` runs the plan's tasks one at a time instead. Either way the report names which ran and how much parallelism was actually achieved.
 
@@ -33,7 +34,7 @@ Use when: the branch must clear every gate the pack defines regardless of how th
 
 ### `/plan`
 
-Brainstorming, plan creation, and the plan's independent review. Stops after the resolved plan is approved.
+Brainstorming, plan creation, and the enabled plan-review gate. Stops after the resolved plan is approved; reports actual independence or self-review.
 
 Use when: you want the design and the reviewed implementation plan, but intend to execute later (often in a different session with `/execute`).
 
@@ -45,13 +46,13 @@ Use when: a reviewed plan already exists and you want it carried through to a re
 
 ### `/execute_parallel`
 
-Same as `/execute`, but extracts independent implementation tracks first and runs them in parallel worktrees — one pane per worktree — before integrating on a coordination branch. Falls back to `/execute` if fewer than two independent tracks survive the extraction step, or if no sibling panes are available.
+Same as `/execute`, but extracts independent tracks and runs them in parallel worktrees before integrating on a coordination branch. Falls back to serial execution if fewer than two tracks remain or resolved writer routes cannot run concurrently. Modes and mandatory subagent requirements remain binding.
 
 Use when: the approved plan has tasks that truly can be implemented in parallel without shared ownership.
 
 ### `/quick`
 
-A shortened cycle for small-scoped changes. Keeps brainstorming, workspace isolation off `<BASE_BRANCH>`, documentation impact review, implementation with TDD, documentation update, verification, an independent final review, and the integration handoff. Brainstorming records the chosen approach in a short design at `<DESIGN_DOC_PATH_PATTERN>` (not committed), sent directly to the user for approval without a builder check. After approval, this explicitly chosen workflow continues with workspace isolation, omitting the separate plan creation and its review.
+A shortened cycle for small-scoped changes. Keeps brainstorming, workspace isolation off `<BASE_BRANCH>`, documentation impact review, TDD, documentation update, verification, the configured final-review gate, and integration handoff. Brainstorming saves a short design at `<DESIGN_DOC_PATH_PATTERN>` (not committed), sent directly to the user without a builder check. The separate plan and its review remain omitted; small scope does not override assignment modes.
 
 Use when: the change is small enough to land without a separate written plan. If scope grows, stop and switch to `/full_cycle`.
 
@@ -61,12 +62,13 @@ All development workflows share the same guardrails:
 
 - **Safety**: Never write to `<BASE_BRANCH>` without explicit user consent; work happens on a feature branch (and, for most workflows, in a dedicated worktree).
 - **Integration is offered, not assumed**: a finished branch ends with the candidates presented — merge locally, push and open a PR, push only, or keep as-is (discarding happens only on an explicit request). The workflow executes the chosen one and cleans up only as far as that choice requires. No workflow merges on its own.
-- **Independence**: Review independence is the reset session, not pane identity — the same physical pane may review after a reset-backed submit. A review task assigned to a role that binds to a list of agent types runs once per entry, from types that never saw each other's draft. No configuration relaxes either rule.
-- **Quality**: No task is marked complete without RED-GREEN evidence, a named test author, and a task review that returns both spec-compliance and code-quality verdicts.
+- **Review routes**: Separate delegated reviews use reset-backed panes, including reuse of an implementing pane after reset. Profile self-target `delegate` requires fresh subagents; other owner-session modes permit reported self-review. No-profile independence remains unchanged. List roles run once per effective entry; empty profile reviewers select the owner rather than disabling a gate.
+- **Quality**: Test reports name the writer and RED/GREEN evidence. Enabled task reviews return both spec-compliance and code-quality verdicts; disabled reviews stay off except strict mode's enabled-only override.
 - **Transparency**: Each step blocks for user confirmation. Agents do not proceed autonomously through the whole cycle.
 - **Evidence**: `verification-before-completion` runs before any "done" claim, and a delegated pane's claim is verified against its report file — not taken on trust.
 - **Root cause over symptoms**: When tests fail, `systematic-debugging` drives the investigation.
-- **Honest degradation**: Any step that could not be delegated, any role that fell back to a substitute agent, any non-default assignment, `delegation:` value, or disabled review from `.herdrpowers/config.yaml`, and any parallel run that degraded toward serial, is named in the final report.
+- **Owner and lifecycle policy**: Owner mismatch always asks unused versus relay before handoff/startup. Lifecycle is a separate strict boolean, false by default; true permits guarded process management, not arbitrary topology destruction. Only explicit owner handoff transfers orchestration authority.
+- **Honest degradation**: Reports name profile/owner, verified model/effort, transports, self-review versus independence, fallback constraints lost, lifecycle actions, changed assignments, disabled/forced gates, and actual concurrency. A mandatory subagent that cannot spawn is inability, never inline delegation or a passed gate.
 
 ## Invoking a Workflow
 
