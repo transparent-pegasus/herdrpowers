@@ -73,7 +73,8 @@ import sys
 kind, model, effort = sys.argv[1:]
 
 # kind -> (composer anchor, how the model line is found below the last line
-# that starts with the anchor). Observed on herdr 0.9.3, 2026-10-09.
+# that starts with the anchor). Observed on herdr 0.9.3, 2026-10-09;
+# Muse Code 1.4.14's separated footer was observed at startup, 2026-11-06.
 #   separated  a border or blank line closes the composer — a wrapped composer
 #              spans several lines — and the model line is the first text line
 #              after that separator
@@ -82,6 +83,7 @@ kind, model, effort = sys.argv[1:]
 #              inside its composer box)
 rules = {
     "claude": ("❯", "separated"),
+    "muse": ("❯", "separated"),
     "codex": ("›", "separated"),
     "cursor": ("→", "separated"),
     "agy": (">", "separated"),
@@ -125,8 +127,8 @@ def canonical_effort(value):
 
 
 def footer_effort():
-    # Only effort fields evidenced by the existing CLI fixtures. Restrict the
-    # field to its position next to the model, excluding usage/context/help.
+    # Restrict effort to its footer field, excluding usage/context/help.
+    # Cursor's explicit labels are synthetic acceptance inputs, not UI evidence.
     token = r"extra high|xhigh|none|minimal|low|medium|high|max|ultra"
     if kind in ("claude", "codex"):
         primary = found.split("·", 1)[0].strip()
@@ -134,15 +136,29 @@ def footer_effort():
     elif kind in ("agy", "grok"):
         primary = re.split(r"[·|]", found, maxsplit=1)[0].strip()
         match = re.fullmatch(rf"(.+?)\s+\(({token})\)", primary, re.IGNORECASE)
+    elif kind == "cursor":
+        fields = [field.strip() for field in found.split("·")]
+        if model.casefold() not in fields[0].casefold():
+            return None
+        efforts = set()
+        for field in fields[1:]:
+            labeled = re.fullmatch(r"(?:Reasoning|Effort)\s*:\s*(.*)", field, re.IGNORECASE)
+            if labeled:
+                if not re.fullmatch(token, labeled[1], re.IGNORECASE):
+                    return None
+                efforts.add(canonical_effort(labeled[1]))
+        return efforts.pop() if len(efforts) == 1 else None
+    elif kind == "muse":
+        fields = [field.strip() for field in found.split("·")]
+        if len(fields) >= 2 and model.casefold() in fields[0].casefold():
+            if re.fullmatch(token, fields[1], re.IGNORECASE):
+                return canonical_effort(fields[1])
+        return None
     elif kind == "opencode":
         fields = [field.strip() for field in found.split("·")]
         if len(fields) == 3 and model.casefold() in fields[1].casefold():
             if re.fullmatch(token, fields[2], re.IGNORECASE):
                 return canonical_effort(fields[2])
-        return None
-    else:
-        # Cursor's observed "1M Max" is ambiguous context/plan evidence.
-        # Muse has no observed composer/footer rule at all and exits 3 above.
         return None
     if match and model.casefold() in match[1].casefold():
         return canonical_effort(match[2])

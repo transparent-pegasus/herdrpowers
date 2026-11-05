@@ -99,6 +99,7 @@ match either. Missing, unknown or ambiguous evidence fails closed.
 | kind | composer anchor | model line | observed |
 | --- | --- | --- | --- |
 | `claude` | `❯` | first text line after the composer's closing border | Claude Code 2.1.295 |
+| `muse` | `❯` | first text line after the composer's closing border | Muse Code 1.4.14 startup |
 | `codex` | `›` | first text line after the blank line below the composer | codex 0.162.0 |
 | `cursor` | `→` | first text line after the composer's closing border | cursor-agent 2026.10.01-e373342 |
 | `agy` | `>` | first text line after the composer's closing border | Antigravity CLI 1.3.2 |
@@ -107,9 +108,9 @@ match either. Missing, unknown or ambiguous evidence fails closed.
 
 For effort positions and evidence limits, read
 [references/composer-keys.md#footer-model-and-effort-evidence](references/composer-keys.md#footer-model-and-effort-evidence).
-The observed Cursor `1M Max` is context/plan ambiguity, not reasoning `max`.
-Muse has no verified composer/footer rule: pinned Muse targets remain unavailable
-until a safely captured live fixture supports one; startup help cannot prove it.
+Cursor's bare `1M Max` cannot prove effort; isolated `Reasoning:` / `Effort:`
+fields are supported synthetic acceptance inputs. Muse uses its observed startup
+footer; runtime still needs a READY pane and matching current footer.
 Never invent a rule to make a profile match.
 
 Unknown kind exits `3`; no footer, model picker, or mismatch exits `1`; bad
