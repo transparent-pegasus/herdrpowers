@@ -256,7 +256,7 @@ contract pointer with the absolute worktree path and split marker.
 | "Ledger bookkeeping is overhead" | The ledger is what survives compaction. Orchestrators without one have re-delegated entire completed task sequences. |
 | "The implementing pane is idle — it can review its own work" | Separate delegated reviews require reset, even on the same pane. Profile owner-session reviews may be self-review; delegated self-targets require fresh subagents. |
 | "The plan mandates it, so the finding is invalid" | Plan-vs-review conflicts are yours to rule on, with the spec as the binding authority. Record the ruling — a conflict you never ledgered is a decision made in secret. |
-| "This call is big enough that I should ask first" | Only the four stop-classes stop you. Everything else is a ruling: decide it, ledger it with what it costs if wrong, and keep going. A session parked on a question costs a whole day and buys nothing. |
+| "This call is big enough that I should ask first" | Honor the general stop conditions and mandatory unused-versus-relay question above. Otherwise decide, record the ruling and its cost if wrong, and continue. |
 | "A delegated pane spun up its own panes — free extra assurance" | A duplicate seat on the same diff; the task review is the gate. Every brief forbids re-delegation, so a pane that did it is a finding to report, not rigor. |
 | "I'll turn the gate off in `.herdrpowers/config.yaml` to get past this loop" | The config is the user's declaration, read once at start. Changing it mid-run to escape a review is falsifying the run's terms. Hit the cap and adjudicate. |
 | "Task review is disabled, so the pane can review its own work" | Disabling removes that gate. Every remaining gate keeps its profile/mode requirements. |

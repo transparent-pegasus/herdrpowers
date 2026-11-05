@@ -12,6 +12,12 @@ roles, then overlay only present profile composition slots. Omitted slots keep
 roles; empty coder selects solo execution and empty reviewers select the owner,
 without changing assignment modes or gate enablement.
 
+A concise Japanese README in that directory records naming and composition
+intent: heaviest Opus-led panels, contract-token-based coder choice, reviewer
+token savings, and solo tasks without complex decisions or coding. It explains
+Herdr kind names, visible model/effort strings, and null/none pitfalls. Init
+copies the README only if absent, preserving local edits; npm ships it too.
+
 New profile and role targets use nested kind/model/effort settings. Legacy
 non-fallback model pins remain migration input; fallback strings remain exact
 and effort-free. A matched empty fallback list is authoritative; fallback drops

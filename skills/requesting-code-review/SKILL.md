@@ -34,7 +34,9 @@ HEAD_SHA=$(git rev-parse HEAD)
 bash ../pane-driven-development/scripts/review-package "$PLAN_FILE" "$BASE_SHA" "$HEAD_SHA"   # prints the path
 ```
 `PLAN_FILE` scopes the package to that plan's workspace. In plan-less flows (`/quick`, ad-hoc reviews) pass `-`.
-The package never enters your own context — you pass the path, the pane reads the file.
+For delegated review, pass the package path to the reviewer without loading its
+diff into the coordinating session. For permitted owner-session self-review,
+read the same package yourself and produce the required written verdict.
 
 **2. Resolve the reviewer and mode:**
 For separate delegated targets, pick matching in-scope idle panes with verified model/effort; a concrete target remains separate even if it matches the owner. Wait for busy matching agents, never interrupt. Apply `orchestration` fallbacks and lifecycle policy if unavailable. For owner targets, use the profile/mode rules above; do not treat an empty reviewer composition as a disabled gate.

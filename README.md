@@ -89,7 +89,7 @@ Plugin files are read-only, so repo-specific values are never written into the p
 
 - a `Herdrpowers Configuration` section in `CLAUDE.md` / `AGENTS.md` — every skill and command resolves its `<KEY>` placeholders (`<BASE_BRANCH>`, `<REPORT_DIRECTORY>`, `<TARGETED_TEST_COMMAND>`, `<PLAN_PATH_PATTERN>`, …) from there;
 - `.herdrpowers/config.yaml` — roles, assignments, gates, delegation, optional `profile`, and separate boolean `allow_agent_lifecycle`, over the shipped [roles.yaml](./skills/orchestration/roles.yaml) defaults;
-- missing `.herdrpowers/profiles/*.yaml` templates, copied without overwriting existing files. Repeat init preserves custom profiles, existing selection, and unmodified settings; installation alone selects nothing. Config/profile YAML is tracked, while report scratch stays ignored.
+- missing `.herdrpowers/profiles/*.yaml` templates and their `README.md`, copied without overwriting existing files. Repeat init preserves custom profiles, the local README, existing selection, and unmodified settings; installation alone selects nothing. Config, profile YAML, and the directory README are tracked, while report scratch stays ignored.
 
 ```yaml
 # Select a composition in the consumer repository's config:
@@ -98,6 +98,8 @@ allow_agent_lifecycle: false
 ```
 
 The six shipped compositions are [opus-sol-panel](./.herdrpowers/profiles/opus-sol-panel.yaml), [astra-sol](./.herdrpowers/profiles/astra-sol.yaml), [opus-solo](./.herdrpowers/profiles/opus-solo.yaml), [sol-solo](./.herdrpowers/profiles/sol-solo.yaml), [opus-opus-panel](./.herdrpowers/profiles/opus-opus-panel.yaml), and [fable-opus](./.herdrpowers/profiles/fable-opus.yaml). Their YAML defines the exact targets and reviewer order. Use a simple filename without extension as `profile`; absent/null/literal `none` keeps the legacy path. Local profiles win over shipped copies; invalid or missing selections are errors.
+
+The [concise profile guide](./.herdrpowers/profiles/README.md) explains names and intended use: Opus-led four-reviewer configurations for the heaviest work, with coder choice based on available contract tokens; same-contract configurations that save reviewer tokens; solo configurations for tasks needing neither complex decisions nor coding.
 
 Profiles contain only `orchestrator`, `coder`, and `reviewers`. Only present slots replace resolved role bindings; omitted slots keep them, including custom owner aliases and roles. New targets use nested settings such as `{codex: {model: GPT-6.1-Sol, effort: max}}`; optional effort requires a model. Both constraints need live footer evidence before keys and after reset; unknown effort fails closed. Legacy non-fallback `kind@model` is migration input only.
 
@@ -138,7 +140,7 @@ skills/          # 16 skills (single tree, platform-neutral wording)
   …                            planning, TDD, debugging, review, worktrees, docs
 commands/        # Workflows: init, plan, execute, execute_parallel, full_cycle,
                  #            strict_full_cycle, quick
-.herdrpowers/profiles/ # Six shipped composition templates
+.herdrpowers/profiles/ # Six shipped compositions and concise usage README
 docs/            # Human-facing framework docs + instruction-file snippet
 changelogs/      # obra/superpowers refresh history + pack-native release notes
 .claude-plugin/  # Claude Code plugin + marketplace manifests
