@@ -25,6 +25,7 @@
   "main": ".opencode-plugin/index.mjs",
   "files": [
     ".opencode-plugin/",
+    ".herdrpowers/profiles/",
     "skills/",
     "commands/",
     "docs/",
