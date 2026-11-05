@@ -12,7 +12,7 @@ Repository initialization, re-runnable to update. Detects tooling, confirms a co
 
 - the `Herdrpowers Configuration` section into the repo's `CLAUDE.md` / `AGENTS.md` — the section every other workflow and skill uses to resolve `<KEY>` placeholders (`<BASE_BRANCH>`, `<REPORT_DIRECTORY>`, `<PLAN_PATH_PATTERN>`, `<BASELINE_VERIFICATION_COMMAND>`, …);
 - `.herdrpowers/config.yaml` — roles, task assignments, delegation, optional `profile`, and separate top-level strict boolean `allow_agent_lifecycle`. New targets use nested kind/model/effort settings; fallback strings remain exact and effort-free;
-- missing shipped `.herdrpowers/profiles/*.yaml` templates. Preserve existing files and selection on repeat init; installing templates selects nothing. Config/profile YAML is tracked; report scratch is ignored.
+- missing shipped `.herdrpowers/profiles/*.yaml` templates and their `README.md`. Preserve existing files, local README, and selection on repeat init; installation selects nothing. Config, profile YAML, and the directory README are tracked; report scratch is ignored.
 
 Pack files themselves are never edited. On Claude Code plugin installs it surfaces as `/herdrpowers:init`. See [Roles](./roles.md) for the schema and the full delegation-task table.
 

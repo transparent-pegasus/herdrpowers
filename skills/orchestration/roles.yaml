@@ -168,11 +168,11 @@ assignments:
     mode: delegate
   review-fixes:
     description: >-
-      Fixing review findings. `mode: implementer` sends them back to the pane
-      that wrote the code (fix-loop rounds 1-3); rounds 4-5 escalate to a fresh
-      pane regardless, per "Escalation is a type swap" in SKILL.md. The fixing
-      pane changes source only — its covering tests come from
-      `fix-round-test-authoring`.
+      Fixing review findings. Separate targets and no-profile routes return
+      to the implementing pane in rounds 1-3 and escalate to a fresh target
+      in rounds 4-5. Selected-profile self-targets retain their resolved mode
+      in every round, per references/profiles.md. Covering tests follow
+      `fix-round-test-authoring`; the five-round cap remains unchanged.
     role: coder
     mode: implementer
   verification:

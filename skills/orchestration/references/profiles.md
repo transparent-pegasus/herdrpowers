@@ -119,25 +119,40 @@ ask whether the reception pane should be **unused** or act as a **relay**.
 Do not infer relay consent from silence, urgency, or the availability of a
 matching pane. No owner handoff or agent startup precedes the answer.
 
-After the answer, find a matching available owner within the resolved pane
-scope. Wait for a busy matching agent rather than interrupting it. If none
-exists and lifecycle is false, report the exact manual action needed: an
-in-scope live agent of the required kind, model, and requested effort. A
-shell is not a matching agent. If lifecycle is true, use the guarded startup
-procedure below. The reception-role answer does not waive target matching.
+After the answer, resolve an **effective owner target** within the frozen pane
+scope. Prefer the profile's primary target; wait for a busy matching agent
+rather than interrupting it. If that target is unavailable or exhausted, apply
+the exact fallback lookup below and try its substitutes left to right. Owner
+selection uses the same approved fallback map as worker selection. An exact
+empty list permits no substitute. A fallback has only its own kind/model
+constraints and no effort constraint; do not carry primary effort into the
+handoff helper or pretend the substitute matches the primary target.
+
+If no existing candidate can serve, lifecycle false means reporting the manual
+setup needed for the primary or an allowed substitute. A shell is not an agent.
+With lifecycle true, use the guarded startup procedure below: try the primary
+first, then its allowed substitutes if the primary cannot be started/verified;
+skip exhausted targets. Verify the effective target before transferring authority.
+The mismatched reception pane keeps its chosen unused/relay role; it is never
+silently promoted to fallback owner, even if a bare-kind substitute matches it.
+Neither fallback nor lifecycle permission waives the reception-role question.
 
 Send an explicit **orchestrator handoff**, containing:
 
 - The original user instruction, constraints, and current task state.
 - Absolute repository/worktree paths, selected profile name/path, frozen
   effective targets, assignments/gates, scope/strategy, and lifecycle policy.
-- An explicit transfer of decision authority to the verified selected owner,
+- The primary and effective owner targets, any fallback key/substitute used,
+  and lost constraints. Keep the profile file unchanged; owner aliases bind
+  to the verified effective owner.
+- An explicit transfer of decision authority to the verified effective owner,
   the reception pane's chosen unused/relay role, and the communication path.
 - That this is ownership transfer, not worker delegation: the new owner may
   orchestrate; workers may not. The handoff must not bounce ownership back.
 
-Use the verified sibling-pane submission transport, with the requested model
-and effort. A relay carries messages and results; it retains no routing or
+Use the verified sibling-pane submission transport, with the effective target's
+own model/effort constraints (no effort argument for a fallback). A relay carries
+messages and results; it retains no routing or
 final-decision authority. An unused reception pane takes no further work.
 If verification fails, report the failed handoff rather than treating the
 mismatched reception pane as the owner. Runtime pane IDs belong in the run's
@@ -205,6 +220,8 @@ here; they do not grant worker re-delegation or revive disabled gates.
 ## Fallback lookup and effort
 
 Read fallback data from the resolved `fallbacks` map, never from profiles.
+These lookup rules apply to owner selection and worker targets alike; owner
+fallback still obeys the reception-role question and explicit handoff above.
 For a nested primary target, form its `kind@model` key using the preserved
 model string. If that exact key exists, use its list, **including `[]`**.
 Only an absent exact key permits lookup by bare kind. A target without a

@@ -18,7 +18,7 @@
 - 選択は `.herdrpowers/config.yaml` の `profile` に拡張子なしのファイル名を指定。
   プロファイルには `orchestrator`・`coder`・`reviewers` の配役だけを書く。
   選択と `allow_agent_lifecycle` は config 側。既定 `false` ではエージェントの起動・終了・再起動不可。
-  省略した配役は解決済み roles を使う。
+  `coder`・`reviewers` 省略は解決済み roles、`orchestrator` 省略は受付ペインを維持。
 - target のキーは `herdr pane list` の `agent` に出る種別名（`claude`、`codex` など）。`hp-coder` 等のペイン別名やペイン ID は不可。
   形式は `coder: {codex: {model: GPT-6.1-Sol, effort: max}}`。
   settings は入れ子。`model`・`effort` は省略可、指定時は空でない文字列。`effort` には `model` が必須。
