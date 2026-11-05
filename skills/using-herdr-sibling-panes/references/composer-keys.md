@@ -58,8 +58,8 @@ The fourth argument is optional, requires a non-empty model, and is checked by
 `pane-model.sh` before any key and again after reset. All script paths resolve
 against the skill directory. Model-only and unconstrained calls remain supported.
 
-The existing `tests/pane-model/fixtures/` captures establish these effort field
-positions within the footer already selected by the CLI's composer rule:
+Observed renderer captures establish these effort field positions within the
+footer already selected by the CLI's composer rule:
 
 | kind | observed model/effort field | extraction |
 | --- | --- | --- |
@@ -68,6 +68,7 @@ positions within the footer already selected by the CLI's composer rule:
 | agy | `Gemini 3.8 Flash (High) \| 5h: 100% \| 7d: 100%` | parenthesized effort on the model segment |
 | grok | `Grok 4.7 (xhigh) · always-approve · …` | parenthesized effort on the first segment |
 | opencode | `Build · GPT-6.1 Sol OpenAI · max` | third segment, after the model/provider segment |
+| muse | `muse-1.0-wonder · max · /tmp/… · Auto-review` | exact second dot-separated field; model is the first field |
 | cursor | `Muse Spark 1.3 1M Max` | no verified reasoning-effort field; bare `Max` is ambiguous |
 
 Effort uses exact case-insensitive tokens. `Extra High` and `xhigh` canonicalize
@@ -78,18 +79,25 @@ unrecognized effort is a mismatch; the observed footer still goes to stdout.
 Synthetic fixture variations can exercise tokens and casing in these established
 positions, but must be labeled synthetic, not presented as observed CLI output.
 
-**Verification required for Cursor effort and Muse.** Cursor needs a safely
-captured live footer that distinguishes reasoning effort from its context/plan
-`Max`. Muse has no composer/footer rule at all: `pane-model.sh --kind muse`
-exits `3`, and composer submission with a requested model/effort exits `5`
-before any key. Installed Muse help supports model and reasoning-effort options
-for a real provider; the echo provider rejects reasoning-effort and cannot
-establish real-provider footer evidence. Neither launch flags nor help are live
-pane truth. Capture visible output before and after reset and after a verified
-settings change in an authorized idle pane; identify the composer and live model
-and effort fields, then add an observed fixture and regression coverage before
-adding a rule. Do not guess an anchor, use transcript/header/config text, or
-invent a future layout.
+**Cursor labeled-field acceptance.** The parser also accepts isolated,
+dot-separated `Reasoning:` or `Effort:` fields after Cursor's model field.
+These are synthetic acceptance inputs, not observed current UI output. The
+entire value must be a known effort token; multiple labeled fields must agree
+after alias normalization. Unknown values and conflicting fields fail closed.
+A live layout without an explicit effort field cannot meet an effort constraint.
+
+**Muse renderer support and readiness.** Muse Code 1.4.14 was observed on
+2026-11-06 in a disposable PTY, with a normal provider, before an expired login
+redirected to the login screen. The rendered snapshot establishes a `❯`
+composer, a closing separator, and the footer above: model first, exact effort
+second, then cwd and Auto-review. The echo footer was `echo · /tmp/… · Auto-review`
+without effort. Login screens without a composer and echo footers without effort
+fail closed. This startup capture does not prove authenticated live delegation
+or composer-key onboarding. Routing still requires a READY live pane whose
+current footer matches before keys and after reset; the onboarding probe below
+remains required. Launch flags, help, transcript, header and config text cannot
+replace renderer evidence. Changed layouts need a safely captured visible
+fixture and regression coverage before adding a rule.
 
 For startup/exit authorization, first read the core
 [profiles policy](../../orchestration/references/profiles.md). Top-level
