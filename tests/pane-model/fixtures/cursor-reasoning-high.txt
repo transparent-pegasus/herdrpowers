@@ -1,0 +1,7 @@
+SYNTHETIC: observed Cursor composer/footer with an explicit reasoning label.
+Cursor Agent · stale transcript: Grok 4.7 reasoning Extra High
+
+ ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+  → Plan, search, build anything
+ ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
+  Grok 4.7 1M Max · Reasoning: High

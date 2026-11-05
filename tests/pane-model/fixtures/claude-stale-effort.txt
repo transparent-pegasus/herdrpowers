@@ -1,0 +1,8 @@
+SYNTHETIC: observed Claude statusLine with a conflicting splash header.
+Claude Code · Opus 5.5 max (stale header)
+
+────────────────────────────────────────────────────────────────────────
+❯ Try a new task
+────────────────────────────────────────────────────────────────────────
+  Opus 5.5 medium
+  ⏵⏵ bypass permissions on
