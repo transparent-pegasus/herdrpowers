@@ -5,11 +5,27 @@ description: "Use when inside herdr (HERDR_ENV=1), the current pane is acting as
 
 # Using herdr sibling panes
 
-`HERDR_ENV=1` is required. If it is missing, stop.
+For Herdr-pane transport, `HERDR_ENV=1` is required. If it is missing, stop that transport.
 
 **Placeholder resolution:** `<KEY>` placeholders in this file (such as `<REPORT_DIRECTORY>`) resolve from the `Herdrpowers Configuration` section of the repository's `CLAUDE.md` / `AGENTS.md`. If that section is missing, initialize it with the pack's init workflow (`/herdrpowers:init` on Claude Code plugin installs; `commands/init.md` otherwise), or fall back to the git-ignored workspace that `bash pane-driven-development/scripts/pdd-workspace [PLAN_FILE]` prints (per-plan with a plan file, the shared `adhoc` directory without one).
 
-For pane layout, read [`herdr`](../herdr/SKILL.md). Use this skill only for multi-pane delegation to idle sibling agent panes.
+Before profile routing, handoff, or lifecycle decisions, read
+[`orchestration/references/profiles.md`](../orchestration/references/profiles.md).
+It owns composition resolution and the active orchestrator's authority. A
+reception pane that mismatches the selected kind, model, or effort always asks
+the user whether it should be unused or relay; it cannot silently take over.
+The explicit handoff carries the instruction, repo/worktree, profile and frozen
+settings and must not bounce back as worker delegation.
+
+For pane layout, read [`herdr`](../herdr/SKILL.md), which loads the installed
+Herdr guide. This skill transports separate targets to idle sibling panes.
+With a selected profile, a self-target (solo coder or empty reviewers) in
+`mode: delegate` instead requires a fresh in-process subagent, including reviews;
+missing capability is a reported inability, never inline delegation. Other
+modes run in the owner session and may use a subagent at its judgment; report
+same-session self-review honestly, without claiming independence. Disabled gates
+stay disabled, and the legacy no-profile reset-backed path is preserved. Only
+the active orchestrator dispatches; workers never re-delegate.
 
 ## When to use
 
@@ -24,10 +40,10 @@ What to delegate depends on how this skill was entered:
 
 1. Run `herdr pane list` and identify your own pane (the orchestrator) by `$HERDR_PANE_ID`. Every entry carries `pane_id`, `tab_id`, `workspace_id`, `agent`, `agent_status`, and `cwd`.
 2. Discard every out-of-scope pane first — by default that is every pane outside your own tab. See "Delegation scope" below; it applies before anything else in this list.
-3. From what remains, select only sibling panes that have an `agent` field and `agent_status: idle` or `done`. A pane still holding one of your delegations — no marker, no report yet — is not a candidate whatever its status: from herdr 0.9.4, agy and grok count as `idle` once back at their prompt while their background tasks or subagents keep running, and a submit would reset the session under that work. For an `agent@model` entry, the pane's footer must also show that model — see "Model-pinned entries". A pane with no `agent` field is a plain shell or a crashed agent — see "Failure handling". The `agent` field alone is not proof the agent is alive: it can name a CLI that has since exited, leaving the pane at a shell prompt. The helper checks this before sending anything (it exits `2` when the pane's foreground process is its own shell), so let it. From herdr 0.9.4 the field can also name an agent suspended with Ctrl+Z while another program holds the foreground, which that check misses — `pane read` the pane and confirm its composer is on screen. Never hand-send text to a pane you have not confirmed.
+3. From what remains, select only sibling panes that have an `agent` field and `agent_status: idle` or `done`. A pane still holding one of your delegations — no marker, no report yet — is not a candidate whatever its status: from herdr 0.9.4, agy and grok count as `idle` once back at their prompt while their background tasks or subagents keep running, and a submit would reset the session under that work. A nested target's requested model and effort must match the live footer — see "Target model and effort". A pane with no `agent` field is a plain shell or a crashed agent — see "Failure handling". The `agent` field alone is not proof the agent is alive: it can name a CLI that has since exited, leaving the pane at a shell prompt. The helper checks this before sending anything (it exits `2` when the pane's foreground process is its own shell), so let it. From herdr 0.9.4 the field can also name an agent suspended with Ctrl+Z while another program holds the foreground, which that check misses — `pane read` the pane and confirm its composer is on screen. Never hand-send text to a pane you have not confirmed.
 4. When more than one candidate remains, confirm the composer is empty before you send: `herdr pane read "$PANE" --source visible`. An empty composer reads as an empty follow-up placeholder (`› `, `→ Add a follow-up`). A pane showing unsent text is not a candidate — another orchestrator is composing there, and `composer-submit.sh` wipes that draft with `ctrl+u` before it resets the session. The helper cannot tell a half-written brief from any other composer content and must not try: this is someone else's work being destroyed, not a failure to recover from. If the only candidate has leftover text, do not send — report the pane to the user.
 5. Distribute independent work items across the available panes, one instruction per pane.
-6. Submit one self-contained instruction per pane with `bash scripts/composer-submit.sh`. It resets the target session and submits the instruction in one call; do not send `/clear` yourself.
+6. Submit one self-contained instruction per pane with `bash scripts/composer-submit.sh PANE INSTRUCTION [MODEL [EFFORT]]`. It resets the target session and submits the instruction in one call; pass the resolved model as argument three and effort as argument four. Do not send `/clear` yourself.
 7. Do not send a second prompt such as "Please run the task I just sent." The submitted instruction is already running.
 8. Wait for the instruction's unique completion marker with `herdr pane wait-output`, always with a timeout.
 9. On a marker match, re-read `pane list`. If the pane is still `working`, wait for `idle` or `done` — work that finishes unseen settles at `done`, so a wait for `idle` alone sits out its whole timeout; if it is already `idle` or `done`, continue. Agent status lags behind the visible output — the marker is the completion signal, status is not.
@@ -62,11 +78,23 @@ An out-of-scope pane is not a candidate at all: not a last resort, not a fallbac
 
 An absolute path in the instruction does not make a cross-repository pane safe. That pane's agent loads *its own* repository's instruction files, configuration, and skills before reading your task, so it works your files under someone else's conventions. If the task itself turns out to target a repository other than the one you are working in, confirm the target with the user before delegating or editing — read-only investigation needs no confirmation.
 
-## Model-pinned entries
+## Target model and effort
 
-herdr reports each pane's agent kind (`agent: cursor`) but not the model it runs, so two cursor panes on different models look identical to routing. An entry can pin the model as `agent@model` — `cursor@Muse Spark`. Split it at the first `@`: the left side is the agent kind, the right side the model. A bare kind matches any model.
+New profiles and newly written roles use nested targets, for example
+`{codex: {model: GPT-6.1-Sol, effort: max}}`. Each target has one kind and a
+settings mapping; optional model/effort strings are non-empty and effort requires
+model. Preserve the user's spelling. Legacy bare kinds and `orchestrator` stay
+readable; non-fallback `kind@model` is read-only migration input, normalized with
+a deprecation notice by `orchestration`. Fallback strings retain that syntax.
 
-The model comes from the footer the CLI draws below its composer, read by `scripts/pane-model.sh`. Nothing else is per-pane truth: herdr's JSON has no model field, a CLI's config file is shared by every pane running it, launch arguments go stale after a `/model` switch, and so does the splash header — a grok pane kept `Model · Grok 4.6` in its header after switching to Grok 4.7, and only the footer changed. A pane matches when the model is a case-insensitive substring of its footer model line, that is, when `pane-model.sh "$PANE" "$MODEL"` exits `0`.
+Herdr reports kind, not model or effort. Read the live footer below the composer
+with `bash scripts/pane-model.sh PANE [MODEL [EFFORT]]`; offline fixture input is
+`bash scripts/pane-model.sh --kind KIND [MODEL [EFFORT]] < screen`.
+Config, launch args, transcript and splash header are never live truth. A grok
+header retained `Model · Grok 4.6` after a switch to Grok 4.7; only its footer changed.
+Models retain case-insensitive substring matching. Efforts use exact semantic
+tokens, case-insensitively: `Extra High` and `xhigh` are aliases; `high` cannot
+match either. Missing, unknown or ambiguous evidence fails closed.
 
 | kind | composer anchor | model line | observed |
 | --- | --- | --- | --- |
@@ -77,29 +105,63 @@ The model comes from the footer the CLI draws below its composer, read by `scrip
 | `grok` | `❯` | first text line after the composer line | grok 1.0.50 |
 | `opencode` | `┃` | the last `┃` line, inside the composer box | opencode 1.18.35 |
 
-Matching fails closed. A kind with no rule (exit `3`), a screen with no composer line, or an open model picker gives no match, and the pane is not a candidate for a pinned entry. claude prints a model line only through a user `statusLine` that outputs the model (for example `.model.display_name`); without one, a `claude@…` entry never matches. A pinned entry whose kind has in-scope panes, none of them showing the model, is **unavailable** — the same as a kind with no pane.
+For effort positions and evidence limits, read
+[references/composer-keys.md#footer-model-and-effort-evidence](references/composer-keys.md#footer-model-and-effort-evidence).
+The observed Cursor `1M Max` is context/plan ambiguity, not reasoning `max`.
+Muse has no verified composer/footer rule: pinned Muse targets remain unavailable
+until a safely captured live fixture supports one; startup help cannot prove it.
+Never invent a rule to make a profile match.
 
-Select for one entry like this (tab scope; widen the topology filter as in "Delegation scope"), then pass the model to the helper as its third argument. The helper re-checks the footer before it sends any key and again after the reset, and exits `5` on a mismatch:
+Unknown kind exits `3`; no footer, model picker, or mismatch exits `1`; bad
+arguments exit `2`. The helper preserves the footer on stdout for a model/effort
+mismatch. Claude requires a user `statusLine` displaying the model and, when
+requested, effort; missing evidence never inherits config or header values.
+A constrained target with no matching in-scope pane is **unavailable**.
+
+For this example's resolved nested target, select at tab scope and pass both
+settings. The submit helper checks before any key and again after reset, exiting
+`5` on mismatch without submitting the instruction:
 
 ```bash
-entry='cursor@Muse Spark'
-kind=${entry%%@*}
-model=
-[[ $entry == *@* ]] && model=${entry#*@}
+# Resolved from {codex: {model: GPT-6.1-Sol, effort: max}}:
+kind=codex
+model=GPT-6.1-Sol
+effort=max
+target_settings=()
+[[ -z $model ]] || target_settings+=("$model")
+[[ -z $effort ]] || target_settings+=("$effort")
 herdr pane list | jq -r --arg tab "$HERDR_TAB_ID" --arg self "$HERDR_PANE_ID" --arg kind "$kind" '
   .result.panes[]
   | select(.tab_id == $tab and .pane_id != $self and .agent == $kind)
   | select(.agent_status == "idle" or .agent_status == "done")
   | .pane_id' |
 while read -r pane; do
-  [[ -z $model ]] || bash "$SKILL_DIR/scripts/pane-model.sh" "$pane" "$model" >/dev/null || continue
+  bash "$SKILL_DIR/scripts/pane-model.sh" "$pane" "${target_settings[@]}" >/dev/null || continue
   echo "$pane"
 done
 # then, for the chosen pane:
-bash "$COMPOSER_SUBMIT" "$PANE" "$INSTRUCTION" ${model:+"$model"}
+bash "$COMPOSER_SUBMIT" "$PANE" "$INSTRUCTION" "${target_settings[@]}"
 ```
 
-Routing selects panes by model; it never sends `/model` or otherwise switches one. For every delegation to a pinned entry, name the pane id and its model line in the report.
+Routing selects matching panes; it never switches an existing pane's model or
+effort. Report pane id and observed footer for each constrained delegation.
+Fallback resolution belongs to `orchestration`: nested kind/model becomes the
+exact `kind@model` key, then bare kind. An explicit empty list is authoritative.
+Fallbacks have no effort constraint; never inherit the primary effort or change
+exact user names such as `Calude` or the distinct Muse spellings.
+
+## Agent lifecycle
+
+`allow_agent_lifecycle` is a top-level strict boolean, false by default, separate
+from delegation and profiles. When false, do not start, exit or restart agents
+by keys or shell to satisfy routing, including fallback and handoff. Reuse a
+matching available pane or report the needed manual action. When true, follow
+the core profiles policy and inspect the installed Herdr guide/current help and
+the target CLI's help before lifecycle work. Start only in available in-scope
+shell panes, then verify the live model and effort. End only idle task-owned
+agents with no pending work; preserve unrelated processes and topology. Neither
+permission allows interruption of working agents or widening scope. Use verified
+current commands and native flags; never invent a stop command or flag translation.
 
 ## Composer-safe submission
 
@@ -124,7 +186,7 @@ COMPOSER_SUBMIT="$SKILL_DIR/scripts/composer-submit.sh"
 bash "$COMPOSER_SUBMIT" "$PANE" "$INSTRUCTION"
 ```
 
-Exit codes: `0` submitted and running, `2` bad usage (embedded newline, or a bare `/word` slash trigger in the instruction) or the pane is not a usable idle agent pane — including a pane whose agent has exited and left it at a shell prompt, `3` the instruction did not submit, `4` the pane remained too narrow after a zoom attempt, `5` a third argument named a model the pane's footer does not show — checked before any key is sent and again after the reset, so no instruction was sent (see "Model-pinned entries").
+Exit codes: `0` submitted and running, `2` bad usage (including empty/multiline model or effort, effort without model, embedded instruction newline, or a bare `/word` slash trigger) or the pane is not a usable idle agent pane — including an exited agent at a shell prompt, `3` the instruction did not submit, `4` the pane remained too narrow after zoom, `5` the requested model (argument three) or effort (argument four) could not be verified before keys or after reset, so no instruction was sent (see "Target model and effort").
 
 ### Verified keys
 
