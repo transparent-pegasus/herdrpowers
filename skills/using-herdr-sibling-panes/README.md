@@ -17,6 +17,7 @@ Workers never re-delegate.
 - [`scripts/composer-submit.sh`](scripts/composer-submit.sh) — bundled helper that checks the pane is a live agent at a usable width, clears the composer, resets the session, submits exactly one instruction with bounded settle points, and confirms the pane started.
 - [`scripts/pane-model.sh`](scripts/pane-model.sh) — reads a live footer and optionally verifies the requested model and exact semantic effort; also accepts offline fixture input with `--kind`.
 - [`scripts/probe-composer.sh`](scripts/probe-composer.sh) — run once per agent CLI (and after every upgrade) to verify it can be driven at all: width, clear, reset, submit, marker capture, interrupt, survival.
+- [`scripts/agent-lifecycle.sh`](scripts/agent-lifecycle.sh) — starts an agent in an in-scope shell pane and ends agents the task started, only while the repository's `allow_agent_lifecycle` is `true`; verifies the live footer and keeps a per-task ledger. See [`references/agent-lifecycle.md`](references/agent-lifecycle.md).
 
 ## Key properties
 
@@ -33,7 +34,7 @@ Workers never re-delegate.
 - New targets use `{codex: {model: GPT-6.1-Sol, effort: max}}`; effort requires model. Legacy bare kinds remain supported; non-fallback `kind@model` is read-only migration input with a deprecation notice. Fallbacks keep string syntax and never inherit the primary effort.
 - Model and effort come only from the live footer, checked before any keys and after reset. Models retain case-insensitive substring matching; effort tokens match exactly, case-insensitively, with `Extra High` / `xhigh` aliases. `high` never matches extra high. Routing never switches an existing pane's settings.
 - Unknown/missing evidence fails closed. Cursor's bare `Max` is ambiguous; isolated `Reasoning:` / `Effort:` fields are supported synthetic acceptance inputs. Muse's observed startup footer is supported; runtime requires a READY live pane with a matching current footer. See [evidence and readiness limits](references/composer-keys.md#footer-model-and-effort-evidence).
-- Top-level `allow_agent_lifecycle` is a strict boolean, false by default. False forbids starting/exiting/restarting agents to satisfy routing, even by keys or shell. True requires current installed Herdr/CLI help, available in-scope shell panes, verified startup settings and idle task-owned cleanup only; unrelated processes and topology are preserved.
+- Top-level `allow_agent_lifecycle` is a strict boolean, false by default, enforced by `agent-lifecycle.sh` (exit `6` unless it is `true`). False forbids starting/exiting/restarting agents to satisfy routing, even by keys or shell. True lets the active owner start a resolved target that has no live match in an available in-scope shell pane, with native flags from the CLI's help and a verified footer, and end idle agents the task started; unrelated processes and topology are preserved, and startup dialogs are never answered.
 - An agent type is exhausted after a usage-limit message, or two markerless delegations on two different panes matching the resolved target; record the exact target settings. The orchestration skill then resolves exact fallback keys (including authoritative empty lists). Helper exits `2`, `4`, and `5` never started a delegation and never count toward that, and a brief refused on cybersecurity policy is a rewrite, not exhaustion.
 
 ## Helper interfaces
@@ -42,9 +43,16 @@ Workers never re-delegate.
 bash "$SKILL_DIR/scripts/pane-model.sh" "$PANE" [MODEL [EFFORT]]
 bash "$SKILL_DIR/scripts/pane-model.sh" --kind KIND [MODEL [EFFORT]] < screen
 bash "$SKILL_DIR/scripts/composer-submit.sh" "$PANE" "$INSTRUCTION" [MODEL [EFFORT]]
+bash "$SKILL_DIR/scripts/agent-lifecycle.sh" policy
+bash "$SKILL_DIR/scripts/agent-lifecycle.sh" start "$LEDGER" "$PANE" KIND NAME [MODEL [EFFORT]] [-- AGENT_ARG...]
+bash "$SKILL_DIR/scripts/agent-lifecycle.sh" stop "$LEDGER" "$PANE"
+bash "$SKILL_DIR/scripts/agent-lifecycle.sh" list "$LEDGER"
 ```
 
 Model is submit argument three; effort is argument four. Old invocations and
 footer stdout are preserved. Bad arguments exit `2`; pane-model mismatch exits
 `1` (unknown kind `3`); composer mismatch exits `5` without submitting the task.
-The optional probe also accepts `PANE [MODEL [EFFORT]]`.
+The optional probe also accepts `PANE [MODEL [EFFORT]]`. The lifecycle helper
+exits `6` when the permission is false or invalid, `2` when a guard refuses,
+`3` when nothing started or an agent was not ended, `4` for a startup dialog,
+and `5` when the started agent's footer does not verify the target.

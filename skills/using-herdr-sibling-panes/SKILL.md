@@ -74,7 +74,7 @@ herdr pane list | jq -r --arg tab "$HERDR_TAB_ID" --arg self "$HERDR_PANE_ID" '
 
 For `workspace`, compare `.workspace_id` against `$HERDR_WORKSPACE_ID` instead; for `session`, drop the topology filter. Without `jq`, read the same three fields out of the JSON by hand — do not skip the check.
 
-An out-of-scope pane is not a candidate at all: not a last resort, not a fallback target, and never counted when deciding whether an agent type is available. When no in-scope pane of the needed type exists, that type is unavailable for this delegation — say so to the user and ask them to start one, wait for one to free up, fall back per "Exhaustion and fallback", or degrade as the calling skill directs. Never widen the scope mid-run to find a pane; that is a configuration change, and configuration is not written from inside a run.
+An out-of-scope pane is not a candidate at all: not a last resort, not a fallback target, and never counted when deciding whether an agent type is available. When no in-scope pane of the needed type exists, that type is unavailable for this delegation — start one when `allow_agent_lifecycle` is true ("Agent lifecycle"); otherwise say so to the user and ask them to start one, wait for one to free up, fall back per "Exhaustion and fallback", or degrade as the calling skill directs. Never widen the scope mid-run to find a pane; that is a configuration change, and configuration is not written from inside a run.
 
 An absolute path in the instruction does not make a cross-repository pane safe. That pane's agent loads *its own* repository's instruction files, configuration, and skills before reading your task, so it works your files under someone else's conventions. If the task itself turns out to target a repository other than the one you are working in, confirm the target with the user before delegating or editing — read-only investigation needs no confirmation.
 
@@ -155,14 +155,15 @@ exact user names such as `Calude` or the distinct Muse spellings.
 
 `allow_agent_lifecycle` is a top-level strict boolean, false by default, separate
 from delegation and profiles. When false, do not start, exit or restart agents
-by keys or shell to satisfy routing, including fallback and handoff. Reuse a
-matching available pane or report the needed manual action. When true, follow
-the core profiles policy and inspect the installed Herdr guide/current help and
-the target CLI's help before lifecycle work. Start only in available in-scope
-shell panes, then verify the live model and effort. End only idle task-owned
-agents with no pending work; preserve unrelated processes and topology. Neither
-permission allows interruption of working agents or widening scope. Use verified
-current commands and native flags; never invent a stop command or flag translation.
+by keys or shell to satisfy routing, including fallback and handoff: reuse a
+matching live pane or report the needed manual action. When true, the active
+owner starts a resolved target that has no live match in an available in-scope
+shell pane, and ends idle agents the task started — only through
+`scripts/agent-lifecycle.sh`, which exits `6` while the value is not `true`.
+Read [references/agent-lifecycle.md](references/agent-lifecycle.md) before the
+first start or stop. Neither value allows interrupting working agents,
+answering startup dialogs, changing topology, or widening scope. Native flags
+come from the CLI's own help; never invent a stop command.
 
 ## Composer-safe submission
 
