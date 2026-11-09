@@ -13,7 +13,7 @@ roles; empty coder selects solo execution and empty reviewers select the owner,
 without changing assignment modes or gate enablement.
 
 A concise Japanese README in that directory records naming and composition
-intent: heaviest Opus-led panels, contract-token-based coder choice, reviewer
+intent: heaviest Fable-led panels, contract-token-based coder choice, reviewer
 token savings, and solo tasks without complex decisions or coding. It explains
 Herdr kind names, visible model/effort strings, and null/none pitfalls. Init
 copies the README only if absent, preserving local edits; npm ships it too.

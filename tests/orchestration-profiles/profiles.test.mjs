@@ -10,9 +10,9 @@ const root = fileURLToPath(new URL('../../', import.meta.url));
 const profiles = join(root, '.herdrpowers/profiles');
 const names = [
   'astra-sol.yaml',
+  'fable-opus-panel.yaml',
   'fable-opus.yaml',
-  'opus-opus-panel.yaml',
-  'opus-sol-panel.yaml',
+  'fable-sol-panel.yaml',
   'opus-solo.yaml',
   'sol-solo.yaml',
 ];

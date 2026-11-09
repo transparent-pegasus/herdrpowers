@@ -4,10 +4,10 @@
 
 | ファイル | 配役・意図 |
 |---|---|
-| `opus-sol-panel.yaml` | `Opus 5.5` owner、`GPT-6.1-Sol` coder、外部4レビュー。最重量。 |
-| `opus-opus-panel.yaml` | `Opus 5.5` owner、別の `Opus 5.5` coder、外部4レビュー。最重量。 |
+| `fable-sol-panel.yaml` | `Fable 5.2` owner、`GPT-6.1-Sol` coder、外部4レビュー。最重量。 |
+| `fable-opus-panel.yaml` | `Fable 5.2` owner、別の `Opus 5.5` coder、外部4レビュー。最重量。 |
 | `astra-sol.yaml` | `GPT-6-Astra` owner、`GPT-6.1-Sol` coder、owner レビュー。Codex 側の節約構成。 |
-| `fable-opus.yaml` | `Fable 5.1` owner、`Opus 5.5` coder、owner レビュー。Claude 側の節約構成。 |
+| `fable-opus.yaml` | `Fable 5.2` owner、`Opus 5.5` coder、owner レビュー。Claude 側の節約構成。 |
 | `sol-solo.yaml` | `GPT-6.1-Sol` 単体。 |
 | `opus-solo.yaml` | `Opus 5.5` 単体。 |
 

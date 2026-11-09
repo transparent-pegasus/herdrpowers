@@ -1,6 +1,6 @@
 orchestrator:
   claude:
-    model: Opus 5.5
+    model: Fable 5.2
     effort: max
 coder:
   codex:
