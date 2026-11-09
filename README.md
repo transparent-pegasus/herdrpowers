@@ -93,13 +93,13 @@ Plugin files are read-only, so repo-specific values are never written into the p
 
 ```yaml
 # Select a composition in the consumer repository's config:
-profile: opus-sol-panel
+profile: fable-sol-panel
 allow_agent_lifecycle: false
 ```
 
-The six shipped compositions are [opus-sol-panel](./.herdrpowers/profiles/opus-sol-panel.yaml), [astra-sol](./.herdrpowers/profiles/astra-sol.yaml), [opus-solo](./.herdrpowers/profiles/opus-solo.yaml), [sol-solo](./.herdrpowers/profiles/sol-solo.yaml), [opus-opus-panel](./.herdrpowers/profiles/opus-opus-panel.yaml), and [fable-opus](./.herdrpowers/profiles/fable-opus.yaml). Their YAML defines the exact targets and reviewer order. Use a simple filename without extension as `profile`; absent/null/literal `none` keeps the legacy path. Local profiles win over shipped copies; invalid or missing selections are errors.
+The six shipped compositions are [fable-sol-panel](./.herdrpowers/profiles/fable-sol-panel.yaml), [astra-sol](./.herdrpowers/profiles/astra-sol.yaml), [opus-solo](./.herdrpowers/profiles/opus-solo.yaml), [sol-solo](./.herdrpowers/profiles/sol-solo.yaml), [fable-opus-panel](./.herdrpowers/profiles/fable-opus-panel.yaml), and [fable-opus](./.herdrpowers/profiles/fable-opus.yaml). Their YAML defines the exact targets and reviewer order. Use a simple filename without extension as `profile`; absent/null/literal `none` keeps the legacy path. Local profiles win over shipped copies; invalid or missing selections are errors.
 
-The [concise profile guide](./.herdrpowers/profiles/README.md) explains names and intended use: Opus-led four-reviewer configurations for the heaviest work, with coder choice based on available contract tokens; same-contract configurations that save reviewer tokens; solo configurations for tasks needing neither complex decisions nor coding.
+The [concise profile guide](./.herdrpowers/profiles/README.md) explains names and intended use: Fable-led four-reviewer configurations for the heaviest work, with coder choice based on available contract tokens; same-contract configurations that save reviewer tokens; solo configurations for tasks needing neither complex decisions nor coding.
 
 Profiles contain only `orchestrator`, `coder`, and `reviewers`. Only present slots replace resolved role bindings; omitted slots keep them, including custom owner aliases and roles. New targets use nested settings such as `{codex: {model: GPT-6.1-Sol, effort: max}}`; optional effort requires a model. Both constraints need live footer evidence before keys and after reset; unknown effort fails closed. Legacy non-fallback `kind@model` is migration input only.
 
