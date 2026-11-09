@@ -196,8 +196,15 @@ Step 2, from before that directory change.
 
 **If `GIT_DIR == GIT_COMMON`:** Normal repo, no worktree to clean up. Done.
 
-**If `WORKTREE_PATH` is under `.worktrees/` or `worktrees/`:** this pack
-created the worktree — we own cleanup:
+Resolve `<WORKTREE_DIRECTORY>` from the primary checkout's `Herdrpowers Configuration`
+section as `using-git-worktrees` describes: relative to the primary checkout,
+defaulting to `.worktrees/` when absent.
+
+**If this task's record confirms it created `WORKTREE_PATH` using Git under
+that shared directory:** we own cleanup. A legacy `.worktrees/` or `worktrees/`
+path created by this task before the setting existed is also eligible.
+The parent directory alone does not authorize removing another task's or a
+native tool's worktree:
 
 ```bash
 git worktree remove "$WORKTREE_PATH"
@@ -246,7 +253,7 @@ place. If your platform provides a workspace-exit tool, use it.
 | "They seem done with this feature — I'll offer to discard it" | The menu is complete as written. Discard happens only when the user asks for it in so many words. |
 | "'Yeah, get rid of it' counts as confirmation" | Only the typed word `discard` authorizes deletion. |
 | "The PR is up, so the worktree is clutter now" | PR feedback gets fixed in that worktree. It stays until the work lands. Same for a bare push — the branch is still live work. |
-| "This other worktree looks stale — I'll clean it too" | Clean up only worktrees under `.worktrees/` or `worktrees/`. Everything else belongs to the host. |
+| "This other worktree looks stale — I'll clean it too" | Clean up only this task's recorded Git-created worktree under the configured shared directory (or its recorded legacy path). Other tasks' and native workspaces stay in place. |
 | "Removal refused — `--force` is just finishing the cleanup" | The refusal means files exist only in that worktree. `--force` destroys them permanently. Show the user and ask. |
 | "The merged-result failure is probably flaky" | A failing merged result stops everything. Branch and worktree stay put while you investigate. |
 | "The base branch is obviously main" | `<BASE_BRANCH>` governs when declared; otherwise confirm the fork point or ask. Merging into the wrong base is expensive to undo. |

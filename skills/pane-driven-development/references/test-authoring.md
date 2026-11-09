@@ -16,7 +16,11 @@ implementer.
 
 - **Its own worktree, detached at BASE.** One writer per working tree still
   binds, so the test author does not share the task worktree:
-  `git worktree add --detach <plan-workspace>/tests-task-N BASE`. Detached, not
+  resolve and verify `LOCATION` using `using-git-worktrees`' Shared Directory
+  Selection and Safety Verification, then ensure that parent exists. Choose a
+  unique child path, for example `mktemp -d "$LOCATION/tests-task-N-XXXXXX"`,
+  and run `git worktree add --detach <test-worktree-path> BASE`. A unique path
+  avoids collisions across plans and parallel tracks. Detached, not
   `-b`: a named branch outlives `git worktree remove`, and a fixed name would
   then collide with the next fix round, a parallel track at the same task
   number, and the next plan. Starting at BASE is also where its RED comes

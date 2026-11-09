@@ -60,6 +60,7 @@ Ask the user only about keys that cannot be inferred confidently. Never invent v
 | `REPO_INSTRUCTION_FILES` | The repo's instruction files, such as `README.md`, `AGENTS.md`, `CLAUDE.md`, or equivalent |
 | `BASE_BRANCH` | The branch feature worktrees and pull requests branch from (e.g. `main`, `dev`) |
 | `REPORT_DIRECTORY` | Git-ignored directory where delegated panes write their report files (e.g. `.tmp/`, `.herdrpowers/pdd/<plan>/`) |
+| `WORKTREE_DIRECTORY` | Shared parent directory for the repository's worktrees; propose `.worktrees/` unless the repo declares another preference. Relative paths resolve from the primary checkout, including when an agent is already in a linked worktree |
 | `DESIGN_DOC_PATH_PATTERN` | Where brainstorming design docs are written (e.g. `docs/designs/YYYY-MM-DD-feature.md`) |
 | `PLAN_PATH_PATTERN` | Where implementation plans are written (e.g. `docs/plans/YYYY-MM-DD-feature.md`) |
 | `PLAN_DIRECTORY` | Directory to search first when only a plan filename is given |
@@ -181,6 +182,7 @@ herdrpowers skills and commands resolve `<KEY>` placeholders from this section.
 - `REPO_INSTRUCTION_FILES`: <value>
 - `BASE_BRANCH`: <value>
 - `REPORT_DIRECTORY`: <value>
+- `WORKTREE_DIRECTORY`: <value>
 - `DESIGN_DOC_PATH_PATTERN`: <value>
 - `PLAN_PATH_PATTERN`: <value>
 - `PLAN_DIRECTORY`: <value>
@@ -308,6 +310,7 @@ local README byte for byte on repeat init; do not overwrite, merge, or refresh i
 8. Validate
 Re-read every written file and confirm:
 - the `Herdrpowers Configuration` section exists, every key has a value, and no value is still an angle-bracket placeholder;
+- `WORKTREE_DIRECTORY` resolves to the same absolute parent directory from the primary checkout and from linked worktrees, and is git-ignored when it is inside the repository;
 - `.herdrpowers/config.yaml` parses as YAML, has no angle-bracket placeholders left, carries a `fallbacks:` key, and defines every role that any assignment references;
 - top-level `profile` is null/`none` or a valid simple name whose selected local/shipped file exists and validates; errors remain explicit rather than clearing selection;
 - top-level `allow_agent_lifecycle` is a YAML boolean, not a string, null, or a field nested in a profile or `delegation`;
@@ -334,6 +337,7 @@ selected composition; installing templates alone does not change routes.
 
 - Never modify files that belong to the pack itself (the plugin installation directory, or checked-in copies of the pack's `skills/` and `commands/` directories). Assignments and gates are customized in the repository's `.herdrpowers/config.yaml`, never by editing `orchestration/roles.yaml` — that file is read-only on plugin installs and must stay diff-clean on checked-in copies.
 - `REPORT_DIRECTORY` must be git-ignored. If needed, propose an ignore change or choose an ignored directory. In the consumer repo, config, profile YAML, and the directory README must stay tracked; scratch stays ignored.
+- `WORKTREE_DIRECTORY` must be git-ignored when it is inside the repository. Verify the proposed directory itself, not another existing worktree directory; apply the same approval rule as for `REPORT_DIRECTORY` before adding an ignore entry. Preserve an existing declared value on reinitialization.
 - Require approval of the concrete proposed configuration before writing the init deliverables, including installing missing templates. Do not write unconfirmed guesses. Existing authorization to implement upstream plugin behavior is not an invocation of consumer init.
 - Preserve every byte of pre-existing instruction-file content outside the upserted section.
 - Mark proposed kinds/models/efforts unverified unless backed by current pane/footer evidence. Shipped profile strings remain exact even when unavailable; do not rewrite a template to fit the current session.
