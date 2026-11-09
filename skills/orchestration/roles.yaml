@@ -73,7 +73,7 @@ roles:
 # do not repair them or add fuzzy aliases (see references/profiles.md).
 # An agent with no entry here has no substitute.
 fallbacks:
-  claude@Fable 5.2: [cursor@Claude Fable 5.2, claude]
+  claude@Fable 5.2: [cursor@Claude Fable 5.2]
   claude@Opus 5.5: [cursor@Calude Opus 5.5, claude]
   codex@GPT-6-Astra: []
   codex@GPT-6.1-Sol: [codex]
