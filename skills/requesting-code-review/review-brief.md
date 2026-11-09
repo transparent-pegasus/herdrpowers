@@ -64,8 +64,10 @@ herdr pane wait-output "$PANE" --match "REVIEW_OK_<4-hex>" --timeout 900000
     Your review is read-only on this checkout. Do not mutate the working tree,
     the index, HEAD, or branch state in any way. Use tools like `git show`,
     `git diff`, and `git log` to inspect history. If you need a working copy
-    of a different revision, check it out into a separate temporary directory
-    (e.g. `git worktree add /tmp/review-[SHA] [SHA]`) — never move HEAD on
+    of a different revision, use a unique child of the shared
+    `<WORKTREE_DIRECTORY>`, resolved and verified per `using-git-worktrees`
+    (e.g. `git worktree add --detach <worktree-root>/review-[unique-id] [SHA]`),
+    and remove only that temporary worktree when finished — never move HEAD on
     this checkout. Cleaning the tree counts as mutating it: never execute
     `git checkout`, `git restore`, `git stash`, `git clean`, or `git reset`
     here. Other panes may have edits in flight, and a dirty tree is a

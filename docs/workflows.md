@@ -10,13 +10,22 @@ Every development workflow reads `orchestration` and its [profiles contract](../
 
 Repository initialization, re-runnable to update. Detects tooling, confirms a concrete configuration, and writes three deliverables:
 
-- the `Herdrpowers Configuration` section into the repo's `CLAUDE.md` / `AGENTS.md` — the section every other workflow and skill uses to resolve `<KEY>` placeholders (`<BASE_BRANCH>`, `<REPORT_DIRECTORY>`, `<PLAN_PATH_PATTERN>`, `<BASELINE_VERIFICATION_COMMAND>`, …);
+- the `Herdrpowers Configuration` section into the repo's `CLAUDE.md` / `AGENTS.md` — the section every other workflow and skill uses to resolve `<KEY>` placeholders (`<BASE_BRANCH>`, `<REPORT_DIRECTORY>`, `<WORKTREE_DIRECTORY>`, `<PLAN_PATH_PATTERN>`, `<BASELINE_VERIFICATION_COMMAND>`, …);
 - `.herdrpowers/config.yaml` — roles, task assignments, delegation, optional `profile`, and separate top-level strict boolean `allow_agent_lifecycle`. New targets use nested kind/model/effort settings; fallback strings remain exact and effort-free;
 - missing shipped `.herdrpowers/profiles/*.yaml` templates and their `README.md`. Preserve existing files, local README, and selection on repeat init; installation selects nothing. Config, profile YAML, and the directory README are tracked; report scratch is ignored.
 
 Pack files themselves are never edited. On Claude Code plugin installs it surfaces as `/herdrpowers:init`. See [Roles](./roles.md) for the schema and the full delegation-task table.
 
-Use when: the pack was just installed (plugin or checked-in copy), or the repo's base branch, report directory, or test/verification commands changed.
+`WORKTREE_DIRECTORY` is the shared parent for worktrees, proposed as `.worktrees/`
+and configurable in the primary checkout's instruction-file section. Relative paths resolve from
+the primary checkout, so every agent uses the same parent even when its current
+directory is a linked worktree. Coordination, track, test-author, and temporary
+review worktrees use unique child paths there; delegation briefs carry the
+specific worktree's absolute path. Native tools are used when they can honor the
+configured parent; otherwise creation uses Git. Existing configurations without
+the key use `.worktrees/`; rerun `/init` to declare or change it.
+
+Use when: the pack was just installed (plugin or checked-in copy), or the repo's base branch, report/worktree directory, or test/verification commands changed.
 
 ### `/full_cycle`
 

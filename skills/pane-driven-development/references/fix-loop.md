@@ -72,7 +72,9 @@ sees both halves:
    [test-author-brief.md](../test-author-brief.md), using that template's fix-round
    variant, and give it the open findings — not the fix diff.
 2. **Its worktree is detached at FIX_BASE**, the head the previous review saw:
-   `git worktree add --detach <plan-workspace>/tests-task-N-fix-R FIX_BASE`.
+   choose a unique path under the same resolved `WORKTREE_DIRECTORY` as the
+   implementation round (per [test-authoring.md](test-authoring.md)), then run
+   `git worktree add --detach <test-worktree-path> FIX_BASE`.
    The buggy implementation *is* present there — that is the point. Its RED is
    the finding reproducing: a new test must fail because the finding is still
    unfixed, and a test that passes at FIX_BASE does not cover the finding.

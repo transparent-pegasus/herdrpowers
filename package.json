@@ -1,6 +1,6 @@
 {
   "name": "herdrpowers",
-  "version": "1.19.0",
+  "version": "1.20.0",
   "description": "Multi-pane development framework for herdr: structured skills, multi-phase workflows, and configurable orchestration profiles for implementation, testing, and review.",
   "author": {
     "name": "transparent-pegasus",
