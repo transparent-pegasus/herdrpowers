@@ -30,12 +30,14 @@ Before starting, exiting, or restarting any agent, read
 and resolve the applicable top-level `allow_agent_lifecycle` policy from repo
 config over shipped defaults. It is a strict boolean, false when omitted;
 a profile or nested delegation field cannot grant it. False prohibits these
-process actions even for handoff, fallback, or recovery. True requires current
-installed Herdr/operation help and the target CLI's help before acting.
+process actions even for handoff, fallback, or recovery. True permits them
+only through `using-herdr-sibling-panes/scripts/agent-lifecycle.sh`; read
+[its reference](../using-herdr-sibling-panes/references/agent-lifecycle.md)
+before acting. The helper enforces the value and exits `6` otherwise.
 
 Start only in available in-scope shell panes, verify live model/effort, and
 record agents actually started for this task. End only those agents once idle
-with no pending work, using a verified installed operation. Permission does
+with no pending work, with the exit keys verified for that CLI. Permission does
 not authorize interrupting working agents, widening scope, or destroying
 workspace/tab/pane topology. A mismatched profile owner always requires the
 unused-versus-relay answer before handoff or startup. `herdr --skill` remains

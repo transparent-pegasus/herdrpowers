@@ -63,7 +63,7 @@ footer already selected by the CLI's composer rule:
 
 | kind | observed model/effort field | extraction |
 | --- | --- | --- |
-| claude | `Opus 5.5 medium` | trailing effort on the model segment, before any `·`; requires a model/effort statusLine |
+| claude | `Opus 5.5 medium` | trailing effort on the model segment, before any `·`; requires a model/effort statusLine ([snippet](agent-lifecycle.md#claude-shows-its-model-only-through-a-statusline)) |
 | codex | `GPT-5.6-Luna medium · weekly 99% left` | trailing effort on the first segment |
 | agy | `Gemini 3.8 Flash (High) \| 5h: 100% \| 7d: 100%` | parenthesized effort on the model segment |
 | grok | `Grok 4.7 (xhigh) · always-approve · …` | parenthesized effort on the first segment |
@@ -103,9 +103,12 @@ For startup/exit authorization, first read the core
 [profiles policy](../../orchestration/references/profiles.md). Top-level
 `allow_agent_lifecycle: false` forbids starting, exiting or restarting an agent
 to obtain a fixture or satisfy routing. Request the manual action or use an
-already available matching pane. When true, consult the installed Herdr guide
-and current command/CLI help; never infer a stop command or translate launch
-flags from the nested strings by guesswork.
+already available matching pane. When true, follow
+[agent-lifecycle.md](agent-lifecycle.md): its helper starts and ends agents
+behind the permission, with native flags taken from the CLI's own help and
+verified against the live footer. Never infer a stop command, and never treat
+a launch flag derived from the nested strings as proof. That reference also
+holds the statusLine a `claude` pane needs before it shows any model or effort.
 
 ### Onboarding a new agent CLI
 

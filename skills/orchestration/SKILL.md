@@ -28,7 +28,7 @@ The base files share this schema:
 - **`delegation:`** — defaults that apply to every task: `pane_scope` (which panes are eligible at all) and `execution` (parallel or serial by default).
 - **`assignments:`** — every delegation task, each with the role that performs it.
 - **`profile`** — optional composition name, not an assignment or a gate switch.
-- **`allow_agent_lifecycle`** — top-level strict boolean, separate from composition/delegation; defaults false. Read the profiles reference before any startup, exit, or recovery action, including owner handoff and fallback.
+- **`allow_agent_lifecycle`** — top-level strict boolean, separate from composition/delegation; defaults false. False starts and ends no agent. True lets the active owner start a resolved target that has no live match and end idle agents the task started, only through `agent-lifecycle.sh`, which enforces the value. Read the profiles reference before any startup, exit, or recovery action, including owner handoff and fallback.
 
 Merging is per key, not per file. Lists replace rather than concatenate.
 Profile keys override conflicting role bindings only when present; omitted
@@ -125,7 +125,7 @@ an enabled review still runs and `delegate` still requires a fresh subagent.
 Three rules bind wherever a list role is used:
 
 - **Separate targets use different agent types, or one type on distinct pinned models.** Compare model strings case-insensitively, with neither containing the other; a bare kind beside that kind on a model is the same type twice. Nested and legacy targets follow the same rule. Different effort on one model does not create a second independent slot. Each slot takes its own pane; leave an invalid/duplicated slot unavailable and report the reduced set.
-- **Degrade, never block.** A target counts as available only if an in-scope matching live agent exists, even if busy; wrong model/effort does not count. Wait for busy matches, never interrupt them. Run the available slots and report missing ones. If none can run, follow "Exhaustion and fallback" and the mandatory profile self-target mode, stating any lost independence.
+- **Degrade, never block.** A target counts as available only if an in-scope matching live agent exists, even if busy; wrong model/effort does not count. Wait for busy matches, never interrupt them. With lifecycle true, start a slot that has no live match before counting it missing. Run the available slots and report missing ones. If none can run, follow "Exhaustion and fallback" and the mandatory profile self-target mode, stating any lost independence.
 - **Say which it was.** Full set, degraded set, or single — the report names it, every time.
 
 Compare findings across the returned reviews, resolve disagreements, and only then act. Reviewers advise; the orchestrator decides.
@@ -164,7 +164,9 @@ Panes are not reserved per role. Pick any idle matching target within scope;
 a pane may serve a different role after its prior task finishes. When no
 candidate is idle, wait, use allowed fallbacks, or report degradation under
 the resolved mode. Do not interrupt working panes or reach outside scope.
-Apply lifecycle permission before any recovery/start/exit action.
+Apply lifecycle permission before any recovery/start/exit action: false
+starts nothing; true starts a target with no live in-scope match before any
+fallback, and ends the task-started agents when the run is done.
 
 Nested model/effort constraints must match live footer evidence before any
 key and after reset, per `using-herdr-sibling-panes`. Legacy pins still require
@@ -232,7 +234,8 @@ of one pinned model does not exhaust another model of that kind.
 4. Remember the exhausted target, including its pinned model, for the rest of the task; do not mark other models of that kind exhausted.
 
 Report which role fell back, to which target, why, and which constraints were
-lost. Lifecycle permission still applies; fallback never authorizes startup.
+lost. Fallback alone never authorizes startup. With lifecycle true, a target
+that is unavailable but not exhausted is started before its substitutes.
 
 ## Delegation contract
 

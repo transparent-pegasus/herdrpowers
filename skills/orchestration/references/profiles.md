@@ -23,6 +23,12 @@ the target repository (`<repo-root>`) from the installed plugin (`<pack>`).
    such as `"false"`, null, and collections are errors for this policy.
    A lifecycle policy nested under `delegation` or inside a profile is invalid
    and cannot authorize lifecycle actions.
+
+   A profile the user names in the task itself ("run this with `fable-opus`"),
+   or an explicit request to use none, selects the composition for that run
+   and takes precedence over the configured `profile`. Validate it the same
+   way and leave the configuration file unchanged. This covers selection
+   only: lifecycle permission comes from configuration alone, never from chat.
 3. For a selected name, read `<repo-root>/.herdrpowers/profiles/<name>.yaml`
    first; only if that file is absent, read the shipped
    `<pack>/.herdrpowers/profiles/<name>.yaml`. An invalid local file is an error,
@@ -120,19 +126,27 @@ Do not infer relay consent from silence, urgency, or the availability of a
 matching pane. No owner handoff or agent startup precedes the answer.
 
 After the answer, resolve an **effective owner target** within the frozen pane
-scope. Prefer the profile's primary target; wait for a busy matching agent
-rather than interrupting it. If that target is unavailable or exhausted, apply
-the exact fallback lookup below and try its substitutes left to right. Owner
-selection uses the same approved fallback map as worker selection. An exact
-empty list permits no substitute. A fallback has only its own kind/model
+scope, in this order:
+
+1. A live agent matching the profile's primary target. Wait for a busy match
+   rather than interrupting it.
+2. With lifecycle true and no live match in scope, start the primary in an
+   available in-scope shell pane, per the lifecycle section below: the
+   selected composition is stood up before any substitute is considered.
+3. If the primary is exhausted, or cannot be started and verified, apply the
+   exact fallback lookup below and try its substitutes left to right — a live
+   match first, a guarded start only with lifecycle true. Skip exhausted
+   targets.
+
+Owner selection uses the same approved fallback map as worker selection. An
+exact empty list permits no substitute. A fallback has only its own kind/model
 constraints and no effort constraint; do not carry primary effort into the
 handoff helper or pretend the substitute matches the primary target.
 
-If no existing candidate can serve, lifecycle false means reporting the manual
-setup needed for the primary or an allowed substitute. A shell is not an agent.
-With lifecycle true, use the guarded startup procedure below: try the primary
-first, then its allowed substitutes if the primary cannot be started/verified;
-skip exhausted targets. Verify the effective target before transferring authority.
+If nothing can serve, report the manual setup needed for the primary or an
+allowed substitute. With lifecycle false that is the outcome as soon as live
+candidates run out: a shell is not an agent, and nothing is started. Verify the
+effective target before transferring authority.
 The mismatched reception pane keeps its chosen unused/relay role; it is never
 silently promoted to fallback owner, even if a bare-kind substitute matches it.
 Neither fallback nor lifecycle permission waives the reception-role question.
@@ -165,27 +179,46 @@ and fallback, with or without a profile. It governs Herdr agent processes;
 creation of the profile routing table's in-process task subagents is a
 separate routing operation and remains allowed when this boolean is false.
 
-- **False:** reuse existing matching live agents only. Do not start, exit, or
-  restart agents to satisfy routing, whether through Herdr, shell commands,
-  composer keys, or recovery argv. Report required manual setup when existing
-  candidates and allowed fallbacks cannot serve the task. Resetting a live
-  worker's conversation through the normal submission helper is still the
-  delegation transport; it does not authorize restarting its agent process.
-- **True:** first read the installed `herdr` skill (`herdr --skill`), current
-  CLI help, and help for the actual lifecycle operation. Learn supported
-  commands and model/effort options at runtime; do not invent an agent-stop
-  subcommand or assume a CLI layout. Start only in available shell panes
-  inside the already resolved scope. Record agents actually started for this
-  task, then verify live kind/model/effort evidence after startup and again
-  through normal pre/post-reset checks. Unknown startup or footer support is
-  a reported inability, not a reason to fabricate success.
+The value works at runtime, not only on paper: every start and end goes
+through `using-herdr-sibling-panes/scripts/agent-lifecycle.sh`, which reads
+the resolved value and exits `6` without sending anything unless it is the
+literal `true`. Read
+[its reference](../../using-herdr-sibling-panes/references/agent-lifecycle.md)
+before the first lifecycle action; it holds the procedure, the exit codes, the
+observed start arguments and exit keys per CLI, and Claude's statusLine
+requirement.
 
-Permission true does not widen scope, authorize topology changes, interrupt
-working agents, or make existing unrelated agents task-owned. End only
-agents actually started for this task that are now idle, have no pending
-work/delegation, and can be ended by a verified installed operation. Preserve
-unrelated sessions/processes and every working agent. If those conditions or
-the supported operation cannot be verified, leave the agent and report it.
+- **False:** reuse existing matching live agents only. Do not start, exit, or
+  restart agents to satisfy routing, whether through the helper, Herdr, shell
+  commands, composer keys, or recovery argv. Report required manual setup when
+  existing candidates and allowed fallbacks cannot serve the task. Resetting a
+  live worker's conversation through the normal submission helper is still
+  the delegation transport; it does not authorize restarting its agent process.
+- **True:** the active owner stands up what the frozen routes need and removes
+  it afterwards.
+  - **Start** when a resolved target the run needs — the selected owner, a
+    separate coder or reviewer slot, or an allowed substitute — has no
+    matching live agent in scope. A busy match is waited for, not duplicated.
+    Start the primary before trying its substitutes; an exhausted target is
+    not restarted. Use an available shell pane inside the already resolved
+    scope. Native launch arguments come from the target CLI's own help and
+    are only an attempt: the helper verifies the live kind/model/effort
+    footer, and the normal pre/post-reset checks still follow. An agent whose
+    footer does not verify is not that target. Unknown startup or footer
+    support is a reported inability, not a reason to fabricate success.
+  - **End** only agents actually started for this task, once idle with no
+    pending work or delegation, when the run needs them no more and at the
+    latest before the final report. The helper's ledger records what the task
+    started and refuses everything else. An owner started for a handoff
+    holds the task: it is left running and reported.
+
+Permission true does not widen scope, authorize topology changes (no pane,
+tab, or workspace is created or closed), interrupt working agents, answer a
+startup dialog for the user, or make existing unrelated agents task-owned.
+Preserve unrelated sessions/processes and every working agent. If an
+operation cannot be verified — an unknown CLI layout, a kind without verified
+exit keys, an open dialog — leave the agent and report it. Never invent a
+stop command. Workers never start or end agents.
 
 ## Profile routing: mode takes precedence
 

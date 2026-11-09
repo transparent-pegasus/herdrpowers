@@ -25,8 +25,9 @@ with its exact strings and observed footer. Submit as
 `composer-submit.sh PANE INSTRUCTION MODEL EFFORT` (effort is argument four).
 Do not carry effort onto string fallbacks. Top-level `allow_agent_lifecycle`
 is false by default: a worker may not start/exit/restart an agent to satisfy
-routing; the active owner follows the core policy and installed guide/current
-help if lifecycle is authorized. Never interrupt working or unrelated agents.
+routing; the active owner follows the core policy and
+[agent-lifecycle.md](agent-lifecycle.md) when the configuration sets it true.
+Never interrupt working or unrelated agents.
 
 **Reports go to files.** Terminal scrollback is lossy — an agent on the alternate screen loses rows that `pane read` cannot always recover. Name a report file path in every brief (under `<REPORT_DIRECTORY>`, or the worktree's scratch directory) and require the pane to write its full report there and reply with that path plus the marker. Read the file; do not reconstruct the result from scrollback.
 
