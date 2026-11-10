@@ -31,7 +31,7 @@ The base files share this schema:
 - **`allow_agent_lifecycle`** — top-level strict boolean, separate from composition/delegation; defaults false. False starts and ends no agent. True lets the active owner start a resolved target that has no live match and end idle agents the task started, only through `agent-lifecycle.sh`, which enforces the value. Read the profiles reference before any startup, exit, or recovery action, including owner handoff and fallback.
 
 Merging is per key, not per file. Lists replace rather than concatenate.
-Profile keys override the orchestrator, generalist, coder, or reviewer binding
+Profile keys override the planning-design, orchestrator, coder, reviewer, or generalist binding
 only when present; omitted keys preserve them. A profile never changes
 assignments, gate enablement, or delegation defaults. Empty profile reviewers select the owner, while a legacy
 empty role list keeps its disabling semantics if no profile overrides it.

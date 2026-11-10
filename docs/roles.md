@@ -23,11 +23,11 @@ Customize the repo file, not `roles.yaml` — plugin installs are read-only, and
 After merging repo config over shipped roles, overlay only keys present in the
 selected `.herdrpowers/profiles/<name>.yaml`, repo-local first and shipped only
 if absent locally. Invalid names, files, or targets are explicit errors. Profiles
-contain only `orchestrator`, `generalist`, `coder`, and `reviewers`; omitted slots keep resolved
-roles. Coder/generalist `orchestrator`, `null`, `[]`, or `none` binds to the
+contain only `planning-design`, `orchestrator`, `coder`, `reviewers`, and `generalist`;
+omitted slots keep resolved roles. Planning-design/coder/generalist `orchestrator`, `null`, `[]`, or `none` binds to the
 owner (solo coder); owner reviewers
 (`[orchestrator]`, `[]`, null, `none`) select the owner without disabling a gate. Lists replace.
-Preserve custom planning-design bindings, generalist bindings the profile omits,
+Preserve planning-design/generalist bindings the profile omits,
 added roles, assignments, modes, and gates. A concrete coder matching the owner
 is still a separate worker.
 

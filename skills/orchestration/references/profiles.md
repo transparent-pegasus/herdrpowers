@@ -46,13 +46,15 @@ the directory holding `skills/`, three levels above this file.
    execution strategy, and lifecycle permission for the run. Do not rewrite
    configuration or switch profiles to escape a missing agent or a gate.
 
-Profiles contain only `orchestrator`, `generalist`, `coder`, and `reviewers`.
+Profiles contain only `planning-design`, `orchestrator`, `coder`, `reviewers`,
+and `generalist`.
 Each is optional in a custom profile; shipped compositions live in the six YAML
 assets, which are the source of truth for their values and reviewer order.
 
 | Profile key | When absent | When present |
 |---|---|---|
 | `orchestrator` | Keep the legacy owner, the pane receiving the user's task | One nested target selects the active owner; null, `none`, and lists are invalid |
+| `planning-design` | Keep the resolved `roles.planning-design` binding | One nested target replaces that binding; bare `orchestrator`, null, `[]`, or literal `none` binds it to the active owner |
 | `generalist` | Keep the resolved `roles.generalist` binding | One nested target replaces that binding; bare `orchestrator`, null, `[]`, or literal `none` binds it to the active owner |
 | `coder` | Keep the resolved `roles.coder` binding | One nested target replaces that binding; bare `orchestrator`, null, `[]`, or literal `none` binds it to the active owner, with no separate coder |
 | `reviewers` | Keep the resolved `roles.reviewer` binding | A nonempty list of nested targets replaces that binding in order; `[orchestrator]`, `[]`, null, or literal `none` binds it to the active owner, with no external reviewers |
@@ -66,10 +68,9 @@ the selected profile has not overridden it; profile omission must not
 reactivate it. The profile's explicit empty `coder` or `reviewers` replaces
 that binding, so legacy empty-list disabling no longer applies to it.
 
-Owner selection does not replace `planning-design` bindings. An existing
-`agent: orchestrator` is a dynamic alias for the active owner; custom bindings
-to other targets remain intact when the profile omits `generalist`, as do all
-user-added roles.
+An existing `agent: orchestrator` is a dynamic alias for the active owner;
+custom `planning-design`/`generalist` bindings remain intact when the profile
+omits that key, as do all user-added roles.
 A concrete coder/reviewer target remains a separate worker even when its
 kind/model equals the owner's. Only an owner alias or a mode resolving to
 the owner is a self-target.
