@@ -1,7 +1,7 @@
 {
   "name": "herdrpowers",
-  "version": "1.20.0",
-  "description": "Multi-pane development framework for herdr: structured skills and multi-phase workflows that delegate implementation, testing, and review to idle sibling agent panes instead of in-process subagents.",
+  "version": "1.21.0",
+  "description": "Development framework for herdr: structured skills and workflows with configurable profiles, model/effort targets, TDD, and explicit work and review routes.",
   "author": {
     "name": "transparent-pegasus",
     "url": "https://github.com/transparent-pegasus"
@@ -28,7 +28,7 @@
   "interface": {
     "displayName": "Herdrpowers",
     "shortDescription": "Herdr multi-pane orchestration for the whole development cycle",
-    "longDescription": "Route every task that arrives from the user through the pane that received it, plan and independently review before touching code, then delegate implementation, test authoring, and code review to idle sibling agent panes in herdr. Covers brainstorming, planning, TDD, systematic debugging, parallel execution across worktrees, review, and finishing a branch — with no in-process subagents and a fallback agent when one is exhausted.",
+    "longDescription": "Plan, implement, test, and review through resolved assignments and optional composition profiles. Separate delegated targets use reset-backed Herdr panes; profile self-target delegation uses fresh subagents, while other owner-session modes permit reported self-review. Covers TDD, debugging, worktrees, verification, and branch integration with explicit lifecycle permission and honest fallback reporting.",
     "developerName": "transparent-pegasus",
     "category": "Developer Tools",
     "capabilities": [

@@ -1,10 +1,10 @@
 ---
-description: Interactive workflow for brainstorming, plan creation, and independent review
+description: Interactive workflow for brainstorming, plan creation, and configured review
 ---
 
 # /plan Workflow
 
-This command runs only the discovery and planning stages of the development cycle. The plan is **not** complete when it is written — it is complete after independent review, resolution of the findings, and the user's approval.
+This command runs only the discovery and planning stages of the development cycle. The plan is complete after its enabled review gate, resolution of findings, and the user's approval. Report disabled or unavailable review and permitted self-review explicitly.
 
 ## Deliverable Saves
 
@@ -20,7 +20,7 @@ Do not edit workflow files unless the user's current request explicitly asks to 
 
 ## Orchestration
 
-Planning and design stay with the orchestrator — the pane the user typed the request into. Only the reviews are delegated, through the `orchestration` skill with `using-herdr-sibling-panes` as the transport. Read both before the first delegation, and resolve the repository's assignments and review gates as `orchestration` describes: `.herdrpowers/config.yaml` first, then `orchestration/roles.yaml` for anything it omits. Every gate this workflow would run is resolved up front; a gate set to `enabled: false` is skipped and named in the final report. In-process subagents are not used for workflow work, with one exception: a review task whose resolved mode is `orchestrator` runs in a fresh subagent the orchestrator spawns.
+Read `orchestration`, its [profiles contract](../skills/orchestration/references/profiles.md), and `using-herdr-sibling-panes` before routing. Resolve repo config over shipped roles, then only present profile composition keys; freeze targets, modes, gates, scope, and lifecycle policy. Drafting follows `plan-and-design`; the active owner keeps decisions. Separate delegated targets use reset-backed panes. With a selected profile, self-target `delegate` requires fresh in-process subagents for work and reviews, even with empty reviewers; other owner-session modes permit inline work/self-review and optional subagents at the owner's judgment. Without a profile, preserve legacy independence, including fresh-subagent orchestrator-mode reviews. Workers never re-delegate. An explicit profile-owner handoff transfers ownership under the canonical contract; ordinary worker delegation does not.
 
 ## Execution Steps
 
@@ -36,14 +36,13 @@ Read and use the writing-plans skill to break the design into small achievable t
 Save the plan to `<PLAN_PATH_PATTERN>`.
 Proceed directly to Step 3 — do not ask for approval yet.
 
-3. Independent Review
+3. Plan Review
 Gate: `assignments.plan-review`. When it is disabled, skip this step, tell the user the plan is going to approval unreviewed, and go to Step 4.
-Inform the user that the plan goes to independent review before approval.
-Resolve the Reviewer role from the merged configuration and delegate the **same self-contained review request** to one idle pane of each Reviewer agent type, in separate panes, with no shared draft opinion between them. The number of reviews is the length of the resolved `roles.reviewer.agents` list.
+Inform the user how the resolved plan review will run before approval.
+Resolve the gate's effective role and mode, then use the **same self-contained review request** for each effective entry. Separate delegated targets use matching in-scope reset-backed panes without shared draft opinions; owner targets follow the profile/mode rules above. Empty profile reviewers select the owner and do not disable this gate.
 Each review request states: the plan file path, the design doc path, the absolute repository path, that the review is read-only, the report-file path under `<REPORT_DIRECTORY>`, a unique completion marker, and that the recipient must execute the review itself and must not re-delegate.
 Wait for every review to finish, read each report file, and compare the findings.
-Each review is a reset-backed submit — the drafting pane is fine after a reset.
-Degrade instead of blocking: with only one Reviewer agent type available, run a single review and say so; with none available, critically review the plan yourself and state that no independent review happened.
+A separate delegated reviewer may reuse the drafting pane after reset. Degrade unavailable separate review sets honestly. Without a profile, retain the legacy critical self-review fallback when no delegated Reviewer is available; with a profile, a route resolving to the owner still obeys its mode. Missing mandatory subagent capability is an inability, never inline substitution or a passed gate.
 
 4. Resolution and Approval
 Resolve every finding: fix the plan, or record why the finding does not apply. Where reviews disagree, decide and state the reasoning — reviewers advise, the orchestrator judges.
@@ -56,4 +55,6 @@ Present the resolved plan, the findings, and their resolutions to the user, and 
 - The remaining development-cycle responsibilities live in `/execute`, `/execute_parallel`, and `/full_cycle`, not in `<REPO_INSTRUCTION_FILES>`.
 - If the design discussion changes scope materially, revisit Brainstorming before writing the plan.
 - Name in the final report which reviews ran, which were skipped for lack of panes, which were disabled in `.herdrpowers/config.yaml`, any non-default assignment or mode, and any role that fell back to a substitute agent.
+- Include the profiles contract's run record, especially selected owner/reception role, transports, model/effort evidence, self-review versus independence, and unavailable mandatory subagents.
+- With `allow_agent_lifecycle: true`, start a resolved target that has no live in-scope match and, before the final report, end the idle agents this run started — both only through `agent-lifecycle.sh`. Name every agent started, ended, or left running. With `false`, start and end none.
 - Read the specific `SKILL.md` file for a skill before invoking it.

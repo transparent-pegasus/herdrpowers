@@ -1,0 +1,5 @@
+SYNTHETIC: observed Grok footer with xhigh replaced by high.
+Model · Grok 4.6 (xhigh) (stale header)
+
+❯
+Grok 4.7 (high) · always-approve · 1.3K / 500K (0%) · ctrl+o transcript

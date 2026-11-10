@@ -10,15 +10,15 @@ Run the `/full_cycle` workflow exactly as written: read `full_cycle.md` — the 
 
 **Every review gate runs, whatever `.herdrpowers/config.yaml` says.**
 
-Resolve the configuration the way `orchestration` describes — the repository's `.herdrpowers/config.yaml` first, `orchestration/roles.yaml` for anything it omits — and then ignore `enabled` on every review task in the resolved result. Each counts as `enabled: true` for this run, including any review task a later pack release adds. `/full_cycle`'s "when it is disabled, skip" clauses therefore never fire here.
+Resolve configuration and the selected composition through `orchestration` and its [profiles contract](../skills/orchestration/references/profiles.md), then ignore `enabled` on every review task in the resolved result. Each counts as `enabled: true` for this run, including later gates. `/full_cycle`'s disabled-gate skip clauses therefore never fire here.
 
-Nothing else changes. `role` and `mode` still bind for every task, as do `roles:`, `fallbacks:`, and `delegation:` — strict mode does not widen `delegation.pane_scope` to find a pane for a forced-on gate, and does not change `delegation.execution`. Strict mode overrides one key: it never reassigns a role, changes a mode, or relaxes an invariant — review independence remains the reset session (not pane identity), and a review whose role binds to a list of agent types still runs once per entry.
+Nothing else changes. Effective profile targets, `role`, `mode`, `fallbacks`, scope, strategy, and lifecycle policy still bind. Separate delegated reviews use reset-backed panes; profile self-target `delegate` requires fresh subagents, while other owner-session modes permit reported self-review and optional subagents. No-profile independence is preserved. Strict mode changes only `enabled`, never targets, modes, or lifecycle permission.
 
 Never write the configuration file. `enabled: false` stays where the user put it; this run declines to honor it and says so in the report.
 
 ## What Forcing a Gate On Cannot Do
 
-A gate still needs a pane. If the role a review resolves to has no available agent type — an empty `agents:` list, or no idle pane of any listed type — the gate degrades exactly as `orchestration`'s "Roles that bind to a list" and "Exhaustion and fallback" sections describe. Forced on is a decision, not a guarantee that the review happened; the report names what actually ran.
+A gate still needs its resolved execution route. An unoverridden legacy empty role list retains its disabling semantics; profile empty reviewers instead select the owner. Unavailable separate targets degrade under `orchestration`; a mandatory fresh subagent that cannot spawn is inability, not inline success. Forced on does not prove a review happened; report the actual transport and self-review versus independence.
 
 ## Reporting
 

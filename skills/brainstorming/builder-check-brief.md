@@ -1,8 +1,8 @@
 # Builder Check Brief Template
 
-The builder check is the `plan-review` gate, resolved through `orchestration` like any review. Under `mode: delegate` it runs in a **sibling pane via a reset-backed submit** — one pane per entry of the resolved role. Under `mode: orchestrator` a fresh subagent the orchestrator spawns gets the same contract. Write the contract below to a file under `<REPORT_DIRECTORY>`, filling in the domain and the document path, and submit a one-line instruction that points at it; the contract itself never goes through the composer.
+The builder check is the `plan-review` gate. Resolve it through `orchestration` and its [profiles contract](../orchestration/references/profiles.md): separate delegated targets use reset-backed panes, selected-profile self-target `delegate` requires fresh subagents even with empty reviewers, and other owner-session modes permit reported self-review and optional subagents. Without a profile, retain legacy fresh-context review. Disabled gates stay off. Write the contract below under `<REPORT_DIRECTORY>`; the one-line submission example is for Herdr transport. Subagents receive the same contract and never re-delegate; owner-session review uses its questions and written report without claiming a fresh reader.
 
-**Purpose:** someone who will build from the written design, and cannot talk to its author, lists what they would still need to ask.
+**Purpose:** read the written design as its builder and list what would still need an answer. Independent readers cannot rely on the author's session; permitted owner-session self-review uses the same document-only question checklist and is reported as self-review.
 
 **Dispatch after:** a project's full written design exists, before the user reads it. A small change's short design goes directly to the user without this check.
 

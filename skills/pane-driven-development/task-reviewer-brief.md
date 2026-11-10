@@ -6,10 +6,14 @@ compliance and code quality.
 **Purpose:** verify one task's implementation matches its requirements (nothing
 more, nothing less) and is well-built (clean, tested, maintainable).
 
-**Independence:** send this via a **reset-backed submit** to any idle pane of
-the resolved role's agent type(s) — including the pane that implemented.
-Because the implementing pane wrote its own tests (when `test-authoring` is
-`implementer`), the reviewer is the independent check on the tests: review them.
+**Route:** follow `orchestration` and its [profiles contract](../orchestration/references/profiles.md).
+Separate delegated reviewers use reset-backed panes, including the implementer
+after reset. Profile self-target `delegate` requires a fresh subagent; other
+owner-session modes permit reported self-review and optional subagents. Keep
+no-profile independence. The example below is for Herdr transport; every
+worker receives this contract and must not re-delegate. When the implementer
+wrote its tests, review that code too; say whether this check was independent
+or same-session self-review.
 
 ## 1. The submitted instruction (one line)
 
@@ -91,8 +95,9 @@ Your instruction says who wrote these tests. Review the test code in the diff
 either way — but the evidence you are checking for, and how load-bearing your
 audit is, differ:
 
-- **The implementer wrote them** (one report file): you are the only
-  independent check on them. RED and GREEN both belong in that report — a
+- **The implementer wrote them** (one report file): audit the test code too;
+  record whether your review is independent or permitted profile self-review.
+  RED and GREEN both belong in that report — a
   failing run *before* the implementation with a reason that matches the
   missing behavior, and a passing run after.
 - **A separate pane wrote them** (a second report file, named in your

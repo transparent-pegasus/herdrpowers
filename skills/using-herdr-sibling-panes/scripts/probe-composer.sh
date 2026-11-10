@@ -5,10 +5,10 @@ set -uo pipefail
 # composer-submit.sh. Run this ONCE per agent CLI (and after any CLI upgrade)
 # before that agent is used as a delegation target.
 #
-# usage: probe-composer.sh <pane-id> [<model>]
+# usage: probe-composer.sh <pane-id> [<model> [<effort>]]
 #
-# <model> is the model half of an `agent@model` entry the pane should serve;
-# steps 4-5 then submit through the helper's model check.
+# <model> and <effort> are settings from the resolved nested target;
+# submissions then use the helper's model/effort checks. Effort requires model.
 #
 # Checks, in order:
 #   1. pane runs an agent and is idle
@@ -23,7 +23,7 @@ set -uo pipefail
 #   9. a running task can be interrupted and the pane returns to idle
 #  10. the agent process is still the same one it was at step 1
 #  11. the footer model line is still readable after the probe's resets
-#      (and, with <model>, still contains it)
+#      (and any requested model and effort still match)
 #  12. a submission pinned to a model the pane does not run is refused with
 #      exit 5 and the pane stays idle
 # Steps 11-12 SKIP for an agent kind with no model-line rule.
@@ -33,10 +33,16 @@ set -uo pipefail
 
 pane_id=${1:-}
 model=${2-}
-if [[ -z $pane_id || $# -gt 2 || ($# -eq 2 && -z $model) ]]; then
-  echo "usage: probe-composer.sh <pane-id> [<model>]" >&2
+effort=${3-}
+if [[ -z $pane_id || $# -gt 3 || ($# -ge 2 && -z ${model//[[:space:]]/}) ||
+      ($# -eq 3 && -z ${effort//[[:space:]]/}) ||
+      $model == *$'\n'* || $model == *$'\r'* || $effort == *$'\n'* || $effort == *$'\r'* ]]; then
+  echo "usage: probe-composer.sh <pane-id> [<model> [<effort>]]" >&2
   exit 1
 fi
+target_settings=()
+[[ -z $model ]] || target_settings+=("$model")
+[[ -z $effort ]] || target_settings+=("$effort")
 
 here=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 submit=$here/composer-submit.sh
@@ -116,7 +122,11 @@ ok "2 pane meets the composer width floor ($cols cols, floor $composer_min_cols)
 
 # Read before any key is sent; step 11 compares it with the line after the resets.
 model_before_rc=0
-model_before=$(bash "$here/pane-model.sh" "$pane_id" ${model:+"$model"} 2>/dev/null) || model_before_rc=$?
+model_before=$(bash "$here/pane-model.sh" "$pane_id" "${target_settings[@]}" 2>/dev/null) || model_before_rc=$?
+if [[ -n $model && $model_before_rc -ne 0 ]]; then
+  bad "model/effort could not be verified before the probe (exit $model_before_rc); no keys sent"
+  exit 1
+fi
 
 # 3. leftover text must clear without ctrl+c (ctrl+c quits some TUIs)
 herdr pane send-text "$pane_id" "PROBE_LEFTOVER_TEXT" >/dev/null; sleep 0.6
@@ -142,7 +152,7 @@ probe_word=PERIWINKLE
 instruction="Reply with exactly one line: the name of the current git branch. The probe word for this conversation is $probe_word. Make no edits and execute no shell commands. End your reply with $marker_head immediately followed by $marker_tail."
 
 submit_rc=0
-bash "$submit" "$pane_id" "$instruction" ${model:+"$model"} >/dev/null 2>&1 || submit_rc=$?
+bash "$submit" "$pane_id" "$instruction" "${target_settings[@]}" >/dev/null 2>&1 || submit_rc=$?
 if [[ $submit_rc -eq 0 ]]; then
   ok "4 session reset sent and the TUI survived"
   ok "5 instruction submitted and the pane started working"
@@ -180,7 +190,7 @@ wait_idle 60 || true
 # can match, and the reply is read only once the pane is idle again.
 fresh_tail=_$(printf '%04X' "$RANDOM")
 fresh_rc=0
-bash "$submit" "$pane_id" "If an earlier message in this conversation gave you a probe word, end your reply with that word immediately followed by $fresh_tail; if none did, end your reply with NONE immediately followed by $fresh_tail. Make no edits and execute no shell commands." >/dev/null 2>&1 || fresh_rc=$?
+bash "$submit" "$pane_id" "If an earlier message in this conversation gave you a probe word, end your reply with that word immediately followed by $fresh_tail; if none did, end your reply with NONE immediately followed by $fresh_tail. Make no edits and execute no shell commands." "${target_settings[@]}" >/dev/null 2>&1 || fresh_rc=$?
 if [[ $fresh_rc -ne 0 ]]; then
   bad "8 reset-check submission failed (composer-submit.sh exited $fresh_rc)"
 elif ! herdr pane wait-output "$pane_id" --regex "(NONE|$probe_word)$fresh_tail" --timeout 120000 >/dev/null 2>&1; then
@@ -200,7 +210,7 @@ interrupt_keys=esc
 # OpenCode's first esc only arms "esc again to interrupt".
 [[ $agent == opencode ]] && interrupt_keys="esc esc"
 interrupt_submit_rc=0
-bash "$submit" "$pane_id" "Count slowly from 1 to 400, one number per line, with no other output." >/dev/null 2>&1 || interrupt_submit_rc=$?
+bash "$submit" "$pane_id" "Count slowly from 1 to 400, one number per line, with no other output." "${target_settings[@]}" >/dev/null 2>&1 || interrupt_submit_rc=$?
 if [[ $interrupt_submit_rc -eq 4 ]]; then
   bad "9 interrupt-test submission hit the layout floor (composer-submit.sh exited 4); widen the pane and re-run"
   exit 1
@@ -237,7 +247,7 @@ if [[ $model_before_rc -eq 3 ]]; then
   printf 'SKIP  %s\n' "12 no model-line rule for '$agent'"
 else
   model_after_rc=0
-  model_after=$(bash "$here/pane-model.sh" "$pane_id" ${model:+"$model"} 2>/dev/null) || model_after_rc=$?
+  model_after=$(bash "$here/pane-model.sh" "$pane_id" "${target_settings[@]}" 2>/dev/null) || model_after_rc=$?
   if [[ $model_before_rc -eq 0 && $model_after_rc -eq 0 ]]; then
     ok "11 model line read before and after the resets ('$model_before' / '$model_after')"
   else

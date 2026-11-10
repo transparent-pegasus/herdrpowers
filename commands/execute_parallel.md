@@ -20,13 +20,13 @@ Do not edit workflow files unless the user's current request explicitly asks to 
 
 ## Orchestration
 
-Every dispatch in this workflow goes through the `orchestration` skill, with `using-herdr-sibling-panes` as the transport. Read both before the first delegation, and resolve the repository's assignments and review gates as `orchestration` describes: `.herdrpowers/config.yaml` first, then `orchestration/roles.yaml` for anything it omits. Every gate this workflow would run is resolved up front; a gate set to `enabled: false` is skipped and named in the final report.
+Read `orchestration`, its [profiles contract](../skills/orchestration/references/profiles.md), and `using-herdr-sibling-panes` before routing work. Resolve repo config over shipped roles, then only composition keys present in the selected profile. Freeze the active owner, targets, assignments, gates, scope, strategy, and lifecycle policy. A profile never rewrites modes or gate enablement; a disabled gate is skipped and named in the report.
 
-Routing comes from `assignments:`, not from this file, and the resolved YAML is the source of truth for every default — read each task's `role` and `mode` there rather than recalling one. This workflow touches implementation tracks (`complex-coding` / `simple-coding`), `test-authoring`, `fix-round-test-authoring`, `review-fixes`, `chores`, `verification`, `documentation-impact-review`, `task-review`, `fix-round-re-review`, and `final-branch-review`. A review task whose role binds to a list of agent types runs once per entry.
+Routing comes from `assignments:`, not from this file, and the resolved YAML is the source of truth for every default — read each task's `role` and `mode` there rather than recalling one. This workflow touches implementation tracks (`complex-coding` / `simple-coding`), `test-authoring`, `fix-round-test-authoring`, `review-fixes`, `chores`, `verification`, `documentation-impact-review`, `task-review`, `fix-round-re-review`, and `final-branch-review`. A review task whose effective role binds to a list runs once per entry.
 - Track extraction, integration, and final synthesis stay with the orchestrator.
-- In-process subagents are not used for workflow work, and the Agent tool is not dispatched for it — with one exception: a review task whose resolved mode is `orchestrator` runs in a fresh subagent the orchestrator spawns.
+- Separate delegated targets use reset-backed Herdr panes, even when a concrete target matches the owner's model. With a selected profile, self-target `delegate` requires a fresh in-process subagent for work and reviews, including empty reviewers; other owner-session modes permit inline work/self-review and optional subagents at the active owner's judgment. Report self-review honestly. Without a profile, keep legacy routing and fresh-subagent orchestrator-mode reviews. Workers never re-delegate.
 
-**Parallelism is bounded by panes and worktrees, not by ambition.** One implementation pane per worktree, one worktree per track — and count the whole writer set a track needs, not one pane per track: with `test-authoring` in `mode: delegate` a track occupies two panes of the resolved role at once (implementer plus test author, each in its own worktree), and the reviews that follow need idle panes of the review role (reset-backed; may reuse a writer pane after it finishes).
+**Parallelism is bounded by resolved routes and worktrees.** One implementation writer per worktree, one worktree per track. Count the whole writer set: delegated implementation and test authoring each need a fresh worker and separate worktree. Separate targets need matching Herdr panes; selected-profile self-target `delegate` needs fresh-subagent capacity. Enabled reviews use their own resolved transport, including permitted owner-session self-review. Serializing tracks never changes these routes.
 
 Only panes within `delegation.pane_scope` count toward that arithmetic — under its default, `tab`, idle panes in another tab are not available to this workflow at any point.
 
@@ -34,7 +34,7 @@ Do not compute a wave plan from those numbers. Take what is idle, start those tr
 
 **Every delegation** states its own track's absolute worktree path (and requires the pane to confirm it is there first), the owned files, the edit policy, the report-file path under `<REPORT_DIRECTORY>`, a unique completion marker, and the prohibition on re-delegating. Read results from report files, not from pane scrollback.
 
-**Degrade, don't block.** If `HERDR_ENV` is unset or no idle sibling agent pane exists, stop parallel execution and continue with `/execute`, stating why.
+**Degrade honestly.** If the resolved routes cannot run concurrently, continue with `/execute`, stating why and preserving all modes. Missing mandatory subagent capability is a reported inability, never inline delegation. No-profile unavailable Herdr transport retains its legacy inline fallback.
 
 ## Execution Steps
 
@@ -66,7 +66,7 @@ Record each track's absolute worktree path — the track's delegation brief must
 Proceed directly to Step 3 after setup completes.
 
 3. Documentation Impact Review
-Gate: `assignments.documentation-impact-review`. When it is disabled, skip this step and name the skipped gate in the final report — the tracks then run with no update list, and Step 5 has nothing to apply. Route it by its resolved role and mode: `delegate` runs the sweep in a fresh pane that reports back, `orchestrator` runs it in this pane.
+Gate: `assignments.documentation-impact-review`. When it is disabled, skip this step and name the skipped gate in the final report — the tracks then run with no update list, and Step 5 has nothing to apply. Use the review route resolved above, including mandatory profile self-target subagents and the legacy no-profile fresh-subagent rule.
 Inform the user that the sweep will identify every file that must be updated if the implementation changes behavior, contracts, prompts, schema, or workflow instructions.
 Produce one explicit post-integration update list covering `<REPO_INSTRUCTION_FILES>`, any affected files under `docs/`, any agent-instruction directories present (such as `.claude/`, `.agents/`, `commands/`), example env/config files, and CI/deploy definitions. The list is post-integration by construction: documentation is never a parallel track, so nothing here is owned by one.
 Proceed to Step 4 only after the update target list is explicit.
@@ -75,12 +75,12 @@ Proceed to Step 4 only after the update target list is explicit.
 Inform the user that parallel implementation and testing will begin.
 Read and use the pane-driven-development skill for the per-track task loop.
 For each confirmed implementation track:
-- assign the track its writer set — an implementation pane and its worktree, plus a test-author pane and worktree when `test-authoring` is delegated — and wait rather than start a track whose writers are not all available
+- assign the track its resolved writer set and worktrees, including a separate BASE worktree for delegated test authors; wait rather than start without the required writer capacity
 - provide the exact task text (as a brief file), owned files, constraints, and expected verification
 - require the implementer to stop and escalate if the task expands beyond its assigned ownership
 - route the track's tests by the resolved `test-authoring` assignment and say which in the brief; a delegated test author gets its own worktree off the track's base, never the track's worktree
 - run track-local verification inside that track's worktree before considering the track complete
-- send each track's task review to any idle pane of the resolved role's agent type(s) via a reset-backed submit — once per entry when the resolved role binds to a list
+- run each enabled task review through its effective target and mode, once per list entry; profile self-target `delegate` requires fresh subagents, other owner-session modes permit reported self-review, and separate delegated targets use reset-backed panes
 
 On any test failure, unexpected behavior, or bug — in a pane or in the orchestrator — use the systematic-debugging skill before proposing or applying a fix. A test author's RED run is not a failure in this sense: a test that fails for its stated reason, in a worktree where the covered behavior is absent or the finding is unfixed, is the evidence the task asked for. Debug the failures that survive the merge, and any failure whose reason does not match what the test author predicted.
 
@@ -111,8 +111,8 @@ If any task is discovered to be coupled, conflicting, or blocked on another trac
 7. Final Code Review
 Gate: `assignments.final-branch-review`. When it is disabled, skip to Step 8 and tell the user the branch is reaching the integration decision unreviewed.
 Inform the user that the final review is starting.
-Read and use the requesting-code-review skill to delegate a whole-branch review via a reset-backed submit over the fully integrated changeset on the coordination branch.
-Fix any critical or important issues reported — one fix delegation carrying the complete findings list, not one pane per finding.
+Read and use requesting-code-review to run the whole-branch gate over the fully integrated coordination branch through its resolved target and mode.
+Fix critical or important issues through `review-fixes`: one fix wave carrying the complete findings list, with profile self-targets retaining their mode.
 Proceed to Step 8 only when the review assesses it as Ready to merge.
 
 8. Integration and Cleanup
@@ -137,4 +137,6 @@ Do not assume merge. Execute only the chosen option. Per-track worktrees whose w
 - If tests fail or errors occur, pause and use the systematic-debugging skill.
 - Before claiming that verification passed or the task is complete, use `verification-before-completion`.
 - Name in the final report every role that fell back to a substitute agent, every non-default assignment or mode and every disabled review from `.herdrpowers/config.yaml`, and every step that ran in the orchestrator pane instead of being delegated.
+- Include the canonical profiles contract's run record: selected profile or none, active owner/reception role, verified targets, task/review transports, self-review versus independence, unavailable routes, fallbacks/lost effort, lifecycle actions, and test writer.
+- With `allow_agent_lifecycle: true`, start a resolved target that has no live in-scope match and, before the final report, end the idle agents this run started — both only through `agent-lifecycle.sh`. Name every agent started, ended, or left running. With `false`, start and end none.
 - Read the specific `SKILL.md` file for a skill before invoking it.

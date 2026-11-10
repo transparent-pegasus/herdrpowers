@@ -6,12 +6,19 @@ target repository. Resolve them before invoking a script.
 
 ## Task routing
 
-Routing is two steps: name the delegation task, then read its assignment.
+Before classifying or routing, read [profiles.md](profiles.md) and resolve the
+active owner, per-key composition overlay, and separate lifecycle policy.
+Freeze them for the run. Routing then names the task and reads its assignment.
 
 1. **Name the task.** Classify the work against the task list in [SKILL.md](../SKILL.md#delegation-tasks-and-their-assignments): design work is `plan-and-design`; coding splits into `complex-coding` and `simple-coding` at the boundary below; lookups, moves, log gathering, and lint/format runs are `chores`; running verification commands is `verification`. When a piece of work spans tasks, use the heavier one (`plan-and-design` > `complex-coding` > `simple-coding` > `chores`).
-2. **Read its assignment.** Take `role` and `mode` from `assignments:`. `mode: delegate` → any idle pane of that role's agent type. `mode: orchestrator` → do it here, in this pane, except a review task: spawn a fresh in-process subagent for that, per "Reviews in `mode: orchestrator`". Do not substitute your own judgment for the configured route; a repo that sent `simple-coding` to the Coder role meant it.
+2. **Read its assignment.** Take `role` and `mode` from `assignments:`; the profile never rewrites them. `delegate` to a separate target uses a matching idle in-scope pane and reset-backed submission. With a selected profile, `delegate` resolved to the active owner requires a fresh in-process subagent, including empty-reviewer reviews; lack of that capability is a reported inability, never inline delegation. `orchestrator` uses the active owner: profile-selected self-review may be same-session or use an optional subagent; no-profile reviews still require a fresh subagent. `implementer` continues in the task's existing session. Follow the profile routing table for self-targets; do not substitute a different route.
 
-Every delegation must satisfy the [delegation contract](../SKILL.md#delegation-contract).
+Every worker receives the [delegation contract](../SKILL.md#delegation-contract)
+and executes without re-delegation. Owner handoff uses the separate contract
+in profiles.md: a mismatched reception pane asks unused versus relay even
+when a matching owner exists. Lifecycle false prohibits start/exit/restart
+during handoff, fallback, and recovery; true still requires verified installed
+operations and protects working/unrelated agents.
 
 ## Development-cycle routing
 
@@ -25,7 +32,13 @@ When this skill drives one of the pack's workflows (`/herdrpowers:execute`, `exe
 
 Read each one's `role` and `mode` from the resolved configuration; the workflow names every assignment its repo config changed in the final report.
 
-**Review independence** comes from a fresh session on each reset-backed delegation, not from a different pane ID or a different tool: every `composer-submit.sh` call resets the target session, so the reviewing agent never sees the implementing session's reasoning. Pick any idle pane of the resolved role's agent type(s) — including the pane that implemented — and do not apply a prefer-different-type heuristic. Unreset continuing sessions must not review their own work product.
+**Separate delegated review independence** comes from the reset session, not
+pane identity: any matching idle pane can review after reset, including the
+implementing pane. Do not prefer a different type. Without a selected profile,
+continuing sessions must not review their own work as a gate. Profile-selected
+owner-session self-review is allowed only by the modes in profiles.md and is
+reported as self-review, not independent review. `delegate` self-targets still
+require fresh subagents; disabled gates remain off.
 
 ## Complex coding boundary
 

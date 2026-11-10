@@ -13,11 +13,11 @@ Coordinates planning, implementation, testing, and review across agent panes.
 
 | | Superpowers | herdrpowers |
 |---|---|---|
-| worker | in-process subagent | idle sibling herdr pane |
+| worker | in-process subagent | idle sibling herdr pane; a profile without a separate coder or reviewer uses a fresh subagent |
 | task loop | `subagent-driven-development` | `pane-driven-development` |
 | parallel work | `dispatching-parallel-agents` | panes, bounded by idle panes and worktrees |
 | entry point | skills trigger themselves | `commands/` workflows, plus the same skills |
-| routing | fixed in the skill | `.herdrpowers/config.yaml` over `roles.yaml` |
+| routing | fixed in the skill | `.herdrpowers/config.yaml` over `roles.yaml`, plus an optional composition profile |
 | who writes tests | the implementer, always | the `test-authoring` assignment |
 | review | one reviewer subagent | a role bound to a list of agent types: one review per entry |
 
@@ -85,7 +85,23 @@ Repository settings stay outside the plugin and survive updates:
 - `AGENTS.md` / `CLAUDE.md`: base branch, verification commands, and shared
   worktree directory (`WORKTREE_DIRECTORY`, default `.worktrees/`).
 - `.herdrpowers/config.yaml`: agent roles, task assignments, delegation scope,
-  and review settings.
+  review settings, the selected `profile`, and `allow_agent_lifecycle`.
+- `.herdrpowers/profiles/`: composition profiles — who orchestrates, codes,
+  and reviews, each with a model and reasoning effort. Init installs the six
+  shipped ones without overwriting yours; their
+  [README](.herdrpowers/profiles/README.md) explains the names.
+
+```yaml
+profile: fable-sol-panel      # or name one in the task; null selects none
+allow_agent_lifecycle: false  # true: the orchestrator may start and end agents in panes
+```
+
+A profile replaces only the roles it names; assignments and review gates stay
+as configured. Model and effort must match what each pane shows in its
+footer. With `allow_agent_lifecycle: true` the orchestrator starts the
+selected composition's missing agents in idle shell panes and ends the ones it
+started; with `false`, the default, it never starts or ends an agent. See
+[Roles](docs/roles.md) for the rules.
 
 Relative worktree paths resolve from the primary checkout so all agents
 share the same parent directory. Delegation stays within one herdr tab

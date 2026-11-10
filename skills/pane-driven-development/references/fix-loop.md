@@ -24,7 +24,15 @@ Before the loop starts, two routes leave it immediately:
   without a recorded ruling.
 
 Everything else enters the loop. A fix round is one fix delegation plus one
-scoped re-review. Five rounds maximum per task:
+scoped re-review. Five rounds maximum per task. Resolve `review-fixes` using
+the frozen targets and modes from the [profiles contract](../../orchestration/references/profiles.md).
+
+**Selected-profile self-target, every round:** keep the resolved mode.
+`delegate` requires a fresh in-process subagent; other owner-session modes
+allow inline fixes and an optional subagent. Do not force a separate escalated
+agent merely because round 4 began. Unavailable mandatory subagents are reported
+as inability; they cannot be replaced by inline work. The rules below govern
+separate targets and preserve the legacy no-profile escalation path:
 
 **Rounds 1-3 — go back to the same implementing pane.** Send it the open
 findings verbatim through `composer-submit.sh`, with a fresh completion
@@ -41,7 +49,7 @@ Read the report file for what was tried." A loop that survives three rounds with
 one agent type usually means that type cannot see the problem — fresh eyes and
 a capability swap in one move.
 
-**Every round, either way:** the fixing pane fixes, re-runs the verification
+**Every round, on any route:** the fixing executor fixes, re-runs the verification
 covering the amended code, appends its fix report to the same report file, and
 replies with the short contract. Name the covering test files in the fix
 message — a one-line fix does not need the whole suite.
@@ -54,8 +62,11 @@ steps and **the evidence is assembled by you, not by any one pane** — no pane
 sees both halves:
 
 1. **Delegate both, from the findings.** The fixing pane changes source only.
-   The test author is a pane that is neither the fixing pane nor the
-   implementation round's test author — a fix's tests written by whoever just
+   The test author is a fresh worker that is neither the fixing session nor the
+   implementation round's test-author session (a reset-backed pane or the
+   profile's required self-target subagent). On the separate-pane path, keep the
+   existing rule: neither the fixing pane nor the original test-author pane.
+   A fix's tests written by whoever just
    changed the behavior prove only that the behavior changed. Write its
    contract to `task-N-fix-R-tests.md` per
    [test-author-brief.md](../test-author-brief.md), using that template's fix-round
@@ -85,8 +96,10 @@ disabled — the round then closes on the fix report's covering tests, command,
 and output, and the cap still counts it. Otherwise: run
 `bash scripts/review-package PLAN_FILE FIX_BASE HEAD`
 where FIX_BASE is the head the previous review saw, and delegate
-[re-review-brief.md](../re-review-brief.md) to a fresh pane — one per agent type
-in the resolved role — with the findings list, the brief, the report file, and
+[re-review-brief.md](../re-review-brief.md) through the resolved review route —
+reset-backed panes for separate delegated targets, mandatory fresh subagents
+for profile self-target `delegate`, or permitted owner-session self-review —
+with the findings list, the brief, the report file, and
 the printed diff path. Each re-reviewer verdicts each finding ADDRESSED or NOT
 ADDRESSED and flags new breakage in the fix diff only; a finding is closed only
 when every re-reviewer that ran calls it ADDRESSED. New Critical/Important
@@ -96,8 +109,8 @@ observations go to the ledger as deferred minors — they never extend the loop.
 **After each round,** append to the ledger:
 `Task <N>: fix round <R>/5 (<X> addressed, <Y> open — <finding one-liners>; commits <a7>..<b7>)`
 
-Never fix findings yourself in the orchestrator pane — your context stays
-clean for coordination, and orchestrator fixes skip review.
+Fix inline only when the resolved route permits it. Profile self-target fixes
+keep their mode, and every enabled re-review still runs through its own route.
 
 **The breaker.** When round 5's re-review still leaves findings open, stop
 delegating. Adjudicate each open finding yourself — you hold the plan and

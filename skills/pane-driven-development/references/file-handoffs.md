@@ -11,6 +11,11 @@ that `pane read` cannot always recover, and everything you paste into a brief
 stays resident in your own context for the rest of the session. Hand
 artifacts over as files, in both directions:
 
+The same files serve profile self-target subagents. Give each fresh worker a
+self-contained contract and no-re-delegation instruction; owner-session
+self-review uses the same requirements/package and a written verdict. The
+composer-specific submission rules below apply to Herdr transport.
+
 - **Requirements file:** `bash scripts/task-brief PLAN_FILE N` writes the task's
   full text into the plan workspace and prints the path. It stays the single
   source of requirements, read by every pane on the task and edited by none —

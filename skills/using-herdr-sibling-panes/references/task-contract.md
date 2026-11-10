@@ -8,6 +8,27 @@ target repository. Resolve them before invoking a script.
 
 Every instruction must include the **absolute working directory** (a pane does not inherit the orchestrator's cwd — when the work happens in a worktree, give the worktree path and require the pane to confirm it is there before doing anything else), the exact command or path, the edit policy, the report format, and a unique final completion marker that `pane wait-output` can match.
 
+The active orchestrator resolves the target and settings before this transport;
+read the core [profiles policy](../../orchestration/references/profiles.md) for
+profile handoff and self-targets. A worker brief explicitly forbids
+re-delegation. A selected owner handoff is distinct from a worker brief: include
+the user instruction, repo/worktree, selected profile and frozen settings, and
+identify the new owner so the handoff cannot bounce back. A mismatching reception
+pane always asks whether it should be unused or relay before that handoff.
+Separate worker targets use reset-backed panes. Profile self-targets in explicit
+delegate use a fresh in-process subagent, including reviews, or report missing
+capability; other modes run in the owner session and may use a subagent at its
+judgment. Report same-session self-review honestly and preserve disabled gates.
+
+Record a nested target such as `{codex: {model: GPT-6.1-Sol, effort: max}}`
+with its exact strings and observed footer. Submit as
+`composer-submit.sh PANE INSTRUCTION MODEL EFFORT` (effort is argument four).
+Do not carry effort onto string fallbacks. Top-level `allow_agent_lifecycle`
+is false by default: a worker may not start/exit/restart an agent to satisfy
+routing; the active owner follows the core policy and
+[agent-lifecycle.md](agent-lifecycle.md) when the configuration sets it true.
+Never interrupt working or unrelated agents.
+
 **Reports go to files.** Terminal scrollback is lossy — an agent on the alternate screen loses rows that `pane read` cannot always recover. Name a report file path in every brief (under `<REPORT_DIRECTORY>`, or the worktree's scratch directory) and require the pane to write its full report there and reply with that path plus the marker. Read the file; do not reconstruct the result from scrollback.
 
 **Verify claims, do not trust them.** A pane reporting "verified" or "tests pass" is a claim. Re-execute the decisive command, or read the quoted output in the report file, before accepting it.
@@ -41,10 +62,15 @@ their work is still running; see **still running** under "Failure handling".
 
 ```bash
 PANE=w2:p18
-INSTRUCTION="Execute make lint in /path/to/repo. Make no edits. Report the command, exit code, and errors. End with LINT_OK immediately followed by _7F3A."
+# Resolved target: {codex: {model: GPT-6.1-Sol, effort: max}}
+MODEL=GPT-6.1-Sol
+EFFORT=max
+# The brief carries the worktree, no-edit/no-redelegation clauses, report path
+# and split marker, keeping the submitted pointer short.
+INSTRUCTION="Read /path/to/repo/scratch/lint-brief.md and execute it exactly, first confirming its worktree."
 COMPOSER_SUBMIT="$SKILL_DIR/scripts/composer-submit.sh"
 submit_rc=0
-bash "$COMPOSER_SUBMIT" "$PANE" "$INSTRUCTION" || submit_rc=$?
+bash "$COMPOSER_SUBMIT" "$PANE" "$INSTRUCTION" "$MODEL" "$EFFORT" || submit_rc=$?
 case "$submit_rc" in
   0) ;;
   4) echo "composer submission needs a wider layout; fix it and retry" >&2; exit 4 ;;

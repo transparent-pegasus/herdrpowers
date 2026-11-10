@@ -6,9 +6,11 @@ target repository. Resolve them before invoking a script.
 
 ### 2. Handle the report
 
-Implementer panes report one of four statuses. Handle each appropriately:
+Implementers (panes, profile subagents, or the active owner) record one of four
+statuses. Handle each through the frozen target/mode; a retry never changes
+the profile or grants a worker re-delegation authority.
 
-**DONE:** Generate the review package (`bash scripts/review-package PLAN_FILE BASE HEAD`, from this skill's directory — it prints the unique file path it wrote; BASE is the commit you recorded before delegating the task — never `HEAD~1`, which silently drops all but the last commit of a multi-commit task), then delegate the task review with the printed path.
+**DONE:** If task review is enabled, generate its package (`bash scripts/review-package PLAN_FILE BASE HEAD`, from this skill's directory; BASE is the recorded pre-task commit, never `HEAD~1`) and run the review through its resolved target/mode with the printed path. If disabled, consume the implementer's report and proceed to §5, naming the skipped gate.
 
 **DONE_WITH_CONCERNS:** The pane completed the work but flagged doubts. Read the concerns before proceeding. If they are about correctness or scope, address them before review. If they are observations (e.g., "this file is getting large"), note them and proceed to review.
 
@@ -18,7 +20,7 @@ Implementer panes report one of four statuses. Handle each appropriately:
 `systematic-debugging` — root cause before fix, in the pane and in the
 orchestrator:
 1. If it is a context problem, provide more context and re-delegate to the same pane
-2. If the task needs more reasoning, escalate the agent type (see Delegation Assignments)
+2. If the task needs more reasoning, escalate separate targets per Delegation Assignments; profile self-targets keep their mode, including mandatory fresh subagents for `delegate`
 3. If the task is too large, break it into smaller pieces
 4. If the plan itself is wrong, rule on the correction, ledger it, and re-delegate with the ruling carried in the brief
 

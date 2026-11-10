@@ -8,9 +8,10 @@ not this directory or the target repository.
 
 Routing is `orchestration`'s job, not this skill's. Resolve the whole
 `assignments:` table at the start of execution from the merged configuration it
-describes — `<repo-root>/.herdrpowers/config.yaml` first, then the pack's
-`orchestration/roles.yaml` for anything the repo file omits. Resolve once, up
-front; do not re-read per task.
+describes, including its [profiles contract](../../orchestration/references/profiles.md):
+repo config over shipped roles, then only composition keys present in the
+selected profile. Freeze effective targets, modes, gates, scope, and lifecycle
+policy up front; do not resolve them anew per task.
 
 Seven tasks in that table drive this loop. Read each one's `role` and `mode`
 from the resolved configuration — this table only says where each lands:
@@ -25,7 +26,7 @@ from the resolved configuration — this table only says where each lands:
 | `fix-round-re-review` | §4's scoped re-review |
 | `chores` | Lookups, file moves, log gathering, mechanical edits found mid-plan |
 
-Plan revisions stay with you, the orchestrator (`plan-and-design`).
+Plan revisions follow `plan-and-design`; the active owner retains decisions.
 
 Four resolved values change the loop's shape:
 
@@ -40,8 +41,8 @@ Four resolved values change the loop's shape:
   gate in your final report.
 - **`test-authoring: {mode: implementer}`** — no test-author delegation in §1.
   The implementer's brief carries RED-GREEN-REFACTOR ownership instead, and the
-  reviewers become the only independent check on test code its author also
-  implemented.
+  reviewers audit test code its author also implemented. Report whether their
+  review was independent or permitted profile self-review.
 - **`fix-round-test-authoring: {mode: implementer}`** — the fixing pane writes
   or amends the round's covering tests itself, instead of a separate pane
   doing it in §4.
@@ -49,7 +50,7 @@ Four resolved values change the loop's shape:
 **A review task assigned to a role that binds to a list of agent types runs
 once per entry** — see "Roles that bind to a list" in `orchestration`. When the
 resolved role lists multiple entries, §3 and §4's re-review each run once per
-entry in separate panes: wait for all of them, merge their findings into one open
+entry through its resolved transport: wait for all of them, merge their findings into one open
 list (a finding raised by either counts), and deduplicate before delegating the
 fix. Degrade per that section when a listed agent type has no pane, and name
 the degradation in your report.
@@ -57,14 +58,20 @@ the degradation in your report.
 The `final-branch-review` gate belongs to the calling workflow, not to this
 skill: when it is disabled, skip the Final Review section below.
 
-**Independence is not configurable.** With `task-review` on, the review is always
-a reset-backed delegation to the resolved role's agent type(s) — same physical
-pane is fine after a reset; do not review inside an unreset implementing
-session. And `review-fixes` escalates at rounds 4-5 to a fresh pane regardless
-of its mode.
+**Apply the mode after selecting the effective target.** Separate delegated
+reviews use reset-backed panes; the implementing pane is eligible after reset.
+With a selected profile, an owner target in `delegate` requires a fresh
+subagent, even with empty reviewers. Other owner-session modes permit reported
+self-review and an optional subagent. A missing required subagent is an
+unavailable gate, not inline success. Without a profile, legacy independence
+still binds. Disabled gates stay disabled.
+
+**Profile self-target fixes retain their mode in every round.** `delegate`
+requires a fresh subagent; other owner-session modes may fix inline. Separate
+targets and the no-profile path retain rounds 4-5 escalation. The cap stays five.
 
 Panes are not reserved per role — pick any idle pane of the matching agent type **within `delegation.pane_scope`** (default `tab`: the orchestrator's own tab only) at delegation time. When no in-scope pane of the right type is idle, wait; do not interrupt a working pane, and do not reach into another tab. When an agent type is exhausted (usage limit, or two markerless delegations on two panes of that type), take its substitute from the resolved `fallbacks:` map and name the fallback in your final report.
 
-**Escalation is a type swap.** Panes have no model dial you control, so "try something stronger" means a different agent type: a fresh pane of another Coder-eligible type, a pane already running a different model (another `agent@model` entry), or the substitute in `fallbacks:`. Use it when a pane reports BLOCKED for lack of reasoning, and at fix-loop rounds 4-5. Name the swap in the ledger line.
+**Separate-target escalation selects another live target.** Use another eligible kind, a pane already on a distinct model, or an allowed fallback; never switch an existing agent's model/effort. New targets use nested settings; fallback strings keep their exact spelling and have no effort constraint. Name the swap and any lost constraint in the ledger. Lifecycle false prohibits start/exit/restart even for recovery or escalation. When true, start a resolved target that has no live in-scope match before falling back, and end the agents this run started once they are idle and no longer needed, per the profiles contract.
 
 **Never delegate two implementation tasks into the same worktree at once.** One writer per working tree; that is the constraint parallelism has to respect, not the pane count.
