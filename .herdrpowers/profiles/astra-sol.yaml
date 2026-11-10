@@ -6,5 +6,5 @@ coder:
   codex:
     model: GPT-6.1-Sol
     effort: max
-reviewers: []
+reviewers: [orchestrator]
 generalist: orchestrator
