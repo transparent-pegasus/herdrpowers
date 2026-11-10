@@ -23,7 +23,7 @@ Read both at the start of every orchestrated task (the repo file may be absent).
 Then overlay only keys present in the selected profile, per the profiles reference.
 The base files share this schema:
 
-- **`roles:`** — each role's `agent` or `agents` binding. New targets use `{kind: {model: <string>, effort: <string>}}`; settings are optional, effort requires model. The bare `orchestrator` alias resolves to the active owner. Legacy bare kinds and non-fallback `kind@model` remain readable, with a deprecation notice for the latter; init writes nested targets. Validate and normalize per the profiles reference, not by silently ignoring invalid fields.
+- **`roles:`** — each role key's binding: one target, `orchestrator`, or a list. Custom keys add roles. New targets use `{kind: {model: <string>, effort: <string>}}`; settings are optional, effort requires model. The bare `orchestrator` alias resolves to the active owner. Legacy bare kinds, `agent:`/`agents:` sub-keys, the old `reviewer` key, and non-fallback `kind@model` remain readable, with a deprecation notice for all but bare kinds; init writes nested targets. Validate and normalize per the profiles reference, not by silently ignoring invalid fields.
 - **`fallbacks:`** — agent → ordered substitutes, for when an agent cannot take work. Keys and substitutes may be pinned too.
 - **`delegation:`** — defaults that apply to every task: `pane_scope` (which panes are eligible at all) and `execution` (parallel or serial by default).
 - **`assignments:`** — every delegation task, each with the role that performs it.
@@ -31,11 +31,11 @@ The base files share this schema:
 - **`allow_agent_lifecycle`** — top-level strict boolean, separate from composition/delegation; defaults false. False starts and ends no agent. True lets the active owner start a resolved target that has no live match and end idle agents the task started, only through `agent-lifecycle.sh`, which enforces the value. Read the profiles reference before any startup, exit, or recovery action, including owner handoff and fallback.
 
 Merging is per key, not per file. Lists replace rather than concatenate.
-Present profile composition keys replace their role bindings. Profile
+Present profile `roles:` entries replace their bindings. Profile
 `fallbacks`, `delegation`, and `assignments` merge per key, including assignment
 fields; omitted entries retain config/default values. Resolve modes and gate
 enablement after the overlay. Empty profile reviewers select the owner, while
-a legacy empty role list keeps its disabling semantics if no profile overrides it.
+a config empty role list keeps its disabling semantics if no profile overrides it.
 
 Report assignment keys not defined by `roles.yaml`: otherwise their intended
 task silently uses a default and can revive a disabled review. Honor legacy
@@ -118,9 +118,9 @@ Resolve every task the workflow will touch before its first delegation, not when
 
 ### Roles that bind to a list
 
-A role declared with `agents:` runs **one delegation per entry**, and you wait
+A role bound to a list runs **one delegation per entry**, and you wait
 for all before acting. A one-entry list is a deliberate single delegation.
-A legacy empty role list disables that task unless a profile overrides the
+A config empty role list disables that task unless a profile overrides the
 binding. Profile `reviewers: [orchestrator]`/`[]`/null/`none` instead selects the active owner;
 an enabled review still runs and `delegate` still requires a fresh subagent.
 

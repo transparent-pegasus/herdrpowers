@@ -25,14 +25,19 @@ test('the six named profile templates are available as files', () => {
   for (const name of names) assert.ok(statSync(join(profiles, name)).isFile(), `${name} must be a file`);
 });
 
-test('every shipped profile orders owner before planning and ends with the owner generalist', () => {
+test('every shipped profile orders owner, then roles from planning to generalist, then overrides', () => {
   for (const name of names) {
     const source = readFileSync(join(profiles, name), 'utf8');
     const keys = [...source.matchAll(/^([a-z-]+):/gm)].map((match) => match[1]);
-    const first = keys.includes('orchestrator') ? ['orchestrator', 'planning-design'] : ['planning-design'];
+    const first = keys.includes('orchestrator') ? ['orchestrator', 'roles'] : ['roles'];
     assert.ok(source.startsWith(`${first[0]}:`), name);
     assert.deepEqual(keys.slice(0, first.length), first, name);
-    assert.ok(source.endsWith('generalist: orchestrator\n'), name);
+    assert.ok(keys.slice(first.length).every((key) => ['fallbacks', 'delegation', 'assignments'].includes(key)), name);
+    const block = source.slice(source.indexOf('roles:\n')).split(/\n(?=[a-z])/)[0];
+    const roles = [...block.matchAll(/^  ([a-z-]+):/gm)].map((match) => match[1]);
+    assert.equal(roles[0], 'planning-design', name);
+    assert.equal(roles.at(-1), 'generalist', name);
+    assert.match(source, /^  generalist: orchestrator$/m, name);
   }
 });
 
@@ -46,44 +51,45 @@ for (const [name, kind, owner, model] of [
   ${kind}:
     model: ${owner}
     effort: max
-planning-design:
-  ${kind}:
-    model: ${model}
-    effort: max
-coder: orchestrator
-reviewers:
-  - ${kind}:
+roles:
+  planning-design:
+    ${kind}:
       model: ${model}
       effort: max
+  coder: orchestrator
+  reviewers:
+    - ${kind}:
+        model: ${model}
+        effort: max
+  generalist: orchestrator
 assignments:
   plan-and-design:
     mode: delegate
-generalist: orchestrator
 `);
   });
 }
 
 test('ultra and solo profiles keep planning with their selected owner', () => {
   for (const name of names.filter((name) => /-(ultra|solo)\.yaml$/.test(name))) {
-    assert.match(readFileSync(join(profiles, name), 'utf8'), /^planning-design: orchestrator$/m, name);
+    assert.match(readFileSync(join(profiles, name), 'utf8'), /^  planning-design: orchestrator$/m, name);
   }
 });
 
 test('the profile contract binds coder and generalist orchestrator or none to the owner', () => {
   const contract = readFileSync(join(root, 'skills/orchestration/references/profiles.md'), 'utf8');
   for (const key of ['planning-design', 'generalist', 'coder']) {
-    assert.match(contract, new RegExp(`\\| \`${key}\` \\|[^\\n]*bare \`orchestrator\`, null, \`\\[\\]\`, or literal \`none\` binds it to the active owner`));
+    assert.match(contract, new RegExp(`\\| \`roles.${key}\` \\|[^\\n]*bare \`orchestrator\`, null, \`\\[\\]\`, or literal \`none\` binds it to the active owner`));
   }
 });
 
 test('solo profiles bind coder and reviewers to the orchestrator alias', () => {
   for (const name of ['opus-solo.yaml', 'sol-solo.yaml']) {
     const source = readFileSync(join(profiles, name), 'utf8');
-    assert.match(source, /^coder: orchestrator$/m, name);
-    assert.match(source, /^reviewers: \[orchestrator\]$/m, name);
+    assert.match(source, /^  coder: orchestrator$/m, name);
+    assert.match(source, /^  reviewers: \[orchestrator\]$/m, name);
   }
   const contract = readFileSync(join(root, 'skills/orchestration/references/profiles.md'), 'utf8');
-  assert.match(contract, /\| `reviewers` \|[^\n]*`\[orchestrator\]`, `\[\]`, null, or literal `none` binds it to the active owner/);
+  assert.match(contract, /\| `roles.reviewers` \|[^\n]*`\[orchestrator\]`, `\[\]`, null, or literal `none` binds it to the active owner/);
 });
 
 test('npm distribution includes the six orchestration profiles and their README, nothing else local', () => {
@@ -104,4 +110,20 @@ test('npm distribution includes the six orchestration profiles and their README,
   } finally {
     rmSync(cache, { recursive: true, force: true });
   }
+});
+
+test('shipped roles use direct values under roles with a description comment per key', () => {
+  const source = readFileSync(join(root, 'skills/orchestration/roles.yaml'), 'utf8');
+  const block = source.slice(source.indexOf('\nroles:\n'), source.indexOf('\nfallbacks:'));
+  const keys = [...block.matchAll(/^  ([a-z-]+):(.*)$/gm)];
+  assert.deepEqual(keys.map((match) => match[1]), ['planning-design', 'reviewers', 'coder', 'generalist']);
+  for (const [, key, rest] of keys) assert.match(rest, / # \S/, key);
+  assert.doesNotMatch(block, /^\s+(agent|agents|description):/m);
+  assert.doesNotMatch(source, /role: reviewer$/m);
+});
+
+test('the profile contract accepts custom roles under roles and rejects unknown top-level keys', () => {
+  const contract = readFileSync(join(root, 'skills/orchestration/references/profiles.md'), 'utf8');
+  assert.match(contract, /\| `roles.<custom>` \|/);
+  assert.match(contract, /any other top-level key is an error/);
 });

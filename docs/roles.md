@@ -9,7 +9,7 @@ Read the canonical [profiles contract](../skills/orchestration/references/profil
 
 Both share one schema — a **role list**, a fallback map, and a **role assigned to every delegation task**:
 
-- `roles:` — `agent`/`agents` bindings. New targets use nested settings, e.g. `{codex: {model: GPT-6.1-Sol, effort: max}}`; effort requires model. Bare `orchestrator` dynamically aliases the active owner. Legacy bare kinds remain readable; non-fallback `kind@model` is migration input normalized with a deprecation notice, and init writes nested targets.
+- `roles:` — each role key's value is its binding: one target, `orchestrator`, or a list. New targets use nested settings, e.g. `{codex: {model: GPT-6.1-Sol, effort: max}}`; effort requires model. Bare `orchestrator` dynamically aliases the active owner. Legacy bare kinds remain readable; `agent:`/`agents:` sub-keys, the old `reviewer` key, and non-fallback `kind@model` are migration input normalized with a deprecation notice, and init writes nested targets.
 - `fallbacks:` — exact string keys and ordered string substitutes (`kind` or `kind@model`), without effort constraints.
 - `delegation:` — defaults applying to every task: `pane_scope` and `execution` (see [Delegation Scope and Execution Strategy](#delegation-scope-and-execution-strategy)).
 - `assignments:` — every delegation task, each with the role that performs it and where it runs.
@@ -23,13 +23,14 @@ Customize the repo file, not `roles.yaml` — plugin installs are read-only, and
 After merging repo config over shipped roles, overlay only keys present in the
 selected `.herdrpowers/profiles/<name>.yaml`, repo-local first and shipped only
 if absent locally. Invalid names, files, or targets are explicit errors. Profiles
-allow `planning-design`, `orchestrator`, `coder`, `reviewers`, `generalist`,
-`fallbacks`, `delegation`, and `assignments`. Omitted slots keep resolved roles. Planning-design/coder/generalist `orchestrator`, `null`, `[]`, or `none` binds to the
+allow top-level `orchestrator`, `roles`, `fallbacks`, `delegation`, and
+`assignments`: `orchestrator` first, then `roles`, then the maps. `roles` uses the config form; its custom keys add
+roles, while unknown top-level keys are errors. Omitted roles keep resolved bindings. Planning-design/coder/generalist `orchestrator`, `null`, `[]`, or `none` binds to the
 owner (solo coder); owner reviewers
 (`[orchestrator]`, `[]`, null, `none`) select the owner without disabling a gate. Lists replace.
 Merge profile `fallbacks`, `delegation`, and `assignments` per key, including
 each task's fields; omitted keys retain config/default values. Empty maps
-change nothing; fallback lists replace, including `[]`. Composition keys alone
+change nothing; fallback lists replace, including `[]`. Role bindings alone
 leave modes and gates intact; explicit assignment fields can override them.
 Preserve custom roles and omitted bindings. A concrete coder matching the owner
 is still a separate worker.
@@ -93,7 +94,7 @@ One workflow overrides this column: `/strict_full_cycle` ignores `enabled` and r
 
 ### One delegation per listed agent type
 
-A role declared with `agents:` runs **one delegation per entry**. A one-entry list is deliberate; a legacy empty role list disables its tasks unless a present profile composition key overrides it. Explicit empty profile reviewers instead select the owner, and an enabled delegated review still requires a fresh subagent.
+A role bound to a list runs **one delegation per entry**; a single target runs one. A one-entry list is deliberate; a config empty role list disables its tasks unless a present profile role key overrides it. Explicit empty profile reviewers instead select the owner, and an enabled delegated review still requires a fresh subagent.
 
 Separate list targets need different kinds or distinct pinned models of one kind (case-insensitive, neither containing the other); effort alone is not another independent slot. Run available slots, wait for busy matching agents, and name reduced sets. Missing mandatory self-target subagent capability is inability, never inline substitution or a passed review.
 
@@ -132,7 +133,7 @@ Without a profile, the reception pane owns the task. A selected profile may name
 
 Its judgment is final: reviewers advise, the orchestrator decides.
 
-### Reviewer
+### Reviewers
 
 Reviews plans, designs, and code where assigned. A list binding supplies one review per entry with the same self-contained request. Separate delegated reviewers share no draft opinion. A profile may instead select the owner, whose mode decides fresh-subagent review versus permitted self-review. The active owner compares findings and resolves disagreements.
 
@@ -153,7 +154,7 @@ Everything else: simple coding that follows an existing pattern, search, file in
 Separate delegated work gets independence from **fresh sessions**:
 
 - Every reset-backed delegation clears the target session, so a reviewing agent never sees the implementing session's reasoning.
-- The same physical pane may take that review after a reset. Routing follows the resolved assignment only (`agent:` / `agents:`); there is no prefer-different-type heuristic.
+- The same physical pane may take that review after a reset. Routing follows the resolved assignment and role binding only; there is no prefer-different-type heuristic.
 - RED evidence is a report artifact: the failing run before the code exists, quoted, with the reason the failure was expected. Missing or reconstructed RED evidence is a finding.
 
 Test independence is a `mode`, and each setting pays for it differently:

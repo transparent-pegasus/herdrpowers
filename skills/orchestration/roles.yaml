@@ -5,7 +5,7 @@
 # A target repository overrides any key below in its own
 # `.herdrpowers/config.yaml` (written by the init workflow) — that file wins
 # key by key, and anything it omits falls back here. A selected profile then
-# overrides its present composition, fallback, delegation, and assignment keys.
+# overrides its present role, fallback, delegation, and assignment keys.
 # Customize the consumer config/profiles, not the read-only plugin installation.
 # See "Configuration resolution" in SKILL.md and references/profiles.md.
 
@@ -30,39 +30,31 @@ allow_agent_lifecycle: false
 # (with a deprecation notice for old non-fallback kind@model entries).
 # One type may fill two list slots only on distinct pinned models.
 #
-# `agent:` (singular) binds one agent type: one task, one delegation.
-# `agents:` (a list) binds several, and means ONE DELEGATION PER ENTRY — the
-# task runs once per listed agent type, in separate panes. That is what makes
-# a review a double review; it is a property of the role, not of any one task.
+# Each role key's value is its binding. A single target or `orchestrator`
+# binds one agent type: one task, one delegation. A list binds several and
+# means ONE DELEGATION PER ENTRY — the task runs once per listed entry, in
+# separate panes. That is what makes a review a double review; it is a
+# property of the role, not of any one task.
 # See "Roles that bind to a list" in SKILL.md.
+# Key comments say what each role does; copy the pattern for a custom role.
+# Legacy `agent:`/`agents:`/`description:` sub-keys and the old `reviewer`
+# key remain readable; init rewrites them in this form.
 # ---------------------------------------------------------------------------
 roles:
-  planning-design:
-    description: Planning and design work
-    agent: orchestrator
-  reviewer:
-    description: >-
-      Independent review — plans, designs, and implemented code. Bound to a
-      list, so every task assigned to this role runs once per listed entry.
-    agents: # one independent review per entry
-      - opencode:
-          model: GPT-6 Astra
-      - cursor:
-          model: Gemini 4 Argon
-      - cursor:
-          model: Grok 4.7
-      - cursor:
-          model: Muse Spark 1.3
-  coder:
-    description: >-
-      Complex coding (see "Complex coding boundary" in SKILL.md), test
-      authoring, and the whole-branch final review.
-    agent:
-      opencode:
-        model: GPT-6.1 Sol
-  generalist:
-    description: Simple coding, search, file inspection, tests, lint, routine operations
-    agent: orchestrator
+  planning-design: orchestrator # planning and design work
+  reviewers: # independent review: plans, designs, code; one per entry
+    - opencode:
+        model: GPT-6 Astra
+    - cursor:
+        model: Gemini 4 Argon
+    - cursor:
+        model: Grok 4.7
+    - cursor:
+        model: Muse Spark 1.3
+  coder: # complex coding (see "Complex coding boundary" in SKILL.md), test authoring, whole-branch final review
+    opencode:
+      model: GPT-6.1 Sol
+  generalist: orchestrator # simple coding, search, file inspection, tests, lint, routine operations
 
 # Substitutes for an agent that cannot take work right now — usage/rate limit
 # reached, no pane of that type in the session, or every pane of that type
@@ -196,7 +188,7 @@ assignments:
       Independent review of a plan or design before approval (/plan,
       /full_cycle), and brainstorming's builder check on a project's full design
       before the user reads it.
-    role: reviewer
+    role: reviewers
     mode: delegate
     enabled: true
   documentation-impact-review:
@@ -206,16 +198,16 @@ assignments:
     enabled: true
   task-review:
     description: Per-task gate in pane-driven-development — spec compliance + code quality
-    role: reviewer
+    role: reviewers
     mode: delegate
     enabled: true
   fix-round-re-review:
     description: Scoped verification of one fix round's diff (re-review-brief.md)
-    role: reviewer
+    role: reviewers
     mode: delegate
     enabled: true
   final-branch-review:
     description: Broad whole-branch review before the integration decision
-    role: reviewer
+    role: reviewers
     mode: delegate
     enabled: true

@@ -2,16 +2,17 @@ orchestrator:
   claude:
     model: Opus 5.5
     effort: max
-planning-design:
-  claude:
-    model: Fable 5.2
-    effort: max
-coder: orchestrator
-reviewers:
-  - claude:
+roles:
+  planning-design:
+    claude:
       model: Fable 5.2
       effort: max
+  coder: orchestrator
+  reviewers:
+    - claude:
+        model: Fable 5.2
+        effort: max
+  generalist: orchestrator
 assignments:
   plan-and-design:
     mode: delegate
-generalist: orchestrator
