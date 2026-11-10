@@ -85,8 +85,7 @@ the active orchestrator resolves the merged fallback map: nested kind/model
 becomes the exact `kind@model` lookup key, then bare kind. An explicitly empty
 matched list stops lookup. Fallback values remain strings and have no effort
 constraint; discard the primary effort rather than inheriting it. Preserve
-exact user names, including `Calude` and the distinct `muse-1.0-wonder` /
-`muse-wonder-1.0` strings. Reuse an available matching pane under the same scope
+exact user names, including `Calude`. Reuse an available matching pane under the same scope
 and lifecycle policy. Profile self-targets follow the core mode policy: explicit
 delegate requires a fresh in-process subagent, including reviews; unavailable
 capability is reported. Other modes stay with the owner and may use a subagent

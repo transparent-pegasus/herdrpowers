@@ -110,8 +110,7 @@ nonempty strings; effort requires model. A kind-only target uses `{kind: {}}`.
 Keep the bare `orchestrator` alias for roles that use it. Read legacy bare
 kinds and `kind@model`; normalize non-fallback pins with a deprecation notice
 and write nested targets. Fallback keys/substitutes keep bare-kind or
-`kind@model` string syntax. Preserve supplied strings, including `Calude` and
-the unequal `muse-1.0-wonder` / `muse-wonder-1.0` spellings; no fuzzy aliases.
+`kind@model` string syntax. Preserve supplied strings, including `Calude`; no fuzzy aliases.
 
 State the empty-value rules explicitly: profile `planning-design`/`coder`/`generalist`
 `orchestrator`/null/`[]`/`none` binds to the owner; `reviewers: [orchestrator]`/`[]`/null/`none` means owner review.

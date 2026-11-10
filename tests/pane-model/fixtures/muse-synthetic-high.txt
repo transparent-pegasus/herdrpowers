@@ -3,4 +3,4 @@
 ────────────────────────────────────────────────────────────────────────────────
 ❯
 ────────────────────────────────────────────────────────────────────────────────
-  muse-1.0-wonder · high · /tmp/herdrpowers-muse-fixture-pBoS7Z · Auto-review
+  muse-wonder-1.0 · high · /tmp/herdrpowers-muse-fixture-pBoS7Z · Auto-review

@@ -168,7 +168,7 @@ Whichever runs, the report names the writer and transport. Profile self-review a
 
 An agent target is exhausted when its output reports a usage limit, or two delegations to different idle panes of that target return no marker and no work. Exhaustion of one constrained model does not exhaust other models of its kind.
 
-For a nested target, look up the exact `kind@model` fallback key using its preserved spelling; only an absent key permits bare-kind lookup. A matched `[]` is authoritative. Substitutes keep string syntax and have no effort constraint: discard primary effort and report that loss. Preserve `Calude` and the unequal `muse-1.0-wonder` / `muse-wonder-1.0` strings. No fuzzy aliases or list concatenation. Re-submit the same self-contained task to the first usable substitute.
+For a nested target, look up the exact `kind@model` fallback key using its preserved spelling; only an absent key permits bare-kind lookup. A matched `[]` is authoritative. Substitutes keep string syntax and have no effort constraint: discard primary effort and report that loss. Preserve `Calude`. No fuzzy aliases or list concatenation. Re-submit the same self-contained task to the first usable substitute.
 
 Without a profile, safe inline degradation remains available for work. With a profile, a fallback to the owner obeys its mode: `delegate` requires a fresh subagent. Report unavailable mandatory capability instead of claiming inline delegation. Lifecycle permission still applies during fallback: with it, a target that is unavailable but not exhausted is started before its substitutes.
 

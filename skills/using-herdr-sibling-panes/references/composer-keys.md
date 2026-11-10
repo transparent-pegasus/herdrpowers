@@ -68,7 +68,7 @@ footer already selected by the CLI's composer rule:
 | agy | `Gemini 3.8 Flash (High) \| 5h: 100% \| 7d: 100%` | parenthesized effort on the model segment |
 | grok | `Grok 4.7 (xhigh) · always-approve · …` | parenthesized effort on the first segment |
 | opencode | `Build · GPT-6.1 Sol OpenAI · max` | third segment, after the model/provider segment |
-| muse | `muse-1.0-wonder · max · /tmp/… · Auto-review` | exact second dot-separated field; model is the first field |
+| muse | `muse-wonder-1.0 · max · /tmp/… · Auto-review` | exact second dot-separated field; model is the first field |
 | cursor | `Muse Spark 1.3 1M Max` | no verified reasoning-effort field; bare `Max` is ambiguous |
 
 Effort uses exact case-insensitive tokens. `Extra High` and `xhigh` canonicalize

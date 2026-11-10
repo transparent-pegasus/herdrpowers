@@ -43,42 +43,42 @@ check() {
   fi
 }
 
-observed='muse-1.0-wonder · max · /tmp/herdrpowers-muse-fixture-pBoS7Z · Auto-review'
-high='muse-1.0-wonder · high · /tmp/herdrpowers-muse-fixture-pBoS7Z · Auto-review'
-missing='muse-1.0-wonder · /tmp/herdrpowers-muse-fixture-pBoS7Z · Auto-review'
+observed='muse-wonder-1.0 · max · /tmp/herdrpowers-muse-fixture-pBoS7Z · Auto-review'
+high='muse-wonder-1.0 · high · /tmp/herdrpowers-muse-fixture-pBoS7Z · Auto-review'
+missing='muse-wonder-1.0 · /tmp/herdrpowers-muse-fixture-pBoS7Z · Auto-review'
 echo_footer='echo · /tmp/herdrpowers-muse-fixture-pBoS7Z · Auto-review'
 
 # The observed footer must support both legacy invocations and MODEL EFFORT.
 check 'observed startup: print-only preserves footer' 0 "$observed" muse-observed-startup.txt --kind muse
-check 'observed startup: legacy model-only matches' 0 "$observed" muse-observed-startup.txt --kind muse muse-1.0-wonder
-check 'observed startup: requested model and max match' 0 "$observed" muse-observed-startup.txt --kind muse muse-1.0-wonder max
+check 'observed startup: legacy model-only matches' 0 "$observed" muse-observed-startup.txt --kind muse muse-wonder-1.0
+check 'observed startup: requested model and max match' 0 "$observed" muse-observed-startup.txt --kind muse muse-wonder-1.0 max
 check 'observed startup: different model mismatches' 1 "$observed" muse-observed-startup.txt --kind muse echo max
-check 'observed startup: different requested effort mismatches' 1 "$observed" muse-observed-startup.txt --kind muse muse-1.0-wonder high
+check 'observed startup: different requested effort mismatches' 1 "$observed" muse-observed-startup.txt --kind muse muse-wonder-1.0 high
 
 # Synthetic variations: ignoring effort, or accepting its absence, is a bug.
-check 'synthetic high: cannot satisfy max' 1 "$high" muse-synthetic-high.txt --kind muse muse-1.0-wonder max
-check 'synthetic missing effort: cannot satisfy max' 1 "$missing" muse-synthetic-missing-effort.txt --kind muse muse-1.0-wonder max
-check 'synthetic missing effort: legacy model-only still matches' 0 "$missing" muse-synthetic-missing-effort.txt --kind muse muse-1.0-wonder
+check 'synthetic high: cannot satisfy max' 1 "$high" muse-synthetic-high.txt --kind muse muse-wonder-1.0 max
+check 'synthetic missing effort: cannot satisfy max' 1 "$missing" muse-synthetic-missing-effort.txt --kind muse muse-wonder-1.0 max
+check 'synthetic missing effort: legacy model-only still matches' 0 "$missing" muse-synthetic-missing-effort.txt --kind muse muse-wonder-1.0
 check 'synthetic echo screen: composer without effort cannot satisfy max' 1 "$echo_footer" muse-synthetic-echo.txt --kind muse echo max
 check 'synthetic echo screen: legacy model-only still matches' 0 "$echo_footer" muse-synthetic-echo.txt --kind muse echo
 
 # Requested values in transcript/composer text cannot override the high footer.
-check 'synthetic deceptive transcript and composer: cannot satisfy max' 1 "$high" muse-synthetic-transcript.txt --kind muse muse-1.0-wonder max
+check 'synthetic deceptive transcript and composer: cannot satisfy max' 1 "$high" muse-synthetic-transcript.txt --kind muse muse-wonder-1.0 max
 
 # Footer-looking text on a synthetic login screen is not a current composer.
-check 'synthetic login without composer: model and effort do not match' 1 '' muse-synthetic-login.txt --kind muse muse-1.0-wonder max
-check 'synthetic login without composer: legacy model-only does not match' 1 '' muse-synthetic-login.txt --kind muse muse-1.0-wonder
+check 'synthetic login without composer: model and effort do not match' 1 '' muse-synthetic-login.txt --kind muse muse-wonder-1.0 max
+check 'synthetic login without composer: legacy model-only does not match' 1 '' muse-synthetic-login.txt --kind muse muse-wonder-1.0
 check 'synthetic login without composer: print-only extracts nothing' 1 '' muse-synthetic-login.txt --kind muse
-check 'empty screen: extracts nothing for model and effort' 1 '' - --kind muse muse-1.0-wonder max
+check 'empty screen: extracts nothing for model and effort' 1 '' - --kind muse muse-wonder-1.0 max
 
 # Invalid invocation remains distinct from a supported kind's mismatch (1).
 check 'invalid: no arguments' 2 '' -
 check 'invalid: no kind value' 2 '' - --kind
-check 'invalid: model without kind' 2 '' - muse-1.0-wonder max
+check 'invalid: model without kind' 2 '' - muse-wonder-1.0 max
 check 'invalid: empty model' 2 '' - --kind muse ''
 check 'invalid: effort with empty model' 2 '' - --kind muse '' max
-check 'invalid: empty effort' 2 '' - --kind muse muse-1.0-wonder ''
-check 'invalid: extra positional argument' 2 '' - --kind muse muse-1.0-wonder max extra
+check 'invalid: empty effort' 2 '' - --kind muse muse-wonder-1.0 ''
+check 'invalid: extra positional argument' 2 '' - --kind muse muse-wonder-1.0 max extra
 
 printf '\n'
 if ((fails == 0)); then
