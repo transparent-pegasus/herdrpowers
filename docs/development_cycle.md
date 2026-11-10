@@ -7,8 +7,10 @@ Every phase routes work through `orchestration` and its [profiles contract](../s
 Resolve config over shipped roles, then only present profile composition keys.
 Freeze modes, gates, scope, and lifecycle policy. A mismatched reception pane
 always asks unused versus relay before explicit owner handoff or startup.
-Lifecycle false forbids start/exit/restart even in recovery; true grants guarded
-agent-process management, not topology destruction. Report the actual owner,
+Lifecycle false forbids start/exit/restart even in recovery. True lets the
+active owner start the selected composition's missing agents in idle in-scope
+shell panes and end the ones it started, through the enforcing
+`agent-lifecycle.sh`; it never changes topology. Report the actual owner,
 transports, live model/effort evidence, self-review, and lifecycle actions.
 
 ## 7 Phases of Development

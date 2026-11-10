@@ -10,6 +10,9 @@
 
 # Composition selection and process lifecycle are separate from delegation.
 # Init installs missing templates, but selects none unless the user chooses.
+# using-herdr-sibling-panes/scripts/agent-lifecycle.sh reads this boolean (and
+# delegation.pane_scope) as written here: only a literal `true` in the
+# repository's config lets the orchestrator start or end agents in panes.
 profile: null
 allow_agent_lifecycle: false
 

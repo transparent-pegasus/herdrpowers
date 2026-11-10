@@ -50,6 +50,12 @@ inside the resolved scope. Read their live footer model lines with
 For proposed model/effort targets use the optional MODEL/EFFORT arguments and
 report missing evidence or unavailable targets. Inventory is read-only: do
 not start, exit, restart, or change an agent to make a proposal look usable.
+A `claude` pane prints no model or effort unless the user's Claude settings
+define a statusLine for it. When a proposed or selected target is `claude`
+with a model and its pane shows none, say that the target cannot be verified
+yet and show the statusLine from
+`<pack>/skills/using-herdr-sibling-panes/references/agent-lifecycle.md`.
+User settings are the user's to change; init never writes them.
 
 2. Propose Values
 Present one proposed value per key with the evidence it was inferred from (file or command).
@@ -80,7 +86,8 @@ Also present the available profile names, proposed selection, and separate
 top-level `allow_agent_lifecycle` boolean. A new config selects no profile
 (`profile: null`) and ships lifecycle false unless the user chooses otherwise.
 Repeat init preserves the existing selection and permission. Installing
-templates does not select one. Explain that a selected profile overrides
+templates does not select one; a profile named in a task selects only that
+run. Explain that a selected profile overrides
 only composition keys present in its file; missing keys retain resolved
 roles, explicit empties override them, and modes/gate enablement stay intact.
 Validate any selected name/file per the profiles reference; invalid or missing
@@ -168,7 +175,7 @@ Rules to state while proposing:
 - A narrow `pane_scope` reduces the panes available for reviews and parallel tracks. That is honest degradation, named in every report — not a silent loss.
 - `execution: parallel` shapes plans too: plans get a `## Tracks` table with owned files per track, and `/full_cycle` runs that partition in per-track worktrees off a coordination branch. It attempts parallelism; a plan with one track, or a session with one usable pane, still runs serially.
 - `/execute` and `/execute_parallel` are the user's explicit choice and ignore `execution`. `/strict_full_cycle` overrides `enabled` only — it never widens the scope or switches the strategy.
-- `allow_agent_lifecycle` is not a delegation key. False prohibits start/exit/restart, including recovery, fallback, and owner startup. True requires learning installed Herdr operations/help, starting only in available in-scope shell panes, and verifying live model/effort. End only idle agents actually started for this task with no pending work; preserve unrelated/working sessions. Do not invent a stop command.
+- `allow_agent_lifecycle` is not a delegation key, and it is enforced: `agent-lifecycle.sh` starts or ends nothing unless the value is the literal `true`, whatever a chat message says. False prohibits start/exit/restart, including recovery, fallback, and owner startup. With true, the active owner starts each selected target that has no live in-scope match — before any fallback substitute — in an idle shell pane the user left in scope, verifies its live model/effort, and ends the idle agents it started before the final report. It never creates or closes panes, interrupts working agents, or answers a startup dialog. Say what true costs: agents appear and disappear in the user's panes without a prompt each time.
 - A profile-owner mismatch always asks whether reception is unused or relay before handoff or startup, regardless of lifecycle permission or existing matching agents. A relay retains no decision authority; describe the explicit owner handoff from the profiles reference.
 
 6. Write Configuration
@@ -313,7 +320,7 @@ Re-read every written file and confirm:
 - `WORKTREE_DIRECTORY` resolves to the same absolute parent directory from the primary checkout and from linked worktrees, and is git-ignored when it is inside the repository;
 - `.herdrpowers/config.yaml` parses as YAML, has no angle-bracket placeholders left, carries a `fallbacks:` key, and defines every role that any assignment references;
 - top-level `profile` is null/`none` or a valid simple name whose selected local/shipped file exists and validates; errors remain explicit rather than clearing selection;
-- top-level `allow_agent_lifecycle` is a YAML boolean, not a string, null, or a field nested in a profile or `delegation`;
+- top-level `allow_agent_lifecycle` is a YAML boolean, not a string, null, or a field nested in a profile or `delegation`, and `bash <pack>/skills/using-herdr-sibling-panes/scripts/agent-lifecycle.sh policy`, run from the repository, prints the approved value — that helper is what enforces it at runtime;
 - new role targets are one-kind mappings with only optional nonempty model/effort strings, effort requires model, and bare `orchestrator` aliases/custom bindings were preserved;
 - profiles contain only the three composition keys with the absent/empty semantics above; original string spelling and reviewer order are intact;
 - all missing shipped templates were installed, every pre-existing profile file is byte-identical, and repeat init preserved the chosen profile, assignments, gate enablement, delegation, and permission;
