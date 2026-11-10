@@ -2,7 +2,8 @@ orchestrator:
   codex:
     model: GPT-6.1-Sol
     effort: max
-planning-design: orchestrator
-coder: orchestrator
-reviewers: [orchestrator]
-generalist: orchestrator
+roles:
+  planning-design: orchestrator
+  coder: orchestrator
+  reviewers: [orchestrator]
+  generalist: orchestrator

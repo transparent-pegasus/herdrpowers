@@ -12,8 +12,7 @@ the directory holding `skills/`, three levels above this file.
    repository's `.herdrpowers/config.yaml` using the existing per-key rules.
    An absent repo file uses shipped defaults. Lists replace lists; they never
    concatenate, including empty fallback arrays. Keep custom roles and task
-   assignments. An explicit role binding replaces its prior `agent`/`agents`
-   binding rather than leaving both forms active.
+   assignments. An explicit role value replaces the prior binding whole.
 2. Resolve the top-level `profile` and `allow_agent_lifecycle` separately from
    `delegation`. Missing, YAML null, or literal `none` for `profile` means no
    selection. A selected name must be a string matching
@@ -34,13 +33,13 @@ the directory holding `skills/`, three levels above this file.
    first; only if that file is absent, read the shipped
    `<pack>/.herdrpowers/profiles/<name>.yaml`. An invalid local file is an error,
    not permission to use the shipped copy. Missing selected files, malformed
-   YAML, invalid targets, and extra profile keys must be reported explicitly;
+   YAML, invalid targets, and unknown top-level keys must be reported explicitly;
    stop profile routing instead of silently using legacy defaults.
 4. Overlay only keys **present** in that profile, using the table below.
    Merge maps per key, including each assignment's fields; replace lists,
    including `[]`. Omitted keys retain the resolved config/default value.
-   Do not use truthiness or fill missing keys from another profile. Composition
-   keys alone do not change assignments; explicit `assignments`, `delegation`,
+   Do not use truthiness or fill missing keys from another profile. Role
+   bindings alone do not change assignments; explicit `assignments`, `delegation`,
    and `fallbacks` entries override their corresponding values. Resolve owner
    aliases and gate enablement after this overlay.
 5. Reconcile the reception pane with the selected owner as described below,
@@ -48,25 +47,40 @@ the directory holding `skills/`, three levels above this file.
    execution strategy, and lifecycle permission for the run. Do not rewrite
    configuration or switch profiles to escape a missing agent or a gate.
 
-Profiles allow `planning-design`, `orchestrator`, `coder`, `reviewers`,
-`generalist`, `fallbacks`, `delegation`, and `assignments`.
-Each is optional; the six shipped YAML assets are the source of truth for
-preset values and reviewer order.
-Keep preset keys ordered: `orchestrator` when present, then `planning-design`,
-remaining keys, and `generalist` last.
+## Role bindings
+
+Config, shipped defaults, and profiles share one role form: under `roles:`,
+each role key's value is its binding. A single target or `orchestrator` means
+one delegation per task. A list means one delegation per entry. The shipped
+keys are `planning-design`, `coder`, `reviewers`, and `generalist`; any other
+key is a custom role, used only through an assignment's `role`.
+Legacy `agent:`/`agents:`/`description:` sub-keys and the old `reviewer` key
+remain readable as migration input; report the deprecation, and init rewrites
+them in the canonical form.
+
+## Profile keys
+
+Profiles allow top-level `orchestrator`, `roles`, `fallbacks`, `delegation`,
+and `assignments`. Each is optional; any other top-level key is an error.
+The six shipped YAML assets are the source of truth for preset values and
+reviewer order. Keep preset keys ordered: `orchestrator` when present, then
+`roles` with `planning-design` first and `generalist` last, then override maps.
+Pre-1.22 profiles with top-level role keys read as their `roles:` entries,
+with a deprecation notice; a role set both ways is an error.
 
 | Profile key | When absent | When present |
 |---|---|---|
 | `orchestrator` | Keep the legacy owner, the pane receiving the user's task | One nested target selects the active owner; null, `none`, and lists are invalid |
-| `planning-design` | Keep the resolved `roles.planning-design` binding | One nested target replaces that binding; bare `orchestrator`, null, `[]`, or literal `none` binds it to the active owner |
-| `generalist` | Keep the resolved `roles.generalist` binding | One nested target replaces that binding; bare `orchestrator`, null, `[]`, or literal `none` binds it to the active owner |
-| `coder` | Keep the resolved `roles.coder` binding | One nested target replaces that binding; bare `orchestrator`, null, `[]`, or literal `none` binds it to the active owner, with no separate coder |
-| `reviewers` | Keep the resolved `roles.reviewer` binding | A nonempty list of nested targets replaces that binding in order; `[orchestrator]`, `[]`, null, or literal `none` binds it to the active owner, with no external reviewers |
+| `roles.planning-design` | Keep the resolved binding | One nested target replaces that binding; bare `orchestrator`, null, `[]`, or literal `none` binds it to the active owner |
+| `roles.generalist` | Keep the resolved binding | One nested target replaces that binding; bare `orchestrator`, null, `[]`, or literal `none` binds it to the active owner |
+| `roles.coder` | Keep the resolved binding | One nested target replaces that binding; bare `orchestrator`, null, `[]`, or literal `none` binds it to the active owner, with no separate coder |
+| `roles.reviewers` | Keep the resolved binding | A nonempty list of nested targets replaces that binding in order; `[orchestrator]`, `[]`, null, or literal `none` binds it to the active owner, with no external reviewers |
+| `roles.<custom>` | Keep the resolved binding, if any | A target, `orchestrator`, or list, as in config; adds the role when config lacks it |
 | `fallbacks` | Keep the resolved fallback map | Override each present string key's entire substitute list, including `[]`; keep omitted entries |
 | `delegation` | Keep the resolved delegation settings | Override each present `pane_scope` or `execution`; keep omitted settings |
 | `assignments` | Keep the resolved task assignments | Override each present task's `role`, `mode`, or review `enabled` field; keep omitted tasks and fields |
 
-These three override blocks must be maps; `{}` changes nothing, while null,
+`roles` and the three override blocks must be maps; `{}` changes nothing, while null,
 scalars, and lists are errors. Their entries use the config schema: fallback
 values are lists of effort-free target strings; `pane_scope` is `tab`,
 `workspace`, or `session`; `execution` is `parallel` or `serial`; assignment
@@ -84,12 +98,12 @@ gate. Resolve these overrides before freezing the run; never edit config.
 An enabled review still runs, and an explicitly delegated review still needs
 a fresh subagent when its target is the owner. A resolved `enabled: false`
 gate stays off (except the existing `/strict_full_cycle` enabled-only override).
-Legacy `roles.<role>.agents: []` still disables tasks using that binding when
-the selected profile has not overridden it; profile omission must not
+A config or default empty role list (`[]`, or legacy `agents: []`) still
+disables tasks using that binding when the selected profile has not overridden it; profile omission must not
 reactivate it. The profile's explicit empty `coder` or `reviewers` replaces
-that binding, so legacy empty-list disabling no longer applies to it.
+that binding, so empty-list disabling no longer applies to it.
 
-An existing `agent: orchestrator` is a dynamic alias for the active owner;
+An existing `orchestrator` binding is a dynamic alias for the active owner;
 custom `planning-design`/`generalist` bindings remain intact when the profile
 omits that key, as do all user-added roles.
 A concrete coder/reviewer target remains a separate worker even when its
@@ -101,10 +115,11 @@ the owner is a self-target.
 A new target is a one-key mapping from an agent kind to a settings mapping:
 
 ```yaml
-coder:
-  codex:
-    model: GPT-6.1-Sol
-    effort: max
+roles:
+  coder:
+    codex:
+      model: GPT-6.1-Sol
+      effort: max
 ```
 
 Settings may contain only `model` and `effort`, each an optional nonempty
@@ -252,7 +267,7 @@ stop command. Workers never start or end agents.
 ## Profile routing: mode takes precedence
 
 After the profile overlay, apply resolved gate enablement first. Then route
-by the resolved assignment and its effective target. Composition keys change
+by the resolved assignment and its effective target. Role bindings change
 targets; explicit assignment fields can change modes and gates.
 
 | Resolved route with a selected profile | Execution |

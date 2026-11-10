@@ -88,7 +88,7 @@ top-level `allow_agent_lifecycle` boolean. A new config selects no profile
 Repeat init preserves the existing selection and permission. Installing
 templates does not select one; a profile named in a task selects only that
 run. Explain that a selected profile overrides
-only keys present in its file. Composition slots replace bindings;
+only keys present in its file. Its `roles:` entries replace bindings;
 `fallbacks`, `delegation`, and `assignments` merge per key, including each
 task's fields. Missing keys retain config/default values, lists replace
 (including `[]`), and explicit assignment fields may change modes or gates.
@@ -96,10 +96,13 @@ Lifecycle permission remains config-only.
 Validate any selected name/file per the profiles reference; invalid or missing
 selection is an explicit error, not a reason to silently clear it.
 
+Each role key's value is its binding: one target or `orchestrator` means one
+delegation per task; a list means one delegation per entry.
+
 | Role | Binds to | Meaning |
 |---|---|---|
 | `planning-design` | one target, or `orchestrator` | Who plans and designs; the alias resolves to the active owner. Preserve custom target bindings |
-| `reviewer` | a **list** of targets | One review per entry. A profile's explicit empty reviewers instead selects the owner; it does not disable reviews |
+| `reviewers` | a **list** of targets | One review per entry. A profile's explicit empty reviewers instead selects the owner; it does not disable reviews |
 | `coder` | one target, or `orchestrator` | The heavier-judgment role: complex coding, test authoring, whole-branch review |
 | `generalist` | one target, or `orchestrator` | Simple coding, inspection, tests, and routine operations; preserve custom target bindings |
 | `fallbacks.<agent>` | a list of string targets | Ordered substitutes for unavailable/exhausted agents; no effort constraint |
@@ -109,16 +112,21 @@ Write new role targets as one-key mappings, e.g.
 nonempty strings; effort requires model. A kind-only target uses `{kind: {}}`.
 Keep the bare `orchestrator` alias for roles that use it. Read legacy bare
 kinds and `kind@model`; normalize non-fallback pins with a deprecation notice
-and write nested targets. Fallback keys/substitutes keep bare-kind or
+and write nested targets. Read legacy `agent:`/`agents:` sub-keys and write
+their value directly on the role key. A legacy `description:` becomes that
+key's end-of-line comment. Rename a legacy `reviewer` role, and every
+`role: reviewer` assignment, to `reviewers`. Tell the user about each
+migration. Fallback keys/substitutes keep bare-kind or
 `kind@model` string syntax. Preserve supplied strings, including `Calude`; no fuzzy aliases.
 
 State the empty-value rules explicitly: profile `planning-design`/`coder`/`generalist`
 `orchestrator`/null/`[]`/`none` binds to the owner; `reviewers: [orchestrator]`/`[]`/null/`none` means owner review.
-Legacy `roles.<role>.agents: []` still disables the task when no profile
+A config empty role list (`[]`, or legacy `agents: []`) still disables the task when no profile
 overrides that binding. Lists replace, and a matched empty fallback list is
 authoritative. A fallback never inherits the primary effort.
 
-A repo may add a role beyond these four and assign tasks to it. Say so if the user asks.
+A repo may add a role beyond these four and assign tasks to it; a profile's
+`roles:` may add one too. Say so if the user asks.
 
 4. Assign a Role to Each Delegation Task
 Present every delegation task's role and mode from the resolved table.
@@ -223,22 +231,20 @@ effort keys that were not chosen; a kind-only settings map is `{}`.
 profile: <approved name, or null for no selection>
 allow_agent_lifecycle: <true|false>
 
-# --- roles: nested targets, or the bare active-owner alias ---
+# --- roles: a nested target, the bare active-owner alias, or a list ---
+# Key comments say what each role does (copied from roles.yaml); give a
+# custom role its own terse comment.
 roles:
-  planning-design:
-    agent: orchestrator # or the approved custom nested target
-  reviewer:
-    agents: # materialize every approved entry; do not infer a default count
-      - <agent kind>:
-          model: <model string>
-          effort: <effort string>
-  coder:
-    agent:
-      <agent kind>:
+  planning-design: orchestrator # planning and design work; or the approved custom nested target
+  reviewers: # independent review: plans, designs, code; one per entry. Materialize every approved entry; do not infer a default count
+    - <agent kind>:
         model: <model string>
         effort: <effort string>
-  generalist:
-    agent: orchestrator # or the approved custom nested target
+  coder: # complex coding (see "Complex coding boundary" in SKILL.md), test authoring, whole-branch final review
+    <agent kind>:
+      model: <model string>
+      effort: <effort string>
+  generalist: orchestrator # simple coding, search, file inspection, tests, lint, routine operations; or the approved custom nested target
 
 fallbacks: # string key -> ordered string substitutes, without effort
   <kind or kind@model>: [<kind or kind@model>]
@@ -309,7 +315,7 @@ Install profile templates by iterating the actual shipped
 if needed and copy a template **only when its destination is absent**.
 Preserve every existing file byte for byte, including a customized profile
 with a shipped filename; do not overwrite, merge, or refresh it on repeat
-init. Preserve custom profile filenames too. Profiles allow composition slots
+init. Preserve custom profile filenames too. Profiles allow `orchestrator`, `roles`,
 and per-key `assignments`, `delegation`, and `fallbacks` overrides, never
 lifecycle policy, profile selection, or session pane IDs. Installing templates
 is independent of selecting a profile.
@@ -324,8 +330,8 @@ Re-read every written file and confirm:
 - `.herdrpowers/config.yaml` parses as YAML, has no angle-bracket placeholders left, carries a `fallbacks:` key, and defines every role that any assignment references;
 - top-level `profile` is null/`none` or a valid simple name whose selected local/shipped file exists and validates; errors remain explicit rather than clearing selection;
 - top-level `allow_agent_lifecycle` is a YAML boolean, not a string, null, or a field nested in a profile or `delegation`, and `bash <pack>/skills/using-herdr-sibling-panes/scripts/agent-lifecycle.sh policy`, run from the repository, prints the approved value — that helper is what enforces it at runtime;
-- new role targets are one-kind mappings with only optional nonempty model/effort strings, effort requires model, and bare `orchestrator` aliases/custom bindings were preserved;
-- profiles contain only the five composition keys and optional `fallbacks`, `delegation`, and `assignments` maps; validate their entries per the profiles reference, preserving omitted keys, original strings, and reviewer order;
+- new role targets are one-kind mappings with only optional nonempty model/effort strings, effort requires model, bare `orchestrator` aliases/custom bindings were preserved, and no role keeps `agent:`/`agents:`/`description:` sub-keys or the `reviewer` name;
+- profiles contain only optional top-level `orchestrator`, `roles`, `fallbacks`, `delegation`, and `assignments` (pre-1.22 top-level role keys are reported as deprecated, not rewritten); validate their entries per the profiles reference, preserving omitted keys, original strings, and reviewer order;
 - all missing shipped templates were installed, every pre-existing profile file is byte-identical, and repeat init preserved the chosen profile, assignments, gate enablement, delegation, and permission;
 - the shipped profiles README was installed only if absent; any pre-existing local README is byte-identical;
 - `delegation.pane_scope` is one of `tab`, `workspace`, `session`, and `delegation.execution` is one of `parallel`, `serial`;

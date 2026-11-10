@@ -18,7 +18,7 @@ Never write the configuration file. `enabled: false` stays where the user put it
 
 ## What Forcing a Gate On Cannot Do
 
-A gate still needs its resolved execution route. An unoverridden legacy empty role list retains its disabling semantics; profile empty reviewers instead select the owner. Unavailable separate targets degrade under `orchestration`; a mandatory fresh subagent that cannot spawn is inability, not inline success. Forced on does not prove a review happened; report the actual transport and self-review versus independence.
+A gate still needs its resolved execution route. An unoverridden config empty role list retains its disabling semantics; profile empty reviewers instead select the owner. Unavailable separate targets degrade under `orchestration`; a mandatory fresh subagent that cannot spawn is inability, not inline success. Forced on does not prove a review happened; report the actual transport and self-review versus independence.
 
 ## Reporting
 
