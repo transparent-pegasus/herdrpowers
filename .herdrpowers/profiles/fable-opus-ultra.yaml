@@ -12,7 +12,7 @@ reviewers:
       model: GPT-6-Astra
       effort: max
   - muse:
-      model: muse-1.0-wonder
+      model: muse-wonder-1.0
       effort: max
   - agy:
       model: Gemini 4 Argon
