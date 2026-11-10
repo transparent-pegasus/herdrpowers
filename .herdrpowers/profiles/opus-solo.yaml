@@ -1,3 +1,4 @@
+planning-design: orchestrator
 orchestrator:
   claude:
     model: Opus 5.5

@@ -25,16 +25,17 @@ test('the six named profile templates are available as files', () => {
   for (const name of names) assert.ok(statSync(join(profiles, name)).isFile(), `${name} must be a file`);
 });
 
-test('every shipped profile routes generalist tasks to its selected owner', () => {
+test('every shipped profile routes planning-design and generalist tasks to its selected owner', () => {
   for (const name of names) {
     const source = readFileSync(join(profiles, name), 'utf8');
+    assert.match(source, /^planning-design: orchestrator\n/, `${name} must start with planning-design: orchestrator`);
     assert.match(source, /^generalist: orchestrator$/m, `${name} must bind generalist to the orchestrator`);
   }
 });
 
 test('the profile contract binds coder and generalist orchestrator or none to the owner', () => {
   const contract = readFileSync(join(root, 'skills/orchestration/references/profiles.md'), 'utf8');
-  for (const key of ['generalist', 'coder']) {
+  for (const key of ['planning-design', 'generalist', 'coder']) {
     assert.match(contract, new RegExp(`\\| \`${key}\` \\|[^\\n]*bare \`orchestrator\`, null, \`\\[\\]\`, or literal \`none\` binds it to the active owner`));
   }
 });

@@ -1,3 +1,4 @@
+planning-design: orchestrator
 orchestrator:
   codex:
     model: GPT-6.1-Sol

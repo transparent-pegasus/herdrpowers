@@ -110,7 +110,7 @@ and write nested targets. Fallback keys/substitutes keep bare-kind or
 `kind@model` string syntax. Preserve supplied strings, including `Calude` and
 the unequal `muse-1.0-wonder` / `muse-wonder-1.0` spellings; no fuzzy aliases.
 
-State the empty-value rules explicitly: profile `coder`/`generalist`
+State the empty-value rules explicitly: profile `planning-design`/`coder`/`generalist`
 `orchestrator`/null/`[]`/`none` binds to the owner; `reviewers: [orchestrator]`/`[]`/null/`none` means owner review.
 Legacy `roles.<role>.agents: []` still disables the task when no profile
 overrides that binding. Lists replace, and a matched empty fallback list is
@@ -322,7 +322,7 @@ Re-read every written file and confirm:
 - top-level `profile` is null/`none` or a valid simple name whose selected local/shipped file exists and validates; errors remain explicit rather than clearing selection;
 - top-level `allow_agent_lifecycle` is a YAML boolean, not a string, null, or a field nested in a profile or `delegation`, and `bash <pack>/skills/using-herdr-sibling-panes/scripts/agent-lifecycle.sh policy`, run from the repository, prints the approved value — that helper is what enforces it at runtime;
 - new role targets are one-kind mappings with only optional nonempty model/effort strings, effort requires model, and bare `orchestrator` aliases/custom bindings were preserved;
-- profiles contain only the four composition keys with the absent/empty semantics above; original string spelling and reviewer order are intact;
+- profiles contain only the five composition keys with the absent/empty semantics above; original string spelling and reviewer order are intact;
 - all missing shipped templates were installed, every pre-existing profile file is byte-identical, and repeat init preserved the chosen profile, assignments, gate enablement, delegation, and permission;
 - the shipped profiles README was installed only if absent; any pre-existing local README is byte-identical;
 - `delegation.pane_scope` is one of `tab`, `workspace`, `session`, and `delegation.execution` is one of `parallel`, `serial`;
