@@ -73,7 +73,7 @@ digraph when_to_use {
 - Review after each task (spec compliance + code quality) instead of only at the end
 - Separate delegated tasks cost a reset session each; profile owner-session modes may reuse context
 - Both are driven from this pane, share the same plan workspace and ledger, and never pause between tasks
-- Herdr transport requires `HERDR_ENV=1` and matching in-scope live agents; profile self-target delegation requires subagent capability instead
+- Herdr transport requires `HERDR_ENV=1` and matching in-scope live agents — or, with `allow_agent_lifecycle: true`, in-scope shell panes to start them in; profile self-target delegation requires subagent capability instead
 
 ## The Process
 

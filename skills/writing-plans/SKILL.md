@@ -252,8 +252,9 @@ supplied method.
 
 **For this plan I recommend <one of the two>, because <one sentence from the plan: how much the tasks depend on each other's interfaces, how many there are, what a shipped mistake would cost>. Does the plan capture what you want, and which approach should we use?"**
 
-Herdr routes require `HERDR_ENV=1` and matching in-scope live agents. Profile
-self-target delegation requires fresh-subagent capability instead. Without a
+Herdr routes require `HERDR_ENV=1` and matching in-scope live agents, or
+in-scope shell panes to start them in when `allow_agent_lifecycle` is true.
+Profile self-target delegation requires fresh-subagent capability instead. Without a
 profile, retain the legacy offer of Inline when no sibling pane can take the
 work; with a profile, keep mandatory delegation and report unavailable routes.
 

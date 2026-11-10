@@ -211,10 +211,11 @@ requirement.
     footer does not verify is not that target. Unknown startup or footer
     support is a reported inability, not a reason to fabricate success.
   - **End** only agents actually started for this task, once idle with no
-    pending work or delegation, when the run needs them no more and at the
-    latest before the final report. The helper's ledger records what the task
-    started and refuses everything else. An owner started for a handoff
-    holds the task: it is left running and reported.
+    pending work or delegation: when the run needs them no more, when another
+    resolved target needs their shell pane, and at the latest before the
+    final report. The helper's ledger records what the task started and
+    refuses everything else. An owner started for a handoff holds the task:
+    it is left running and reported.
 
 Permission true does not widen scope, authorize topology changes (no pane,
 tab, or workspace is created or closed), interrupt working agents, answer a
