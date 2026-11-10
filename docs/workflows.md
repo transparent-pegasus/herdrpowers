@@ -76,7 +76,7 @@ All development workflows share the same guardrails:
 - **Transparency**: Each step blocks for user confirmation. Agents do not proceed autonomously through the whole cycle.
 - **Evidence**: `verification-before-completion` runs before any "done" claim, and a delegated pane's claim is verified against its report file — not taken on trust.
 - **Root cause over symptoms**: When tests fail, `systematic-debugging` drives the investigation.
-- **Owner and lifecycle policy**: Owner mismatch always asks unused versus relay before handoff/startup. Lifecycle is a separate strict boolean, false by default; true permits guarded process management, not arbitrary topology destruction. Only explicit owner handoff transfers orchestration authority.
+- **Owner and lifecycle policy**: Owner mismatch always asks unused versus relay before handoff/startup. `allow_agent_lifecycle` is a separate strict boolean, false by default and enforced by `agent-lifecycle.sh`: false starts and ends no agent; true lets the active owner start the selected composition's missing agents in idle in-scope shell panes and end the ones it started, never creating or closing panes. Only explicit owner handoff transfers orchestration authority.
 - **Honest degradation**: Reports name profile/owner, verified model/effort, transports, self-review versus independence, fallback constraints lost, lifecycle actions, changed assignments, disabled/forced gates, and actual concurrency. A mandatory subagent that cannot spawn is inability, never inline delegation or a passed gate.
 
 ## Invoking a Workflow

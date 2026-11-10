@@ -3,7 +3,8 @@
 Read this reference before resolving ownership or routing any task. It is the
 composition contract for `orchestration`; configuration is interpreted by the
 skills, not by a separate parser or execution service. Paths below distinguish
-the target repository (`<repo-root>`) from the installed plugin (`<pack>`).
+the target repository (`<repo-root>`) from the installed plugin (`<pack>`):
+the directory holding `skills/`, three levels above this file.
 
 ## Resolve once, by key presence
 
@@ -117,7 +118,10 @@ selects a matching agent; it never changes an existing agent's model/effort.
 Without a selected profile, the reception pane remains the owner and legacy
 routing/review independence applies. With a profile, check whether the
 reception pane matches the selected owner target, including requested model
-and effort. If the profile omitted `orchestrator`, keep the reception owner.
+and effort — like any other target, by its `agent` kind and
+`pane-model.sh "$HERDR_PANE_ID" MODEL [EFFORT]`. A pane whose footer shows no
+such evidence does not match. If the profile omitted `orchestrator`, keep the
+reception owner.
 
 **A mismatch always requires the reception-role question**, even if an exact
 owner is already idle, a shell is available, or lifecycle permission is true:

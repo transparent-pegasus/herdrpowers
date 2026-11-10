@@ -34,11 +34,19 @@ or startup, even if a matching owner exists. The explicit handoff transfers
 decision authority, user instruction, paths, and frozen settings; workers never
 re-delegate, while the newly selected owner may orchestrate. A relay only relays.
 
-Lifecycle false forbids start/exit/restart, including recovery and fallback.
-True requires installed Herdr/operation and CLI help, starts only in available
-in-scope shell panes, verifies live model/effort, and ends only idle agents
-actually started for this task with no pending work. It grants process
-management, not topology destruction or interruption of working agents.
+`allow_agent_lifecycle` works at runtime through
+`using-herdr-sibling-panes/scripts/agent-lifecycle.sh`, which refuses every
+start and stop unless the resolved value is the literal `true`. False forbids
+start/exit/restart, including recovery and fallback. With true, the active
+owner starts each resolved target that has no live in-scope match — the
+selected one before any fallback substitute — in an available shell pane,
+verifies its live model/effort, and ends the idle agents this task started
+before the final report. It grants process management, not topology changes,
+interruption of working agents, or answers to startup dialogs. The permission
+is configuration only; a profile, by contrast, may also be named in the task
+to select that run's composition. A `claude` target needs a statusLine that
+prints its model and effort: see the
+[lifecycle reference](../skills/using-herdr-sibling-panes/references/agent-lifecycle.md).
 
 ## Delegation Tasks
 
@@ -157,7 +165,7 @@ An agent target is exhausted when its output reports a usage limit, or two deleg
 
 For a nested target, look up the exact `kind@model` fallback key using its preserved spelling; only an absent key permits bare-kind lookup. A matched `[]` is authoritative. Substitutes keep string syntax and have no effort constraint: discard primary effort and report that loss. Preserve `Calude` and the unequal `muse-1.0-wonder` / `muse-wonder-1.0` strings. No fuzzy aliases or list concatenation. Re-submit the same self-contained task to the first usable substitute.
 
-Without a profile, safe inline degradation remains available for work. With a profile, a fallback to the owner obeys its mode: `delegate` requires a fresh subagent. Report unavailable mandatory capability instead of claiming inline delegation. Lifecycle permission still applies during fallback.
+Without a profile, safe inline degradation remains available for work. With a profile, a fallback to the owner obeys its mode: `delegate` requires a fresh subagent. Report unavailable mandatory capability instead of claiming inline delegation. Lifecycle permission still applies during fallback: with it, a target that is unavailable but not exhausted is started before its substitutes.
 
 **Separate-target escalation selects a different eligible live target**, rather than changing an existing agent's model/effort. Apply it for lack-of-reasoning BLOCKED reports and rounds 4-5; profile self-target fixes retain their mode. Record the swap and lost constraints. All requested model/effort constraints need live footer evidence before keys and after reset; unknown effort fails closed, and Cursor's bare Max plan label is not reasoning evidence.
 

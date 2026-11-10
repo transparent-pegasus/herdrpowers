@@ -44,10 +44,11 @@ Rules:
    and report owner, transports, self-review/independence, changed assignments,
    disabled gates, fallback constraints lost, and test writer.
 10. Top-level `allow_agent_lifecycle` is a strict boolean, false by default:
-    false forbids start/exit/restart even for recovery or fallback. True requires
-    installed Herdr/CLI help and verified live settings; start only in available
-    in-scope shells and end only idle agents actually started for this task with
-    no pending work. It does not permit arbitrary workspace/tab/pane destruction.
+    false forbids start/exit/restart even for recovery or fallback. True lets
+    the active owner start a selected target that has no live match in an idle
+    in-scope shell pane and end idle agents this task started, only through
+    `agent-lifecycle.sh`, which enforces the value and verifies live settings.
+    It never creates or closes a workspace, tab, or pane.
 ```
 
 For checked-in copies, adjust workflow invocation to how your tool reads `commands/` (slash commands, skills, or direct file reads — see [workflows.md](./workflows.md)).

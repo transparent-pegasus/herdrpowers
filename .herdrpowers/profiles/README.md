@@ -16,15 +16,22 @@
 `solo` は複雑な意思決定もコーディングも不要な作業向け。
 
 - 選択は `.herdrpowers/config.yaml` の `profile` に拡張子なしのファイル名を指定。
+  タスク指示でプロファイル名を言えばその実行だけ選択。config は書き換えない。
   プロファイルには `orchestrator`・`coder`・`reviewers` の配役だけを書く。
-  選択と `allow_agent_lifecycle` は config 側。既定 `false` ではエージェントの起動・終了・再起動不可。
   `coder`・`reviewers` 省略は解決済み roles、`orchestrator` 省略は受付ペインを維持。
+- `allow_agent_lifecycle` は config 側の真偽値。`true` / `false` をそのまま書く。`"true"`・`yes` はエラー。
+  `false`（既定）: エージェントの起動・終了・再起動なし。足りなければ手動で用意。
+  `true`: owner が不足 target をスコープ内の空きシェルペインへ起動し、自分で起動した idle のものだけ終了。
+  ペインは作らない・閉じない。空きシェルペインは先に用意。チャット指示では許可にならない。
 - target のキーは `herdr pane list` の `agent` に出る種別名（`claude`、`codex` など）。`hp-coder` 等のペイン別名やペイン ID は不可。
   形式は `coder: {codex: {model: GPT-6.1-Sol, effort: max}}`。
   settings は入れ子。`model`・`effort` は省略可、指定時は空でない文字列。`effort` には `model` が必須。
   fallback 以外に新しい `kind@model` を書かない。
 - `model`・`effort` はペインのフッター表示に合わせる。プロバイダー名から推測しない。
   文脈使用量やプランの `Max` は推論量の証拠にならない。テンプレートの文字列を勝手に直さない。
+- `claude` は既定でフッターに model・effort を出さない。statusLine が無いと `claude` target は常に不一致。
+  `~/.claude/settings.json` に入れる（`jq` 必須）:
+  `{"statusLine": {"type": "command", "command": "jq -r '\"\\(.model.display_name) \\(.effort.level // \"\")\"'"}}`
 - `null` は標準 YAML の null。配布テンプレートでも維持。裸の `none` は対応するリテラル別名で、YAML null ではない。
   `coder: null` / `[]` / `none` は別 coder なし。
   `reviewers: []` / `null` / `none` は owner レビュー。レビュー無効化ではない。

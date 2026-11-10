@@ -102,4 +102,5 @@ Do not assume merge. Execute only the chosen option, and delete the worktree onl
 - If tests fail or errors occur, pause and use the `systematic-debugging` skill.
 - Before claiming that verification passed or the task is complete, use `verification-before-completion`.
 - Include the canonical profiles contract's run record: selected profile or none, active owner/reception role, verified targets, task/review transports, self-review versus independence, unavailable routes, fallbacks/lost effort, lifecycle actions, and test writer.
+- With `allow_agent_lifecycle: true`, start a resolved target that has no live in-scope match and, before the final report, end the idle agents this run started — both only through `agent-lifecycle.sh`. Name every agent started, ended, or left running. With `false`, start and end none.
 - Read the specific `SKILL.md` file for a skill before invoking it.

@@ -25,7 +25,7 @@ test('the six named profile templates are available as files', () => {
   for (const name of names) assert.ok(statSync(join(profiles, name)).isFile(), `${name} must be a file`);
 });
 
-test('npm distribution includes all six orchestration profiles', () => {
+test('npm distribution includes the six orchestration profiles and their README, nothing else local', () => {
   const cache = mkdtempSync(join(tmpdir(), 'herdr-profile-pack-'));
   try {
     const result = spawnSync('npm', ['pack', '--dry-run', '--json', '--ignore-scripts'], {
@@ -37,9 +37,9 @@ test('npm distribution includes all six orchestration profiles', () => {
     assert.ifError(result.error);
     assert.equal(result.status, 0, result.stderr);
     const [pack] = JSON.parse(result.stdout);
-    const shipped = pack.files.map((file) => file.path)
-      .filter((path) => path.startsWith('.herdrpowers/profiles/') && path.endsWith('.yaml')).sort();
-    assert.deepEqual(shipped, names.map((name) => `.herdrpowers/profiles/${name}`));
+    const shipped = pack.files.map((file) => file.path).filter((path) => path.startsWith('.herdrpowers/')).sort();
+    // Exactly the templates and their README: no local config or run scratch.
+    assert.deepEqual(shipped, ['README.md', ...names].map((name) => `.herdrpowers/profiles/${name}`));
   } finally {
     rmSync(cache, { recursive: true, force: true });
   }
