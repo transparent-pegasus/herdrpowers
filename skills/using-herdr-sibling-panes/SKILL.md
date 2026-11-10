@@ -54,7 +54,7 @@ What to delegate depends on how this skill was entered:
 
 **Delegation stays inside the orchestrator's own tab unless the repository widens it.** A tab is how a herdr user separates projects: every pane carries its own `cwd`, and a pane one tab over is usually sitting in a different repository, in a session its own user is mid-task in. `composer-submit.sh` resets the target session, so a cross-tab delegation destroys that work — silently, and in a repo the task has no business touching.
 
-The scope comes from `delegation.pane_scope` in the merged configuration (`.herdrpowers/config.yaml` over `orchestration/roles.yaml`), and defaults to `tab` — including standalone use, where no configuration was resolved at all.
+The scope comes from resolved `delegation.pane_scope` after repo config and present profile overrides over `orchestration/roles.yaml`, and defaults to `tab` — including standalone use, where no configuration was resolved at all.
 
 | value | eligible panes |
 |---|---|

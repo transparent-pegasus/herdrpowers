@@ -20,21 +20,22 @@ The base configuration answers "who does what, and which reviews run":
 2. **[`roles.yaml`](roles.yaml)** — the pack's shipped defaults. Supplies every key the repo file omits.
 
 Read both at the start of every orchestrated task (the repo file may be absent).
-Then overlay only composition keys present in the selected profile, if any.
+Then overlay only keys present in the selected profile, per the profiles reference.
 The base files share this schema:
 
 - **`roles:`** — each role's `agent` or `agents` binding. New targets use `{kind: {model: <string>, effort: <string>}}`; settings are optional, effort requires model. The bare `orchestrator` alias resolves to the active owner. Legacy bare kinds and non-fallback `kind@model` remain readable, with a deprecation notice for the latter; init writes nested targets. Validate and normalize per the profiles reference, not by silently ignoring invalid fields.
 - **`fallbacks:`** — agent → ordered substitutes, for when an agent cannot take work. Keys and substitutes may be pinned too.
 - **`delegation:`** — defaults that apply to every task: `pane_scope` (which panes are eligible at all) and `execution` (parallel or serial by default).
 - **`assignments:`** — every delegation task, each with the role that performs it.
-- **`profile`** — optional composition name, not an assignment or a gate switch.
+- **`profile`** — optional preset name; its present composition and routing entries override the base configuration.
 - **`allow_agent_lifecycle`** — top-level strict boolean, separate from composition/delegation; defaults false. False starts and ends no agent. True lets the active owner start a resolved target that has no live match and end idle agents the task started, only through `agent-lifecycle.sh`, which enforces the value. Read the profiles reference before any startup, exit, or recovery action, including owner handoff and fallback.
 
 Merging is per key, not per file. Lists replace rather than concatenate.
-Profile keys override the planning-design, orchestrator, coder, reviewer, or generalist binding
-only when present; omitted keys preserve them. A profile never changes
-assignments, gate enablement, or delegation defaults. Empty profile reviewers select the owner, while a legacy
-empty role list keeps its disabling semantics if no profile overrides it.
+Present profile composition keys replace their role bindings. Profile
+`fallbacks`, `delegation`, and `assignments` merge per key, including assignment
+fields; omitted entries retain config/default values. Resolve modes and gate
+enablement after the overlay. Empty profile reviewers select the owner, while
+a legacy empty role list keeps its disabling semantics if no profile overrides it.
 
 Report assignment keys not defined by `roles.yaml`: otherwise their intended
 task silently uses a default and can revive a disabled review. Honor legacy
@@ -49,7 +50,8 @@ report degradation instead.
 ## Delegation scope
 
 `delegation.pane_scope` filters eligible panes before selecting a role target
-or an owner handoff recipient. Read its resolved value; profiles do not widen it.
+or an owner handoff recipient. Read its resolved value after the profile overlay
+and freeze it; never widen it during the run.
 
 | value | eligible panes |
 |---|---|
@@ -112,7 +114,7 @@ Resolve every task the workflow will touch before its first delegation, not when
 
 **`/strict_full_cycle` ignores `enabled` and runs every gate in this table**, naming each one it forced on in its report. It is the pack's only override of the resolved configuration, and it touches nothing but `enabled` — never a `role`, a `mode`, or an invariant.
 
-**Every assignment the repo config changed away from `roles.yaml`, every non-default `delegation:` value, and every disabled review, is named in the final report**, next to any role that fell back and any review that degraded for lack of panes. The user configured it; the report says so, every run, so nobody later mistakes an unreviewed branch for a reviewed one, or a self-tested one for independently tested.
+**Every assignment the repo config or profile changed away from `roles.yaml`, every non-default `delegation:` value, and every disabled review, is named in the final report**, next to any role that fell back and any review that degraded for lack of panes. The user configured it; the report says so, every run, so nobody later mistakes an unreviewed branch for a reviewed one, or a self-tested one for independently tested.
 
 ### Roles that bind to a list
 

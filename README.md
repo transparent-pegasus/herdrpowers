@@ -17,7 +17,7 @@ Coordinates planning, implementation, testing, and review across agent panes.
 | task loop | `subagent-driven-development` | `pane-driven-development` |
 | parallel work | `dispatching-parallel-agents` | panes, bounded by idle panes and worktrees |
 | entry point | skills trigger themselves | `commands/` workflows, plus the same skills |
-| routing | fixed in the skill | `.herdrpowers/config.yaml` over `roles.yaml`, plus an optional composition profile |
+| routing | fixed in the skill | `.herdrpowers/config.yaml` over `roles.yaml`, plus an optional profile |
 | who writes tests | the implementer, always | the `test-authoring` assignment |
 | review | one reviewer subagent | a role bound to a list of agent types: one review per entry |
 
@@ -86,18 +86,20 @@ Repository settings stay outside the plugin and survive updates:
   worktree directory (`WORKTREE_DIRECTORY`, default `.worktrees/`).
 - `.herdrpowers/config.yaml`: agent roles, task assignments, delegation scope,
   review settings, the selected `profile`, and `allow_agent_lifecycle`.
-- `.herdrpowers/profiles/`: composition profiles — who orchestrates, codes,
-  and reviews, each with a model and reasoning effort. Init installs the six
+- `.herdrpowers/profiles/`: presets for role targets, models/effort, and
+  optional fallback, delegation, and assignment overrides. Init installs the six
   shipped ones without overwriting yours; their
   [README](.herdrpowers/profiles/README.md) explains the names.
 
 ```yaml
-profile: fable-sol-panel      # or name one in the task; null selects none
+profile: fable-sol-ultra      # or name one in the task; null selects none
 allow_agent_lifecycle: false  # true: the orchestrator may start and end agents in panes
 ```
 
-A profile replaces only the roles it names; assignments and review gates stay
-as configured. Model and effort must match what each pane shows in its
+A profile overrides only present keys. Omitted keys keep config/default
+values; maps merge per key and lists replace, including empty lists.
+Assignment overrides may change modes and review gates; lifecycle permission
+remains config-only. Model and effort must match what each pane shows in its
 footer. With `allow_agent_lifecycle: true` the orchestrator starts the
 selected composition's missing agents in idle shell panes and ends the ones it
 started; with `false`, the default, it never starts or ends an agent. See

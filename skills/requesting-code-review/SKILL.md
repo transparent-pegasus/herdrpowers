@@ -11,7 +11,7 @@ Read `orchestration` and its [profiles contract](../orchestration/references/pro
 
 **Core principle:** Review early, through the resolved route. Report same-session self-review honestly; it is not independent review. Missing mandatory subagent capability is a reported inability, never inline substitution or a passed gate.
 
-**Gate:** whole-branch review uses `assignments.final-branch-review`; per-task review uses `assignments.task-review`. Resolve repo config over shipped roles, then the selected profile's present composition keys. Keep assignment modes and gate enablement. List roles run once per effective entry; merge their findings. A disabled gate does not run and is named in the report. Empty profile reviewers instead select the active owner and leave the gate enabled.
+**Gate:** whole-branch review uses `assignments.final-branch-review`; per-task review uses `assignments.task-review`. Resolve repo config over shipped roles, then the selected profile's present keys. Resolve assignment fields per key before applying modes and gates. List roles run once per effective entry; merge their findings. A disabled gate does not run and is named in the report. Empty profile reviewers instead select the active owner and leave the gate enabled.
 
 ## When to Request Review
 
