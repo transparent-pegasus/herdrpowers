@@ -25,10 +25,13 @@ test('the six named profile templates are available as files', () => {
   for (const name of names) assert.ok(statSync(join(profiles, name)).isFile(), `${name} must be a file`);
 });
 
-test('every shipped profile starts with planning-design and ends with the owner generalist', () => {
+test('every shipped profile orders owner before planning and ends with the owner generalist', () => {
   for (const name of names) {
     const source = readFileSync(join(profiles, name), 'utf8');
-    assert.match(source, /^planning-design:/, name);
+    const keys = [...source.matchAll(/^([a-z-]+):/gm)].map((match) => match[1]);
+    const first = keys.includes('orchestrator') ? ['orchestrator', 'planning-design'] : ['planning-design'];
+    assert.ok(source.startsWith(`${first[0]}:`), name);
+    assert.deepEqual(keys.slice(0, first.length), first, name);
     assert.ok(source.endsWith('generalist: orchestrator\n'), name);
   }
 });
@@ -39,13 +42,13 @@ for (const [name, kind, owner, model] of [
 ]) {
   test(`${name} delegates planning and review while keeping execution with its cheaper owner`, () => {
     const source = readFileSync(join(profiles, name), 'utf8');
-    assert.equal(source, `planning-design:
-  ${kind}:
-    model: ${model}
-    effort: max
-orchestrator:
+    assert.equal(source, `orchestrator:
   ${kind}:
     model: ${owner}
+    effort: max
+planning-design:
+  ${kind}:
+    model: ${model}
     effort: max
 coder: orchestrator
 reviewers:
@@ -62,7 +65,7 @@ generalist: orchestrator
 
 test('ultra and solo profiles keep planning with their selected owner', () => {
   for (const name of names.filter((name) => /-(ultra|solo)\.yaml$/.test(name))) {
-    assert.match(readFileSync(join(profiles, name), 'utf8'), /^planning-design: orchestrator\n/, name);
+    assert.match(readFileSync(join(profiles, name), 'utf8'), /^planning-design: orchestrator$/m, name);
   }
 });
 

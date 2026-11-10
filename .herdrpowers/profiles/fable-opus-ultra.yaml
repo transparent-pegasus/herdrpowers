@@ -1,8 +1,8 @@
-planning-design: orchestrator
 orchestrator:
   claude:
     model: Fable 5.2
     effort: max
+planning-design: orchestrator
 coder:
   claude:
     model: Opus 5.5
