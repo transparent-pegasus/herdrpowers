@@ -17,7 +17,9 @@ Use `solo` for tasks that need neither complex decisions nor coding.
 
 - Select a profile by setting `profile` in `.herdrpowers/config.yaml` to the filename without its extension.
   Naming a profile in the task instructions selects it for that run only; leave the config unchanged.
-  Profiles contain only the `orchestrator`, `coder`, and `reviewers` composition keys.
+  Profiles contain only the `orchestrator`, `generalist`, `coder`, and `reviewers`
+  composition keys. `generalist: orchestrator` assigns routine tasks to the selected
+  owner.
   Omitted `coder` and `reviewers` keep the resolved role bindings; an omitted `orchestrator` keeps the reception pane as owner.
 - `allow_agent_lifecycle` is a config boolean. Use literal `true` or `false`; `"true"` and `yes` are errors.
   `false` (default): no agent starts, exits, or restarts. Set up any missing agents manually.

@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { existsSync, mkdtempSync, readdirSync, rmSync, statSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -23,6 +23,13 @@ test('the six named profile templates are available as files', () => {
   assert.ok(existsSync(profiles), 'missing shipped .herdrpowers/profiles directory');
   assert.deepEqual(readdirSync(profiles).filter((name) => name.endsWith('.yaml')).sort(), names);
   for (const name of names) assert.ok(statSync(join(profiles, name)).isFile(), `${name} must be a file`);
+});
+
+test('every shipped profile routes generalist tasks to its selected owner', () => {
+  for (const name of names) {
+    const source = readFileSync(join(profiles, name), 'utf8');
+    assert.match(source, /^generalist: orchestrator$/m, `${name} must bind generalist to the orchestrator`);
+  }
 });
 
 test('npm distribution includes the six orchestration profiles and their README, nothing else local', () => {
