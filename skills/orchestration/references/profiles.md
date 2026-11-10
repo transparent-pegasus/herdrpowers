@@ -46,13 +46,14 @@ the directory holding `skills/`, three levels above this file.
    execution strategy, and lifecycle permission for the run. Do not rewrite
    configuration or switch profiles to escape a missing agent or a gate.
 
-Profiles contain only `orchestrator`, `coder`, and `reviewers`. Each is
-optional in a custom profile; shipped compositions live in the six YAML
+Profiles contain only `orchestrator`, `generalist`, `coder`, and `reviewers`.
+Each is optional in a custom profile; shipped compositions live in the six YAML
 assets, which are the source of truth for their values and reviewer order.
 
 | Profile key | When absent | When present |
 |---|---|---|
 | `orchestrator` | Keep the legacy owner, the pane receiving the user's task | One nested target selects the active owner; null, `none`, and lists are invalid |
+| `generalist` | Keep the resolved `roles.generalist` binding | The bare `orchestrator` alias binds Generalist tasks to the active owner |
 | `coder` | Keep the resolved `roles.coder` binding | One nested target replaces that binding; null, `[]`, or literal `none` binds it to the active owner, with no separate coder |
 | `reviewers` | Keep the resolved `roles.reviewer` binding | A nonempty list of nested targets replaces that binding in order; `[]`, null, or literal `none` binds it to the active owner, with no external reviewers |
 

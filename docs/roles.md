@@ -23,11 +23,13 @@ Customize the repo file, not `roles.yaml` — plugin installs are read-only, and
 After merging repo config over shipped roles, overlay only keys present in the
 selected `.herdrpowers/profiles/<name>.yaml`, repo-local first and shipped only
 if absent locally. Invalid names, files, or targets are explicit errors. Profiles
-contain only `orchestrator`, `coder`, and `reviewers`; omitted slots keep resolved
-roles. Explicit empty coder (`null`, `[]`, `none`) means solo; empty reviewers
+contain only `orchestrator`, `generalist`, `coder`, and `reviewers`; omitted slots keep resolved
+roles. `generalist: orchestrator` routes Generalist tasks to the selected owner.
+Explicit empty coder (`null`, `[]`, `none`) means solo; empty reviewers
 (`[]`, null, `none`) select the owner without disabling a gate. Lists replace.
-Preserve custom planning-design/generalist bindings, added roles, assignments,
-modes, and gates. A concrete coder matching the owner is still a separate worker.
+Preserve custom planning-design/generalist bindings when those profile keys are
+omitted, as well as added roles, assignments, modes, and gates. A concrete coder
+matching the owner is still a separate worker.
 
 A mismatched reception pane always asks **unused or relay** before owner handoff
 or startup, even if a matching owner exists. The explicit handoff transfers
