@@ -32,6 +32,12 @@ test('every shipped profile routes generalist tasks to its selected owner', () =
   }
 });
 
+test('the profile contract lets generalist targets override config and none preserve it', () => {
+  const contract = readFileSync(join(root, 'skills/orchestration/references/profiles.md'), 'utf8');
+  assert.match(contract, /\| `generalist` \|[^\n]*nested target[^\n]*overrides `roles\.generalist`/);
+  assert.match(contract, /literal `none` preserves the resolved `roles\.generalist` binding/);
+});
+
 test('npm distribution includes the six orchestration profiles and their README, nothing else local', () => {
   const cache = mkdtempSync(join(tmpdir(), 'herdr-profile-pack-'));
   try {
