@@ -1,6 +1,7 @@
 # Profiles
 
 Names put the owner first. `ultra` means four external reviewers; `solo` means no separate coder.
+YAML keys start with `orchestrator` when present, then `planning-design`; `generalist` stays last.
 
 | File | Composition and purpose |
 |---|---|

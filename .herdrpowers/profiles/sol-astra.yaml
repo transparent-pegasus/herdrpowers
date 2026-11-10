@@ -1,10 +1,10 @@
-planning-design:
-  codex:
-    model: GPT-6-Astra
-    effort: max
 orchestrator:
   codex:
     model: GPT-6.1-Sol
+    effort: max
+planning-design:
+  codex:
+    model: GPT-6-Astra
     effort: max
 coder: orchestrator
 reviewers:

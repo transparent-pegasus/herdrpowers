@@ -18,7 +18,8 @@ targets. Replace `astra-sol.yaml` and `fable-opus.yaml` with `sol-astra.yaml`
 and `opus-fable.yaml`: Sol/Opus owns execution, Astra/Fable handles planning
 and one review, all at `max` effort. Both set `coder` and `generalist` to
 `orchestrator` and override only `assignments.plan-and-design.mode` to
-`delegate`. Every preset keeps `planning-design` first and `generalist` last.
+`delegate`. Presets put `orchestrator` first when present, then
+`planning-design`; `generalist` remains last.
 
 Synchronize workflow/skill instructions, configuration docs, preset names,
 and npm package expectations. Add regression coverage for resolved lifecycle

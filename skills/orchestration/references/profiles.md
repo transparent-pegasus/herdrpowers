@@ -52,6 +52,8 @@ Profiles allow `planning-design`, `orchestrator`, `coder`, `reviewers`,
 `generalist`, `fallbacks`, `delegation`, and `assignments`.
 Each is optional; the six shipped YAML assets are the source of truth for
 preset values and reviewer order.
+Keep preset keys ordered: `orchestrator` when present, then `planning-design`,
+remaining keys, and `generalist` last.
 
 | Profile key | When absent | When present |
 |---|---|---|
