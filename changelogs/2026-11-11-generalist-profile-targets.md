@@ -3,10 +3,9 @@ change_type: pack-native
 date: 2026-11-11
 ---
 
-# Allow Generalist targets in profiles
+# Generalist profile key; orchestrator alias for coder
 
-Profile `generalist` now accepts the same nested herdr kind/model/effort target
-as other target slots. A profile target or `orchestrator` alias overrides the
-repository's `roles.generalist`; literal `none` and an omitted key preserve the
-repository binding. The profile reference and init guidance define the rule,
-and the profile contract test guards it.
+Profiles accept `generalist` with the same values as `coder`. Both take a
+nested target or bare `orchestrator`; `orchestrator`, null, `[]`, and `none`
+bind to the owner. Shipped profiles set `generalist: orchestrator`; solo
+profiles set `coder: orchestrator`.
