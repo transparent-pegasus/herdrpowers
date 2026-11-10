@@ -119,7 +119,7 @@ Resolve every task the workflow will touch before its first delegation, not when
 A role declared with `agents:` runs **one delegation per entry**, and you wait
 for all before acting. A one-entry list is a deliberate single delegation.
 A legacy empty role list disables that task unless a profile overrides the
-binding. Profile `reviewers: []`/null/`none` instead selects the active owner;
+binding. Profile `reviewers: [orchestrator]`/`[]`/null/`none` instead selects the active owner;
 an enabled review still runs and `delegate` still requires a fresh subagent.
 
 Three rules bind wherever a list role is used:

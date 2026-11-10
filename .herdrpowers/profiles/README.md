@@ -34,7 +34,7 @@ Use `solo` for tasks that need neither complex decisions nor coding.
   `{"statusLine": {"type": "command", "command": "jq -r '\"\\(.model.display_name) \\(.effort.level // \"\")\"'"}}`
 - `null` is standard YAML null. Bare `none` is a supported literal alias, not YAML null.
   `coder`/`generalist`: `orchestrator` / `null` / `[]` / `none` binds to the owner.
-  `reviewers: []` / `null` / `none` selects owner review; it does not disable reviews.
+  `reviewers: [orchestrator]` / `[]` / `null` / `none` selects owner review; it does not disable reviews.
 - `delegate` requires a fresh subagent every time, even when targeting the owner. An empty composition does not waive this requirement.
   Disabled gates stay disabled. Selecting a composition must not change modes or gates.
 - If the reception pane does not match the owner, always ask whether it should be `unused` or a `relay` before handoff or startup.
