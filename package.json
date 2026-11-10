@@ -1,7 +1,7 @@
 {
   "name": "herdrpowers",
-  "version": "1.20.0",
-  "description": "Multi-pane development framework for herdr: structured skills and multi-phase workflows that delegate implementation, testing, and review to idle sibling agent panes instead of in-process subagents.",
+  "version": "1.21.0",
+  "description": "Multi-pane development framework for herdr: structured skills, multi-phase workflows, and configurable orchestration profiles for implementation, testing, and review.",
   "author": {
     "name": "transparent-pegasus",
     "url": "https://github.com/transparent-pegasus"
@@ -25,6 +25,7 @@
   "main": ".opencode-plugin/index.mjs",
   "files": [
     ".opencode-plugin/",
+    ".herdrpowers/profiles/",
     "skills/",
     "commands/",
     "docs/",

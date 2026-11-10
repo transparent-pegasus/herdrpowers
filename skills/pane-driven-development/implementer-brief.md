@@ -1,5 +1,15 @@
 # Implementer Pane Brief Template
 
+Use this contract for the resolved implementation route. Separate delegated
+targets use the Herdr submission below; profile self-target `delegate` uses a
+fresh subagent given the same self-contained contract and no-re-delegation
+rule. Other owner-session modes may execute inline with an optional subagent.
+A concrete coder matching the owner's kind/model is still separate. Only the
+active owner may choose optional subagents; the worker contract below forbids
+workers from delegating in any transport. Owner-session execution retains
+orchestration authority and uses the task/evidence requirements without
+pretending to be a delegated worker.
+
 Delegation to an agent pane goes through a composer, which rejects embedded
 newlines — so the instruction you submit is **one line of pointers**, and the
 contract below goes in **its own file** (`task-N-implementer.md`), pointing at
@@ -61,7 +71,7 @@ continue; do not clean them up.
 **Who writes this task's tests** — keep the line that matches the resolved
 `test-authoring` assignment and delete the other before sending the contract:
 
-- *`mode: delegate`* — A separate pane is writing this task's tests right now,
+- *`mode: delegate`* — A fresh test worker (reset-backed pane or required profile self-target subagent) is writing this task's tests right now,
   from the same requirements file, without seeing your code. Do not write them yourself
   and do not go looking for them. Implement the brief's stated behavior using
   its exact names, signatures, and values: those are the contract both of you
@@ -78,8 +88,8 @@ suite once before committing, not after every edit.
 **Execute this task yourself.** Do not delegate it onward, do not orchestrate
 other panes, and do not open new panes — even for parts that look routine, and
 above all not to review your own work. Self-review (below) means reading your
-own diff. Review is the orchestrator's job: after you report, it delegates a
-fresh reviewer against your diff. A reviewer you delegate duplicates that
+own diff. Review is the active owner's job: after you report, it runs the
+enabled gate through the frozen profile/mode route. A reviewer you delegate duplicates that
 review at full cost, and its verdict counts for nothing here. If you catch
 yourself thinking "an independent review would strengthen my report" — that
 review is already scheduled. Report instead.

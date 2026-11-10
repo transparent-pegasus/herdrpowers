@@ -1,0 +1,7 @@
+SYNTHETIC: observed OpenCode composer with the reasoning token removed.
+
+  ┃
+  ┃  Ask anything…
+  ┃
+  ┃  Build · GPT-6.1 Sol OpenAI
+  ╹▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀

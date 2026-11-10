@@ -1,0 +1,21 @@
+orchestrator:
+  claude:
+    model: Fable 5.2
+    effort: max
+coder:
+  codex:
+    model: GPT-6.1-Sol
+    effort: max
+reviewers:
+  - codex:
+      model: GPT-6-Astra
+      effort: max
+  - muse:
+      model: muse-1.0-wonder
+      effort: max
+  - agy:
+      model: Gemini 4 Argon
+      effort: High
+  - cursor:
+      model: Grok 4.7
+      effort: Extra High

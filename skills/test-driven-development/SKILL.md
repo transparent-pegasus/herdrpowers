@@ -7,16 +7,16 @@ description: Use when implementing any feature or bugfix, before writing impleme
 
 ## Who Writes the Test (READ FIRST)
 
-**The resolved `test-authoring` assignment says** — read it (see `orchestration`), do not assume. Two shapes ship, and they bind different rules.
+**The resolved `test-authoring` assignment says** — read it through `orchestration` and its [profiles contract](../orchestration/references/profiles.md), including the selected composition. Profiles never rewrite modes or gate enablement. The writer's session determines the rules below.
 
-**A separate pane writes them (`mode: delegate`).** That pane works from the task brief alone, in a worktree at the commit before the implementation, and is never shown the implementation — so its assertions cannot be shaped by code it read. If you are that pane, `pane-driven-development`'s test author brief binds you: tests only, never production code, and a test that *passes* in that worktree is a defect to investigate and report. If you are the implementing pane, you implement the brief's stated interface exactly — someone else's assertions are already written against it — and you do not write the tests.
+**A fresh worker writes them (`mode: delegate`).** Separate targets use reset-backed Herdr panes; selected-profile owner targets require fresh in-process subagents, including solo composition. Missing subagent capability is a reported inability, never inline test authoring. The worker gets the task brief alone in its own worktree at BASE and never sees implementation. `pane-driven-development`'s test-author contract binds it: tests only, never production code, expected RED evidence, and no re-delegation. The implementer follows the exact stated interface and does not write those tests.
 
-**The implementing pane writes them (`mode: implementer`).** The delegation brief that hands you a task also hands you its tests. That removes the structural guard against grading your own homework, so two compensating rules bind instead:
+**The owning session writes them (`mode: implementer`, or an owner-session route).** The implementing session owns RED-GREEN-REFACTOR. With a selected profile, the active owner may choose an optional subagent in nondelegated owner-session modes; workers may not. Two rules still bind:
 
 - **Assertions come from the requirements, never from the code.** Write the test against the task brief's stated behavior and exact values, before the implementation exists. A test written after the code, shaped to match it, catches nothing.
-- **The RED run is evidence you must produce.** Your report carries the failing command and its output *before* implementation, with the reason the failure was expected, plus the passing run after. The reviewing panes treat missing or reconstructed RED evidence as a finding, and review your test code as the only independent check on it.
+- **The RED run is evidence you must produce.** Your report carries the failing command and its output *before* implementation, with the expected reason, plus the passing run after. Enabled reviewers audit the test code and missing or reconstructed RED evidence. Report permitted owner-session self-review as self-review, not an independent check; a disabled gate stays disabled.
 
-Either shape: whoever writes a test produces its RED run, assertions trace to the requirements, and the report names which pane wrote the tests. `fix-round-test-authoring` answers the same question for a fix round's covering tests. The Iron Law below binds whichever pane owns them: no production code without a failing test first.
+Either shape: whoever writes a test produces its RED run, assertions trace to requirements, and the report names the writer and transport. `fix-round-test-authoring` answers the same question for a fix round. No-profile routing and review independence are unchanged. The Iron Law below binds the test owner: no production code without a failing test first.
 
 ## Where Tests Go and How to Run Them
 

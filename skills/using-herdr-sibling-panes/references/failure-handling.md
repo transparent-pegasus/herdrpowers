@@ -4,6 +4,19 @@ This reference belongs to `using-herdr-sibling-panes`. Script paths are relative
 skill directory (the parent of `references/`), not this directory or the
 target repository. Resolve them before invoking a script.
 
+Before fallback, handoff or any agent startup/exit, read the core
+[profiles policy](../../orchestration/references/profiles.md). Only the active
+orchestrator routes; workers report their result and never re-delegate.
+Top-level `allow_agent_lifecycle` is a strict boolean, false by default. False
+forbids starting, exiting or restarting agents by keys or shell to satisfy
+routing; report the required manual action instead. True permits only verified
+startup in available in-scope shell panes and ending idle task-owned agents with
+no pending work, through `scripts/agent-lifecycle.sh` as
+[agent-lifecycle.md](agent-lifecycle.md) describes. The helper enforces the
+value, verifies live model/effort after startup, and preserves unrelated
+processes and topology. Never invent a stop command or treat launch flags as
+live truth.
+
 ## Failure handling
 
 `herdr pane wait-output` exits `1` on timeout — and on a server error such as an unknown pane, with JSON on stderr — so every delegation ends in exactly one of these states. An immediate exit `2` is a CLI syntax error, not a timeout: fix the command before reading anything into it. Diagnose with `herdr pane get`, `herdr pane read --source recent`, and `herdr pane process-info --pane "$PANE"`.
@@ -14,10 +27,10 @@ Helper exits `2`, `4`, and `5` mean the delegation never started. Do not call `h
 | --- | --- | --- |
 | **finished** | marker matched | read the result, integrate it |
 | **too narrow** | helper exits `4` after its zoom attempt | the 40-column floor is conservative, not a measured cliff — resubmit to the same pane with a lower floor (`HERDR_COMPOSER_MIN_COLS=24 bash "$COMPOSER_SUBMIT" ...`; codex has submitted down to 4 columns, cursor has not) before touching the layout. Layout retry only — never exhaustion or fallback |
-| **wrong model** | helper exits `5` | the pane's footer does not show the pinned model — before the reset (nothing was sent) or after it (the session was reset, no instruction submitted). Re-read `pane-model.sh` for that pane and pick another pane matching the entry, or treat the entry as unavailable. Never exhaustion |
+| **wrong model/effort** | helper exits `5` | the footer does not verify the requested model or effort — before reset (no keys) or after reset (session reset, no instruction). Re-read with `pane-model.sh PANE MODEL [EFFORT]`; pick a matching available pane or classify the target as unavailable. Missing/unknown evidence, including Cursor's bare `Max` and Muse screens without a composer or effort, fails closed. Never exhaustion |
 | **did not submit** | helper exits `3` | check for the marker first — a very fast task can finish before the status poll sees it. Otherwise re-run the helper once; a second `3` means the keys are wrong for this CLI, so run the probe |
 | **submitted but idle** | helper exited `0`, the composer still shows `[Pasted Content ...]`, no tree change | the paste was split — put the brief in a file and send a one-line pointer |
-| **crashed** | `pane read` shows a shell prompt; `pane get` may or may not still name an `agent`; the helper exits `2` naming the shell pid | restart it in place with the argv from `pane process-info` taken *before* the crash, then re-delegate once |
+| **crashed** | `pane read` shows a shell prompt; `pane get` may or may not still name an `agent`; the helper exits `2` naming the shell pid | with lifecycle false, report the manual restart needed. With true, the crashed pane is a shell pane again: restart the target there with `agent-lifecycle.sh start` (see [agent-lifecycle.md](agent-lifecycle.md)), which verifies live model/effort, then retry once. While herdr still names an agent in that pane (stale label, or an agent suspended with Ctrl+Z) the helper refuses with exit `2`: report the manual restart instead. Previously captured argv may help choose native arguments but never proves current settings |
 | **someone else's draft** | `pane read` shows unsent text in the composer while `agent_status` is `idle` | not a candidate — another orchestrator is composing there; pick a different pane or report it |
 | **stalled on an approval** | `pane read` shows `Run this MCP tool?` / `Run (once) (y)`; `agent_status` may be `blocked` **or** `idle` | report the pane and the prompt to the user; do not answer a shell approval yourself — see "A delegated pane can stall on its own approval prompt" |
 | **blocked** | `agent_status: blocked` | the agent is waiting on an approval or input prompt. Do not answer it blindly — report it to the user. Confirm it against `pane read` first: a cursor pane reporting `blocked` at an empty composer is a false positive from the echoed instruction, not a prompt — see below |
@@ -59,7 +72,7 @@ The underlying fix is upstream in herdr's cursor detection rules. Keep herdr and
 
 ### Exhaustion and fallback
 
-Treat an agent type as **exhausted** when its output says the usage or rate limit is reached, or when two delegations to two different idle panes of that type both come back with no marker and no completed work. Exhaustion is a property of the agent type, not of one pane — do not retry it on a sibling pane of the same type. For an `agent@model` entry, record it against the entry as written: `cursor@Grok 4.7` exhausted leaves `cursor@Muse Spark 1.3` usable, and the two-pane rule counts panes that matched that entry. A vendor whose limit is account-wide then fails once more on the other entry, which is recorded the same way.
+Treat an agent type as **exhausted** when its output says the usage or rate limit is reached, or when two delegations to two different idle panes of that type both come back with no marker and no completed work. Exhaustion is a property of the resolved target, not of one pane — do not retry it on a sibling pane matching the same target. Record constrained nested targets with their exact settings: `{cursor: {model: Grok 4.7, effort: Extra High}}` exhausted leaves a different model target usable, and the two-pane rule counts only panes that matched the requested settings. A vendor whose limit is account-wide then fails once more on the other target, which is recorded the same way. Legacy entries retain their original identity in the report.
 
 An agent type with no in-scope pane is **unavailable**, not exhausted. Report it as such: it may have plenty of idle panes one tab over, and the fix is a configuration decision by the user, not a retry.
 
@@ -67,7 +80,19 @@ Only submissions for which the helper returned `0` can contribute to the two-pan
 
 Do not match vendor error strings; they change with every CLI release. The reliable signal is the outcome: no marker, twice, on two panes.
 
-When exhausted, report it upward. If this skill was entered from the `orchestration` skill, the orchestrator resolves a substitute from that skill's merged `fallbacks:` map (`.herdrpowers/config.yaml` over `roles.yaml`) — looking up the entry as written, then its bare kind — and re-delegates there. Standalone, run the work in the orchestrator pane and say which agent was skipped and why.
+When exhausted, report it upward. If this skill was entered from `orchestration`,
+the active orchestrator resolves the merged fallback map: nested kind/model
+becomes the exact `kind@model` lookup key, then bare kind. An explicitly empty
+matched list stops lookup. Fallback values remain strings and have no effort
+constraint; discard the primary effort rather than inheriting it. Preserve
+exact user names, including `Calude` and the distinct `muse-1.0-wonder` /
+`muse-wonder-1.0` strings. Reuse an available matching pane under the same scope
+and lifecycle policy. Profile self-targets follow the core mode policy: explicit
+delegate requires a fresh in-process subagent, including reviews; unavailable
+capability is reported. Other modes stay with the owner and may use a subagent
+at its judgment. Standalone, do the work in the orchestrator pane and say which
+target was skipped and why. This does not turn a disabled gate back on or alter
+legacy no-profile review independence.
 
 Record the exhausted agent type for the rest of the task and stop routing to it, so one exhausted agent does not burn a retry on every subsequent delegation.
 

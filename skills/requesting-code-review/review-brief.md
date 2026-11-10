@@ -1,6 +1,6 @@
 # Code Review Brief Template
 
-The review runs in a **sibling pane via a reset-backed submit** — any idle pane of the resolved role's agent type(s), including the pane that wrote the code. Submit a one-line instruction that points at this contract written to a file; the contract itself never goes through the composer.
+Resolve transport through `orchestration` and its [profiles contract](../orchestration/references/profiles.md). Separate delegated targets use reset-backed panes, including the implementing pane after reset. Selected-profile self-target `delegate` requires a fresh subagent; other owner-session modes permit reported self-review and optional subagents. Use the same contract and written verdict in each case. The submission example below is for Herdr transport; subagents receive the contract directly and must not re-delegate.
 
 **Purpose:** Review completed work against requirements and code quality standards before it cascades into more work.
 
@@ -118,8 +118,8 @@ herdr pane wait-output "$PANE" --match "REVIEW_OK_<4-hex>" --timeout 900000
     - Security concerns?
     - Integrates cleanly with surrounding code?
 
-    **Tests (the implementing pane wrote its own tests — you are the only
-    independent check on them):**
+    **Tests (audit implementer-authored tests; report actual independence
+    or permitted profile self-review):**
     - Does each test assert the requirement, or only what the implementation
       happens to do? A test written to match the code catches nothing.
     - Would the test fail if the behavior regressed? Tautologies, over-mocked

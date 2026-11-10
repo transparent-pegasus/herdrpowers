@@ -20,16 +20,16 @@ Do not edit workflow files unless the user's current request explicitly asks to 
 
 ## Orchestration
 
-`/quick` skips the plan, not the independence. The final review goes through the `orchestration` skill via a reset-backed submit, with `using-herdr-sibling-panes` as the transport.
+`/quick` omits the separate plan and its review. Read `orchestration`, its [profiles contract](../skills/orchestration/references/profiles.md), and `using-herdr-sibling-panes` before routing the remaining work and gates.
 
-Resolve the repository's assignments and review gates as `orchestration` describes before the first delegation: `.herdrpowers/config.yaml` first, then `orchestration/roles.yaml` for anything it omits. A gate set to `enabled: false` is skipped and named in the final report.
+Resolve repo config over shipped roles, then only profile composition keys present. Freeze the owner, targets, modes, gates, scope, and lifecycle policy. A profile never changes modes or enablement. A gate set to `enabled: false` is skipped and named in the report; empty profile reviewers instead select the owner.
 
-Routing comes from `assignments:`, not from this file, and the resolved YAML is the source of truth for every default. The scoped implementation may run in the orchestrator pane — the change is small by definition — or go to the pane its `complex-coding` / `simple-coding` assignment names. `test-authoring`, `chores`, and `verification` follow their assignments. The `final-branch-review` assignment resolves to any idle pane of its role's agent type(s) via a reset-backed submit — once per entry when its role binds to a list of agent types.
-- In-process subagents are not used for workflow work, and the Agent tool is not dispatched for it — with one exception: a review task whose resolved mode is `orchestrator` runs in a fresh subagent the orchestrator spawns.
+Routing comes from `assignments:` and effective targets. Without a profile, retain the legacy small-scope inline implementation choice. With a profile, read `complex-coding` / `simple-coding` and preserve their modes; small scope cannot replace required delegation with inline work. `test-authoring`, `chores`, `verification`, and review assignments follow their resolved routes. List roles run once per effective entry.
+- Separate delegated targets use reset-backed Herdr panes, even when a concrete target matches the owner's model. With a selected profile, self-target `delegate` requires a fresh in-process subagent for work and reviews, including empty reviewers; other owner-session modes permit inline work/self-review and optional subagents at the active owner's judgment. Report self-review honestly. Without a profile, keep legacy routing and fresh-subagent orchestrator-mode reviews. Workers never re-delegate.
 
 **Every delegation** states the worktree's absolute path (and requires the pane to confirm it is there first), the exact scope, the edit policy, the report-file path under `<REPORT_DIRECTORY>`, a unique completion marker, and the prohibition on re-delegating. Read results from the report file, not from pane scrollback.
 
-**Degrade, don't block.** If `HERDR_ENV` is unset or no idle sibling agent pane exists, review the change yourself against `requesting-code-review`'s brief and state plainly in the final report that the review was not independent.
+**Degrade honestly.** Without a profile, retain the legacy critical self-review fallback when no delegated reviewer is available and name the lost independence. With a profile, owner targets retain their mode: an unavailable required fresh subagent is reported as inability, never replaced by inline review or called passed. Wait for busy matching agents; never interrupt them.
 
 ## Execution Steps
 
@@ -46,7 +46,7 @@ Record the worktree's absolute path — the rest of this workflow runs there, an
 Proceed to Step 3 after setup completes.
 
 3. Documentation Impact Review
-Gate: `assignments.documentation-impact-review`. When it is disabled, skip this step and name the skipped gate in the final report. Route it by its resolved role and mode: `delegate` runs the sweep in a fresh pane that reports back, `orchestrator` runs it in this pane.
+Gate: `assignments.documentation-impact-review`. When it is disabled, skip this step and name the skipped gate in the final report. Use the review route resolved above, including mandatory profile self-target subagents and the legacy no-profile fresh-subagent rule.
 Inform the user that the sweep will identify every file that must be updated if the implementation changes behavior, contracts, prompts, schema, or workflow instructions.
 List the expected non-code follow-up targets before implementation begins, including `<REPO_INSTRUCTION_FILES>`, any affected files under `docs/`, any agent-instruction directories present (such as `.claude/`, `.agents/`, `commands/`), example env/config files, and CI/deploy definitions.
 Proceed to Step 4 only after the update target list is explicit and the user confirms.
@@ -80,7 +80,7 @@ Proceed to Step 7 only when verification evidence is fresh, successful, and the 
 7. Final Code Review
 Gate: `assignments.final-branch-review`. When it is disabled, skip this step and tell the user the change is shipping unreviewed — for a workflow whose only independence is this review, say it plainly.
 Inform the user that the final review is starting.
-Read the specific `SKILL.md` for `requesting-code-review`, then delegate the review of the entire changeset via a reset-backed submit to any idle pane of the resolved role's agent type(s).
+Read requesting-code-review and run the whole-changeset gate through its resolved target and mode.
 Fix any critical or important issues reported.
 Proceed to Step 8 only when the review assesses it as Ready to merge and the user confirms.
 
@@ -97,8 +97,10 @@ Do not assume merge. Execute only the chosen option, and delete the worktree onl
 - Branch from `<BASE_BRANCH>`, never from a branch the deploy flow does not expect.
 - Treat `<REPO_INSTRUCTION_FILES>`, the repository's build/test/deploy configuration, and the latest approved plan as the source of truth for repository-specific commands, environment variables, and deploy flows.
 - Block and require user confirmation at the end of every step. Do not proceed autonomously through the whole cycle.
-- Do not review the change inside an unreset implementing session — independence is the reset; same physical pane after a reset-backed submit is fine.
+- Separate delegated reviews require reset; profile owner-session modes permit honestly reported self-review, while self-target `delegate` requires fresh subagents. Preserve the no-profile independence path.
 - Name in the final report the branch and the worktree's absolute path, every role that fell back to a substitute agent, and every non-default assignment or mode and every disabled review from `.herdrpowers/config.yaml`.
 - If tests fail or errors occur, pause and use the `systematic-debugging` skill.
 - Before claiming that verification passed or the task is complete, use `verification-before-completion`.
+- Include the canonical profiles contract's run record: selected profile or none, active owner/reception role, verified targets, task/review transports, self-review versus independence, unavailable routes, fallbacks/lost effort, lifecycle actions, and test writer.
+- With `allow_agent_lifecycle: true`, start a resolved target that has no live in-scope match and, before the final report, end the idle agents this run started — both only through `agent-lifecycle.sh`. Name every agent started, ended, or left running. With `false`, start and end none.
 - Read the specific `SKILL.md` file for a skill before invoking it.

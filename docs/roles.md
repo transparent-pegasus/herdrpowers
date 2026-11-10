@@ -1,24 +1,61 @@
 # Roles
 
-herdrpowers has no named agent personas, and work is delegated to **sibling agent panes inside herdr** rather than to in-process subagents — the one exception is a review task whose resolved mode is `orchestrator`, which the orchestrator runs in a fresh spawned subagent instead of inline. Roles bind to *agent types*, not to reserved panes or specific tools. Any idle pane of the right type can take any task; a pane that just finished a review can take a coding task next.
+herdrpowers routes work by roles, effective targets, and assignment modes. Separate delegated targets use reset-backed Herdr panes. With a selected profile, `delegate` to the active owner requires a fresh in-process subagent for work and reviews; other owner-session modes permit inline work/self-review and optional subagents at the owner's judgment. Without a profile, retain legacy routing and fresh-subagent orchestrator-mode reviews. Roles do not reserve panes: any idle matching pane can serve a role after its previous task finishes.
 
-Routing resolves from two files, in order:
+Read the canonical [profiles contract](../skills/orchestration/references/profiles.md) before resolving ownership or routing. The base configuration comes from:
 
 1. **`<repo-root>/.herdrpowers/config.yaml`** — the target repository's own configuration, written by `/init`. Wins key by key. This is where you change who does what and which reviews run.
 2. **[`skills/orchestration/roles.yaml`](../skills/orchestration/roles.yaml)** — the pack's shipped defaults, supplying every key the repo file omits.
 
 Both share one schema — a **role list**, a fallback map, and a **role assigned to every delegation task**:
 
-- `roles:` — each role and the agent type(s) it binds to. Any agent type may be pinned to a model as `agent@model`: `cursor@Muse Spark 1.3` is served only by a cursor pane whose footer model line contains `Muse Spark 1.3`, case-insensitively, because herdr reports a pane's agent type but not its model. Wherever this page says a role's agent type, a pinned entry means that type on that model.
-- `fallbacks:` — agent → ordered substitutes for when an agent cannot take work. Keys and substitutes may be pinned too.
+- `roles:` — `agent`/`agents` bindings. New targets use nested settings, e.g. `{codex: {model: GPT-6.1-Sol, effort: max}}`; effort requires model. Bare `orchestrator` dynamically aliases the active owner. Legacy bare kinds remain readable; non-fallback `kind@model` is migration input normalized with a deprecation notice, and init writes nested targets.
+- `fallbacks:` — exact string keys and ordered string substitutes (`kind` or `kind@model`), without effort constraints.
 - `delegation:` — defaults applying to every task: `pane_scope` and `execution` (see [Delegation Scope and Execution Strategy](#delegation-scope-and-execution-strategy)).
 - `assignments:` — every delegation task, each with the role that performs it and where it runs.
+- `profile` — optional composition name; missing/null/literal `none` selects none.
+- `allow_agent_lifecycle` — separate top-level strict boolean, false by default.
 
 Customize the repo file, not `roles.yaml` — plugin installs are read-only, and editing a checked-in copy makes the pack diff-dirty against upstream. The skills speak in role and task names, never in tool names.
 
+## Profile Composition and Ownership
+
+After merging repo config over shipped roles, overlay only keys present in the
+selected `.herdrpowers/profiles/<name>.yaml`, repo-local first and shipped only
+if absent locally. Invalid names, files, or targets are explicit errors. Profiles
+contain only `orchestrator`, `coder`, and `reviewers`; omitted slots keep resolved
+roles. Explicit empty coder (`null`, `[]`, `none`) means solo; empty reviewers
+(`[]`, null, `none`) select the owner without disabling a gate. Lists replace.
+Preserve custom planning-design/generalist bindings, added roles, assignments,
+modes, and gates. A concrete coder matching the owner is still a separate worker.
+
+A mismatched reception pane always asks **unused or relay** before owner handoff
+or startup, even if a matching owner exists. The explicit handoff transfers
+decision authority, user instruction, paths, and frozen settings; workers never
+re-delegate, while the newly selected owner may orchestrate. A relay only relays.
+
+`allow_agent_lifecycle` works at runtime through
+`using-herdr-sibling-panes/scripts/agent-lifecycle.sh`, which refuses every
+start and stop unless the resolved value is the literal `true`. False forbids
+start/exit/restart, including recovery and fallback. With true, the active
+owner starts each resolved target that has no live in-scope match — the
+selected one before any fallback substitute — in an available shell pane,
+verifies its live model/effort, and ends the idle agents this task started
+before the final report. It grants process management, not topology changes,
+interruption of working agents, or answers to startup dialogs. The permission
+is configuration only; a profile, by contrast, may also be named in the task
+to select that run's composition. A `claude` target needs a statusLine that
+prints its model and effort: see the
+[lifecycle reference](../skills/using-herdr-sibling-panes/references/agent-lifecycle.md).
+
 ## Delegation Tasks
 
-`assignments:` is the routing table: every unit of work the pack hands out has an entry, so nothing is hard-coded to a role. Each entry takes the same knobs — `role` (from the role list), `mode` (`delegate` = a fresh pane of that role, `orchestrator` = the orchestrator pane itself — inline for a work task, a fresh spawned subagent for a review, `implementer` = the pane that already owns the task), and for reviews `enabled`.
+`assignments:` supplies `role`, `mode`, and (for reviews) `enabled`. `delegate`
+uses a fresh reset-backed worker for separate targets; profile self-targets
+require fresh subagents. `orchestrator` uses the active owner; selected-profile
+reviews permit same-session self-review or an optional subagent, while
+no-profile reviews require a fresh subagent. `implementer` continues in the
+session owning the task. Apply gate enablement first, then target and mode.
 
 **The YAML is the source of truth for who does what.** These tables say what each task covers; for the shipped role and mode, read [`roles.yaml`](../skills/orchestration/roles.yaml) — it changes across releases, and no prose copy of it is authoritative.
 
@@ -51,16 +88,16 @@ One workflow overrides this column: `/strict_full_cycle` ignores `enabled` and r
 
 ### One delegation per listed agent type
 
-A role declared with `agents:` (a list) rather than `agent:` runs **one delegation per entry**. That is where a double review comes from — the role, not the task — so assigning a review task to a list role multiplies its pane usage by the list length, and assigning it to a single-agent role makes it a single review. A one-entry list is a deliberate single delegation; an empty list is the same as disabling the task.
+A role declared with `agents:` runs **one delegation per entry**. A one-entry list is deliberate; a legacy empty role list disables its tasks unless a present profile composition key overrides it. Explicit empty profile reviewers instead select the owner, and an enabled delegated review still requires a fresh subagent.
 
-Wherever a list role is used: the delegations come from different agent types — or from one type on different models, as `agent@model` entries whose models differ and neither contains the other — an unavailable type degrades the set rather than blocking the run, and the report names whether the full set, a degraded set, or a single delegation ran.
+Separate list targets need different kinds or distinct pinned models of one kind (case-insensitive, neither containing the other); effort alone is not another independent slot. Run available slots, wait for busy matching agents, and name reduced sets. Missing mandatory self-target subagent capability is inability, never inline substitution or a passed review.
 
 ### What no assignment changes
 
-- **Review independence is the reset session, not pane ID.** A reset-backed review may reuse any idle pane of the resolved role's agent type(s), including the pane that implemented. Disabling a review removes it; it never converts one into an in-session self-review.
-- **Reviews from a list role come from different agent types, or from one type on different models.**
-- **`review-fixes` escalates at fix-loop rounds 4-5** to a fresh pane of an escalated agent type, whatever its mode says.
-- **The report names which pane wrote the tests**, whatever `test-authoring` and `fix-round-test-authoring` resolve to.
+- **Separate delegated review independence comes from reset, not pane ID.** The implementing pane may review after reset. Profile owner-session self-review is the scoped alternative and is reported as self-review; no-profile independence remains unchanged.
+- **Separate list slots require distinct kinds or pinned models.**
+- **Separate targets and no-profile `review-fixes` keep rounds 4-5 escalation.** Profile self-targets retain their resolved mode, including mandatory fresh subagents for `delegate`; the five-round cap stays fixed.
+- **The report names the test writer and transport**, whatever test-authoring assignments resolve to. Disabled gates remain off (except strict mode's enabled-only override).
 
 **Every assignment the repo config changed away from the shipped default, and every disabled review, is named in the final report**, alongside any role that fell back and any review that degraded for lack of panes — so nobody later mistakes an unreviewed branch for a reviewed one. Configuration is input: it is read once before the first delegation and never written from inside a run.
 
@@ -86,19 +123,19 @@ Under `parallel`, plans are written for it: `writing-plans` emits a `## Tracks` 
 
 ### Orchestrator
 
-Whichever pane the user typed the request into. It plans, designs, integrates results, and talks to the user. It never re-delegates a task that arrived from another pane — a delegated instruction is executed in place.
+Without a profile, the reception pane owns the task. A selected profile may name a verified different owner through the explicit handoff above. The active owner integrates results and makes decisions; a relay retains no decision authority. Ordinary workers execute delegated instructions directly and never re-delegate.
 
 Its judgment is final: reviewers advise, the orchestrator decides.
 
 ### Reviewer
 
-Independent review — of plans and designs before any code is touched, and of implemented code where a review task is assigned to it. It binds to a **list** of agent types, so each review task assigned to it runs once per entry: different agent types review the same self-contained request in separate panes, with no shared draft opinion. The orchestrator compares findings, resolves disagreements, and only then acts.
+Reviews plans, designs, and code where assigned. A list binding supplies one review per entry with the same self-contained request. Separate delegated reviewers share no draft opinion. A profile may instead select the owner, whose mode decides fresh-subagent review versus permitted self-review. The active owner compares findings and resolves disagreements.
 
-If applying a fallback would put the same agent type in two Reviewer slots — other than as two `agent@model` entries on different models — the slot stays empty and the workflow degrades to fewer reviews instead: two reviews from the same agent type on the same model are one review with extra steps.
+If fallback duplicates a separate slot's kind/model, leave that slot unavailable and report fewer reviews. Different effort on the same model does not create another independent review.
 
 ### Coder
 
-The heavier-judgment role: complex coding, **test authoring**, and the whole-branch **final review** — every one of those a reassignable delegation task. The boundary between `complex-coding` and `simple-coding` is spelled out in the orchestration skill: cross-cutting changes, design freedom, stateful/concurrent logic, non-obvious debugging, risky refactors, and algorithmic work are complex. When in doubt, treat it as complex.
+The role for heavier implementation judgment. Actual tasks and modes come from the resolved assignments, not this description. The orchestration skill defines the complex/simple coding boundary. Explicit empty profile coder selects the active owner; a concrete coder target stays separate even when its kind/model equals the owner's.
 
 Test authoring is its own task (`test-authoring`, and `fix-round-test-authoring` for a fix round), so whether a Coder pane writes tests for code it also wrote, or a second Coder pane writes them blind, is a `mode` — see "Where Independence Comes From" below.
 
@@ -108,7 +145,7 @@ Everything else: simple coding that follows an existing pattern, search, file in
 
 ## Where Independence Comes From
 
-The older design separated a `test-engineer` from a `code-reviewer` so nobody graded their own homework. This pack gets the same property from **reset sessions** instead:
+Separate delegated work gets independence from **fresh sessions**:
 
 - Every reset-backed delegation clears the target session, so a reviewing agent never sees the implementing session's reasoning.
 - The same physical pane may take that review after a reset. Routing follows the resolved assignment only (`agent:` / `agents:`); there is no prefer-different-type heuristic.
@@ -116,28 +153,30 @@ The older design separated a `test-engineer` from a `code-reviewer` so nobody gr
 
 Test independence is a `mode`, and each setting pays for it differently:
 
-- **`test-authoring: {mode: delegate}`** — a second pane writes the tests from the same task brief, in its own worktree at the commit before the implementation, and is never shown the code. Its RED is structural: the implementation is genuinely absent, so a test that *passes* there is a defect to report. The cost is an extra pane and a throwaway worktree per task, and a brief that has to pin exact names and signatures — both panes are working to it, and an unpinned interface fails as a test failure.
-- **`test-authoring: {mode: implementer}`** — the implementing pane writes its own tests under RED-GREEN-REFACTOR. Cheaper, and the reviewing panes then **review the test code** as the compensating control: does the test assert the requirement or just mirror the implementation, and would it fail if the behavior regressed? That review is not optional under this mode.
-- **`fix-round-test-authoring`** answers the same question for a fix round. Delegated, the round's covering tests come from a pane that is neither the fixing pane nor the original test author — tests written by whoever just changed the behavior prove only that the behavior changed.
+- **`test-authoring: {mode: delegate}`** — a fresh worker (reset-backed pane or required profile self-target subagent) gets requirements alone in its own BASE worktree, without implementation. It reports expected RED; merged tests produce GREEN.
+- **`test-authoring: {mode: implementer}`** — the implementing session owns RED-GREEN-REFACTOR. Enabled reviewers audit that test code; report whether that was independent or permitted profile self-review. This mode does not revive a disabled gate.
+- **`fix-round-test-authoring`** answers the same question for a fix round. Delegated tests use a fresh author with findings rather than the fix diff, at FIX_BASE. Keep the separate-pane ownership restrictions on the legacy path.
 
-Whichever runs, the report names the pane that wrote the tests.
+Whichever runs, the report names the writer and transport. Profile self-review allowances do not relax fresh-sample requirements for skill-authorship testing.
 
 ## Exhaustion and Fallback
 
-An agent type is exhausted when its output says the usage or rate limit is reached, or when two delegations to two different idle panes of that type both come back with no completion marker and no work done. Exhaustion is a property of the agent type, not of one pane; an `agent@model` entry is exhausted as written, so `cursor@Grok 4.7` running out leaves `cursor@Muse Spark 1.3` usable.
+An agent target is exhausted when its output reports a usage limit, or two delegations to different idle panes of that target return no marker and no work. Exhaustion of one constrained model does not exhaust other models of its kind.
 
-The orchestrator then takes the first substitute from the resolved `fallbacks:` map — looking up the entry as written, then its bare type — that has a usable idle pane, re-delegates the same instruction unchanged, and routes around the exhausted type for the rest of the task. Every fallback is named in the final report.
+For a nested target, look up the exact `kind@model` fallback key using its preserved spelling; only an absent key permits bare-kind lookup. A matched `[]` is authoritative. Substitutes keep string syntax and have no effort constraint: discard primary effort and report that loss. Preserve `Calude` and the unequal `muse-1.0-wonder` / `muse-wonder-1.0` strings. No fuzzy aliases or list concatenation. Re-submit the same self-contained task to the first usable substitute.
 
-If no substitute is available, the work runs in the orchestrator pane when that is safe, and the report says which independence was lost.
+Without a profile, safe inline degradation remains available for work. With a profile, a fallback to the owner obeys its mode: `delegate` requires a fresh subagent. Report unavailable mandatory capability instead of claiming inline delegation. Lifecycle permission still applies during fallback: with it, a target that is unavailable but not exhausted is started before its substitutes.
 
-**Escalation is the same mechanism, different trigger.** Exhaustion routes around an agent type that *cannot* work; escalation routes around one that *is not getting there* — a pane reporting BLOCKED for lack of reasoning, or a fix loop still open at round 4. Panes expose no model dial to the orchestrator, so "try something stronger" means a fresh pane of a different agent type: another type eligible for the role, a pane already running a different model (another `agent@model` entry), or the substitute in `fallbacks:`. Routing selects panes by the model their footer shows; it never switches one. The swap is named in the ledger, same as a fallback is named in the report.
+**Separate-target escalation selects a different eligible live target**, rather than changing an existing agent's model/effort. Apply it for lack-of-reasoning BLOCKED reports and rounds 4-5; profile self-target fixes retain their mode. Record the swap and lost constraints. All requested model/effort constraints need live footer evidence before keys and after reset; unknown effort fails closed, and Cursor's bare Max plan label is not reasoning evidence.
 
 ## Delegating
 
 | Platform | How |
 |---|---|
 | Any agent inside herdr (`HERDR_ENV=1`) | `using-herdr-sibling-panes` → `scripts/composer-submit.sh`, then wait for the completion marker with `herdr pane wait-output`. |
-| Outside herdr | No delegation. Skills degrade to inline execution (`executing-plans`), and the report states which steps were not independent. |
+| Profile self-target `delegate` | Fresh in-process subagent with the same self-contained brief and no re-delegation; missing capability is inability. |
+| Profile owner-session modes | Inline/self-review permitted, optional subagent at active-owner judgment; report actual transport and independence. |
+| Outside herdr | Herdr transport unavailable; legacy no-profile work may degrade inline. Selected-profile modes remain binding. |
 
 Before an agent CLI is used as a delegation target for the first time — and again after that CLI is upgraded — run `bash skills/using-herdr-sibling-panes/scripts/probe-composer.sh "$PANE"` against one idle pane of that type. Composer key bindings differ per CLI and change across releases; any `FAIL` means that agent type is not delegatable yet.
 

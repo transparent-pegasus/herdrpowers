@@ -60,7 +60,7 @@ Where a file must be touched by two tracks, prefer moving that edit into one tra
 ## Task Right-Sizing
 
 A task is the smallest unit that carries its own test cycle and is worth a
-fresh reviewer's gate. When drawing task boundaries: fold setup,
+task's review gate. When drawing task boundaries: fold setup,
 configuration, scaffolding, and documentation steps into the task whose
 deliverable needs them; split only where a reviewer could meaningfully
 reject one task while approving its neighbor. Each task ends with an
@@ -224,6 +224,16 @@ If you find issues, fix them inline. No need to re-review — just fix and move 
 
 ## Execution Handoff
 
+Before offering execution methods, read `orchestration` and its
+[profiles contract](../orchestration/references/profiles.md). Resolve the active
+owner, targets, and modes; a profile changes composition, not assignments or
+gate enablement. A concrete coder matching the owner's model remains separate.
+Do not offer inline execution as a substitute for profile `delegate` routes:
+owner targets require fresh subagents, separate targets reset-backed workers.
+Other owner-session modes permit inline work/self-review and optional subagents
+at the active owner's judgment. Missing mandatory capability is reported as
+inability. Workers never re-delegate.
+
 After saving and self-reviewing the plan, link it for the user to read. If
 they have already explicitly supplied an execution method, ask them to
 review the plan and confirm it captures what they want; wait for that review
@@ -237,12 +247,16 @@ supplied method.
 
 **"Plan complete and saved to `<PLAN_PATH_PATTERN>`. Please review the plan. Which execution approach would you prefer?**
 
-- **Pane-driven** - A fresh herdr sibling pane implements each task and reset-backed reviewer panes check it before the next one starts, then a whole-branch review at the end. Most thorough; costs a fresh session per task and per review.
-- **Inline** - I implement every task myself in this session, then one fresh-session review checks the whole branch. Cheapest and fastest; no independent review until the end. Runs well with a mid-tier session model, since the plan carries the design.
+- **Pane-driven** - `pane-driven-development` runs each task and enabled review through the resolved modes and profile targets, followed by a whole-branch review. Separate delegated targets use panes; profile self-target delegation uses fresh subagents.
+- **Inline, when eligible** - I implement each owner-session task here under `executing-plans`, with one final review through its resolved route. This gives up per-task review; permitted same-session final self-review is reported as such.
 
 **For this plan I recommend <one of the two>, because <one sentence from the plan: how much the tasks depend on each other's interfaces, how many there are, what a shipped mistake would cost>. Does the plan capture what you want, and which approach should we use?"**
 
-Pane-driven requires `HERDR_ENV=1` and an idle sibling agent pane inside `delegation.pane_scope`; without them, offer Inline alone and say why.
+Herdr routes require `HERDR_ENV=1` and matching in-scope live agents, or
+in-scope shell panes to start them in when `allow_agent_lifecycle` is true.
+Profile self-target delegation requires fresh-subagent capability instead. Without a
+profile, retain the legacy offer of Inline when no sibling pane can take the
+work; with a profile, keep mandatory delegation and report unavailable routes.
 
 **When an execution method has already been supplied:**
 
