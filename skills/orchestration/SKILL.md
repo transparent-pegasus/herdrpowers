@@ -32,7 +32,8 @@ The base files share this schema:
 
 Merging is per key, not per file. Lists replace rather than concatenate.
 Profile keys override the orchestrator, generalist, coder, or reviewer binding
-only when present; omitted keys preserve them. A profile never changes
+only when present; omitted keys preserve them. For `generalist`, literal `none`
+also preserves the resolved config binding. A profile never changes
 assignments, gate enablement, or delegation defaults. Empty profile reviewers select the owner, while a legacy
 empty role list keeps its disabling semantics if no profile overrides it.
 

@@ -53,7 +53,7 @@ assets, which are the source of truth for their values and reviewer order.
 | Profile key | When absent | When present |
 |---|---|---|
 | `orchestrator` | Keep the legacy owner, the pane receiving the user's task | One nested target selects the active owner; null, `none`, and lists are invalid |
-| `generalist` | Keep the resolved `roles.generalist` binding | The bare `orchestrator` alias binds Generalist tasks to the active owner |
+| `generalist` | Keep the resolved `roles.generalist` binding | A nested target such as `{codex: {model: GPT-6.1-Sol, effort: max}}` or bare `orchestrator` overrides `roles.generalist`; literal `none` preserves the resolved `roles.generalist` binding |
 | `coder` | Keep the resolved `roles.coder` binding | One nested target replaces that binding; null, `[]`, or literal `none` binds it to the active owner, with no separate coder |
 | `reviewers` | Keep the resolved `roles.reviewer` binding | A nonempty list of nested targets replaces that binding in order; `[]`, null, or literal `none` binds it to the active owner, with no external reviewers |
 
@@ -66,9 +66,12 @@ the selected profile has not overridden it; profile omission must not
 reactivate it. The profile's explicit empty `coder` or `reviewers` replaces
 that binding, so legacy empty-list disabling no longer applies to it.
 
-Owner selection does not replace `planning-design` or `generalist` bindings.
-An existing `agent: orchestrator` is a dynamic alias for the active owner;
-custom bindings to other targets remain intact, as do all user-added roles.
+Owner selection does not replace `planning-design` bindings. An existing
+`agent: orchestrator` is a dynamic alias for the active owner; custom bindings
+to other targets remain intact when the profile omits `generalist` or sets it
+to literal `none`. A profile's nested Generalist target takes precedence over
+the repo's `roles.generalist` binding, as does `generalist: orchestrator`.
+User-added roles remain intact.
 A concrete coder/reviewer target remains a separate worker even when its
 kind/model equals the owner's. Only an owner alias or a mode resolving to
 the owner is a self-target.
