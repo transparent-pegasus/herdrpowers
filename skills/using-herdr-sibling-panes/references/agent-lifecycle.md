@@ -38,8 +38,9 @@ run it from the task's repository or worktree.
 Start one only for a resolved target that has **no matching live agent in
 scope**; a busy match is waited for. One ledger file per task records what the
 task started — keep it in the run's report workspace (`<REPORT_DIRECTORY>`, or
-the directory `pane-driven-development/scripts/pdd-workspace` prints), and
-never reuse a ledger an earlier task left behind.
+the directory `pane-driven-development/scripts/pdd-workspace` prints), note
+its path in the run's progress ledger so it survives compaction, and never
+reuse a ledger an earlier task left behind.
 
 1. Find a shell pane inside the resolved scope (tab scope shown):
 
@@ -88,10 +89,11 @@ hold: `composer-submit.sh` re-verifies before any key and after its reset.
 
 ## End an agent
 
-End **only agents this task started**, once they are idle, hold none of your
-delegations (marker and report received), and the run needs them no more — at
-the latest before the final report. Read the pane first: exit keys belong on an
-idle, empty composer.
+End **only agents this task started**, once they are idle and hold none of
+your delegations (marker and report received): when the run needs them no
+more, when another resolved target needs their shell pane — shell panes are
+the only room there is — and at the latest before the final report. Read the
+pane first: exit keys belong on an idle, empty composer.
 
 ```bash
 bash "$LIFECYCLE" list "$LEDGER"          # pane, kind, name, running|exited|replaced
