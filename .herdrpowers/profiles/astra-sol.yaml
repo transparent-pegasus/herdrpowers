@@ -2,9 +2,9 @@ orchestrator:
   codex:
     model: GPT-6-Astra
     effort: max
-generalist: orchestrator
 coder:
   codex:
     model: GPT-6.1-Sol
     effort: max
 reviewers: []
+generalist: orchestrator

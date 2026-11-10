@@ -2,9 +2,9 @@ orchestrator:
   claude:
     model: Fable 5.2
     effort: max
-generalist: orchestrator
 coder:
   claude:
     model: Opus 5.5
     effort: max
 reviewers: []
+generalist: orchestrator

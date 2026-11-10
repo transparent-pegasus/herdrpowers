@@ -2,7 +2,6 @@ orchestrator:
   claude:
     model: Fable 5.2
     effort: max
-generalist: orchestrator
 coder:
   codex:
     model: GPT-6.1-Sol
@@ -20,3 +19,4 @@ reviewers:
   - cursor:
       model: Grok 4.7
       effort: Extra High
+generalist: orchestrator
