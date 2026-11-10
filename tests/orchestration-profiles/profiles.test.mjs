@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { existsSync, mkdtempSync, readdirSync, rmSync, statSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -23,6 +23,31 @@ test('the six named profile templates are available as files', () => {
   assert.ok(existsSync(profiles), 'missing shipped .herdrpowers/profiles directory');
   assert.deepEqual(readdirSync(profiles).filter((name) => name.endsWith('.yaml')).sort(), names);
   for (const name of names) assert.ok(statSync(join(profiles, name)).isFile(), `${name} must be a file`);
+});
+
+test('every shipped profile routes planning-design and generalist tasks to its selected owner', () => {
+  for (const name of names) {
+    const source = readFileSync(join(profiles, name), 'utf8');
+    assert.match(source, /^planning-design: orchestrator\n/, `${name} must start with planning-design: orchestrator`);
+    assert.match(source, /^generalist: orchestrator$/m, `${name} must bind generalist to the orchestrator`);
+  }
+});
+
+test('the profile contract binds coder and generalist orchestrator or none to the owner', () => {
+  const contract = readFileSync(join(root, 'skills/orchestration/references/profiles.md'), 'utf8');
+  for (const key of ['planning-design', 'generalist', 'coder']) {
+    assert.match(contract, new RegExp(`\\| \`${key}\` \\|[^\\n]*bare \`orchestrator\`, null, \`\\[\\]\`, or literal \`none\` binds it to the active owner`));
+  }
+});
+
+test('solo profiles bind coder and reviewers to the orchestrator alias', () => {
+  for (const name of ['opus-solo.yaml', 'sol-solo.yaml']) {
+    const source = readFileSync(join(profiles, name), 'utf8');
+    assert.match(source, /^coder: orchestrator$/m, name);
+    assert.match(source, /^reviewers: \[orchestrator\]$/m, name);
+  }
+  const contract = readFileSync(join(root, 'skills/orchestration/references/profiles.md'), 'utf8');
+  assert.match(contract, /\| `reviewers` \|[^\n]*`\[orchestrator\]`, `\[\]`, null, or literal `none` binds it to the active owner/);
 });
 
 test('npm distribution includes the six orchestration profiles and their README, nothing else local', () => {

@@ -1,6 +1,8 @@
+planning-design: orchestrator
 orchestrator:
   claude:
     model: Opus 5.5
     effort: max
-coder: null
-reviewers: []
+coder: orchestrator
+reviewers: [orchestrator]
+generalist: orchestrator
