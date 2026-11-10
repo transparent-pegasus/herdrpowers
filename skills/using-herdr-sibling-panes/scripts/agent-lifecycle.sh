@@ -14,6 +14,10 @@ set -euo pipefail
 # instruction, a profile, or a nested key cannot. <repo> is
 # $HERDRPOWERS_REPO_ROOT, else the git toplevel of the cwd, else the cwd.
 #
+# HERDRPOWERS_PANE_SCOPE supplies the frozen resolved delegation.pane_scope,
+# including a profile override. Omission reads config/default scope; invalid
+# values fail closed. It cannot grant lifecycle permission.
+#
 # <ledger> is this task's own file (keep it in the run's report directory).
 # `start` appends the agents it launched; `stop` ends only those, and only
 # while the pane still runs the very process that was started and — when the
@@ -218,7 +222,15 @@ start() {
   require_permission
 
   local scope fields tab workspace agent cwd
-  scope=$(resolve nested delegation.pane_scope tab tab workspace session) || exit 2
+  if [[ ${HERDRPOWERS_PANE_SCOPE+x} ]]; then
+    scope=$HERDRPOWERS_PANE_SCOPE
+    case $scope in
+      tab|workspace|session) ;;
+      *) echo 'HERDRPOWERS_PANE_SCOPE must be tab, workspace, or session' >&2; exit 2 ;;
+    esac
+  else
+    scope=$(resolve nested delegation.pane_scope tab tab workspace session) || exit 2
+  fi
   if ! fields=$(pane_fields "$pane" tab_id workspace_id agent foreground_cwd); then
     echo "unknown pane: $pane" >&2
     exit 2

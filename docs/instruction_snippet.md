@@ -37,7 +37,8 @@ Rules:
    on failures, use `systematic-debugging`.
 9. `<KEY>` placeholders resolve from the `Herdrpowers Configuration` section in
    this file. Resolve repo config over shipped roles, then only present selected
-   profile composition slots. Preserve custom roles/bindings, modes, and gates.
+   profile keys. Merge fallback/delegation/assignment maps per key; preserve
+   custom roles and omitted bindings/settings.
    Empty profile reviewers select the owner; disabled gates stay off. New
    targets use nested kind/model/effort settings and verified live footers;
    fallback strings stay exact and effort-free. Freeze configuration for the run

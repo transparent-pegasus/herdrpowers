@@ -31,7 +31,11 @@ bash "$LIFECYCLE" policy   # prints true or false; exit 2 on an invalid value
 
 The helper reads block-style YAML as init writes it. It resolves the repository
 from `HERDRPOWERS_REPO_ROOT`, else the git toplevel of the current directory;
-run it from the task's repository or worktree.
+run it from the task's repository or worktree. For `start`, pass the frozen
+resolved `delegation.pane_scope` as `HERDRPOWERS_PANE_SCOPE`, including any
+profile override. Only `tab`, `workspace`, and `session` are accepted; empty
+or invalid values fail closed. If omitted, the helper reads config/default
+scope for standalone use. This value cannot grant lifecycle permission.
 
 ## Start an agent
 
@@ -60,11 +64,12 @@ reuse a ledger an earlier task left behind.
    strings alone. They are an attempt, never evidence.
 3. Start it. `NAME` matches `[a-z][a-z0-9_-]{0,31}` and is unique among live
    agents; pass the resolved model and effort unchanged, and native arguments
-   after `--`:
+   after `--`. `RESOLVED_PANE_SCOPE` is the frozen effective scope:
 
    ```bash
    LEDGER="<REPORT_DIRECTORY>/lifecycle-agents.tsv"
-   bash "$LIFECYCLE" start "$LEDGER" "$PANE" codex hp-coder-1 "GPT-6.1-Sol" max \
+   HERDRPOWERS_PANE_SCOPE="$RESOLVED_PANE_SCOPE" \
+     bash "$LIFECYCLE" start "$LEDGER" "$PANE" codex hp-coder-1 "GPT-6.1-Sol" max \
      -- -m gpt-6.1-sol -c 'model_reasoning_effort="max"'
    ```
 

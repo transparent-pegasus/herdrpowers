@@ -1,7 +1,7 @@
 # Profiles, Targets, and Active Ownership
 
 Read this reference before resolving ownership or routing any task. It is the
-composition contract for `orchestration`; configuration is interpreted by the
+routing contract for `orchestration`; configuration is interpreted by the
 skills, not by a separate parser or execution service. Paths below distinguish
 the target repository (`<repo-root>`) from the installed plugin (`<pack>`):
 the directory holding `skills/`, three levels above this file.
@@ -25,8 +25,8 @@ the directory holding `skills/`, three levels above this file.
    A lifecycle policy nested under `delegation` or inside a profile is invalid
    and cannot authorize lifecycle actions.
 
-   A profile the user names in the task itself ("run this with `fable-opus`"),
-   or an explicit request to use none, selects the composition for that run
+   A profile the user names in the task itself ("run this with `sol-astra`"),
+   or an explicit request to use none, selects the profile for that run
    and takes precedence over the configured `profile`. Validate it the same
    way and leave the configuration file unchanged. This covers selection
    only: lifecycle permission comes from configuration alone, never from chat.
@@ -36,20 +36,22 @@ the directory holding `skills/`, three levels above this file.
    not permission to use the shipped copy. Missing selected files, malformed
    YAML, invalid targets, and extra profile keys must be reported explicitly;
    stop profile routing instead of silently using legacy defaults.
-4. Overlay only keys **present** in that profile, using the table below. Do
-   not use truthiness, fill missing profile keys from another profile, or
-   expand the profile into assignments. Resolve owner aliases after this
-   overlay. A selected profile never rewrites `assignments.*.role`, `mode`,
-   `enabled`, `delegation`, or `fallbacks`.
+4. Overlay only keys **present** in that profile, using the table below.
+   Merge maps per key, including each assignment's fields; replace lists,
+   including `[]`. Omitted keys retain the resolved config/default value.
+   Do not use truthiness or fill missing keys from another profile. Composition
+   keys alone do not change assignments; explicit `assignments`, `delegation`,
+   and `fallbacks` entries override their corresponding values. Resolve owner
+   aliases and gate enablement after this overlay.
 5. Reconcile the reception pane with the selected owner as described below,
    then freeze the selected file, effective targets, assignments, scope,
    execution strategy, and lifecycle permission for the run. Do not rewrite
    configuration or switch profiles to escape a missing agent or a gate.
 
-Profiles contain only `planning-design`, `orchestrator`, `coder`, `reviewers`,
-and `generalist`.
-Each is optional in a custom profile; shipped compositions live in the six YAML
-assets, which are the source of truth for their values and reviewer order.
+Profiles allow `planning-design`, `orchestrator`, `coder`, `reviewers`,
+`generalist`, `fallbacks`, `delegation`, and `assignments`.
+Each is optional; the six shipped YAML assets are the source of truth for
+preset values and reviewer order.
 
 | Profile key | When absent | When present |
 |---|---|---|
@@ -58,11 +60,28 @@ assets, which are the source of truth for their values and reviewer order.
 | `generalist` | Keep the resolved `roles.generalist` binding | One nested target replaces that binding; bare `orchestrator`, null, `[]`, or literal `none` binds it to the active owner |
 | `coder` | Keep the resolved `roles.coder` binding | One nested target replaces that binding; bare `orchestrator`, null, `[]`, or literal `none` binds it to the active owner, with no separate coder |
 | `reviewers` | Keep the resolved `roles.reviewer` binding | A nonempty list of nested targets replaces that binding in order; `[orchestrator]`, `[]`, null, or literal `none` binds it to the active owner, with no external reviewers |
+| `fallbacks` | Keep the resolved fallback map | Override each present string key's entire substitute list, including `[]`; keep omitted entries |
+| `delegation` | Keep the resolved delegation settings | Override each present `pane_scope` or `execution`; keep omitted settings |
+| `assignments` | Keep the resolved task assignments | Override each present task's `role`, `mode`, or review `enabled` field; keep omitted tasks and fields |
+
+These three override blocks must be maps; `{}` changes nothing, while null,
+scalars, and lists are errors. Their entries use the config schema: fallback
+values are lists of effort-free target strings; `pane_scope` is `tab`,
+`workspace`, or `session`; `execution` is `parallel` or `serial`; assignment
+roles must exist, modes are `delegate`, `orchestrator`, or `implementer`, and
+review `enabled` is a strict boolean. Report unknown settings, tasks, or
+assignment fields rather than silently ignoring them. Work tasks cannot be
+disabled. A profile cannot contain `profile` or `allow_agent_lifecycle`;
+lifecycle permission remains config-only.
+
+For example, `assignments: {plan-and-design: {mode: delegate}}` changes only
+that mode. It preserves the task's role, every other task, and every review
+gate. Resolve these overrides before freezing the run; never edit config.
 
 **Empty profile reviewers choose a reviewer; they do not disable a gate.**
 An enabled review still runs, and an explicitly delegated review still needs
-a fresh subagent when its target is the owner. An `enabled: false` gate stays
-off (except the existing `/strict_full_cycle` enabled-only override).
+a fresh subagent when its target is the owner. A resolved `enabled: false`
+gate stays off (except the existing `/strict_full_cycle` enabled-only override).
 Legacy `roles.<role>.agents: []` still disables tasks using that binding when
 the selected profile has not overridden it; profile omission must not
 reactivate it. The profile's explicit empty `coder` or `reviewers` replaces
@@ -230,8 +249,9 @@ stop command. Workers never start or end agents.
 
 ## Profile routing: mode takes precedence
 
-Apply gate enablement first. Then resolve the assignment and its effective
-target. A selected composition changes targets, never assignment modes.
+After the profile overlay, apply resolved gate enablement first. Then route
+by the resolved assignment and its effective target. Composition keys change
+targets; explicit assignment fields can change modes and gates.
 
 | Resolved route with a selected profile | Execution |
 |---|---|
@@ -260,7 +280,7 @@ here; they do not grant worker re-delegation or revive disabled gates.
 
 ## Fallback lookup and effort
 
-Read fallback data from the resolved `fallbacks` map, never from profiles.
+Read fallback data from the resolved `fallbacks` map after the profile overlay.
 These lookup rules apply to owner selection and worker targets alike; owner
 fallback still obeys the reception-role question and explicit handoff above.
 For a nested primary target, form its `kind@model` key using the preserved
@@ -279,7 +299,8 @@ The shipped strings deliberately include `Calude`. The profile model
 `muse-1.0-wonder` and fallback key model `muse-wonder-1.0` deliberately differ;
 they do not match each other. Leave both spellings intact and report that
 lookup result rather than silently unifying them. The exact shipped map is
-in `roles.yaml` and must not be duplicated into profile assets.
+in `roles.yaml`; profiles contain only intentional overrides, not copies of
+inherited entries.
 
 ## Init and run record
 

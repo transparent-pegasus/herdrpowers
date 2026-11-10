@@ -9,11 +9,11 @@ import test from 'node:test';
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const profiles = join(root, '.herdrpowers/profiles');
 const names = [
-  'astra-sol.yaml',
-  'fable-opus-panel.yaml',
-  'fable-opus.yaml',
-  'fable-sol-panel.yaml',
+  'fable-opus-ultra.yaml',
+  'fable-sol-ultra.yaml',
+  'opus-fable.yaml',
   'opus-solo.yaml',
+  'sol-astra.yaml',
   'sol-solo.yaml',
 ];
 
@@ -25,11 +25,44 @@ test('the six named profile templates are available as files', () => {
   for (const name of names) assert.ok(statSync(join(profiles, name)).isFile(), `${name} must be a file`);
 });
 
-test('every shipped profile routes planning-design and generalist tasks to its selected owner', () => {
+test('every shipped profile starts with planning-design and ends with the owner generalist', () => {
   for (const name of names) {
     const source = readFileSync(join(profiles, name), 'utf8');
-    assert.match(source, /^planning-design: orchestrator\n/, `${name} must start with planning-design: orchestrator`);
-    assert.match(source, /^generalist: orchestrator$/m, `${name} must bind generalist to the orchestrator`);
+    assert.match(source, /^planning-design:/, name);
+    assert.ok(source.endsWith('generalist: orchestrator\n'), name);
+  }
+});
+
+for (const [name, kind, owner, model] of [
+  ['sol-astra.yaml', 'codex', 'GPT-6.1-Sol', 'GPT-6-Astra'],
+  ['opus-fable.yaml', 'claude', 'Opus 5.5', 'Fable 5.2'],
+]) {
+  test(`${name} delegates planning and review while keeping execution with its cheaper owner`, () => {
+    const source = readFileSync(join(profiles, name), 'utf8');
+    assert.equal(source, `planning-design:
+  ${kind}:
+    model: ${model}
+    effort: max
+orchestrator:
+  ${kind}:
+    model: ${owner}
+    effort: max
+coder: orchestrator
+reviewers:
+  - ${kind}:
+      model: ${model}
+      effort: max
+assignments:
+  plan-and-design:
+    mode: delegate
+generalist: orchestrator
+`);
+  });
+}
+
+test('ultra and solo profiles keep planning with their selected owner', () => {
+  for (const name of names.filter((name) => /-(ultra|solo)\.yaml$/.test(name))) {
+    assert.match(readFileSync(join(profiles, name), 'utf8'), /^planning-design: orchestrator\n/, name);
   }
 });
 

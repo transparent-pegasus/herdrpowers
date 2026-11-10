@@ -4,14 +4,15 @@
 # THIS FILE IS THE PACK'S DEFAULT, NOT THE PLACE TO CUSTOMIZE A REPO.
 # A target repository overrides any key below in its own
 # `.herdrpowers/config.yaml` (written by the init workflow) — that file wins
-# key by key, and anything it omits falls back here. Plugin installations are
-# read-only, so the repo file is the only editable layer on those installs.
+# key by key, and anything it omits falls back here. A selected profile then
+# overrides its present composition, fallback, delegation, and assignment keys.
+# Customize the consumer config/profiles, not the read-only plugin installation.
 # See "Configuration resolution" in SKILL.md and references/profiles.md.
 
 # Composition selection and process lifecycle are separate from delegation.
 # Init installs missing templates, but selects none unless the user chooses.
 # using-herdr-sibling-panes/scripts/agent-lifecycle.sh reads this boolean (and
-# delegation.pane_scope) as written here: only a literal `true` in the
+# the frozen resolved delegation.pane_scope): only a literal `true` in the
 # repository's config lets the orchestrator start or end agents in panes.
 profile: null
 allow_agent_lifecycle: false

@@ -1,0 +1,17 @@
+planning-design:
+  codex:
+    model: GPT-6-Astra
+    effort: max
+orchestrator:
+  codex:
+    model: GPT-6.1-Sol
+    effort: max
+coder: orchestrator
+reviewers:
+  - codex:
+      model: GPT-6-Astra
+      effort: max
+assignments:
+  plan-and-design:
+    mode: delegate
+generalist: orchestrator

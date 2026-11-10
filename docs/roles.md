@@ -18,17 +18,20 @@ Both share one schema — a **role list**, a fallback map, and a **role assigned
 
 Customize the repo file, not `roles.yaml` — plugin installs are read-only, and editing a checked-in copy makes the pack diff-dirty against upstream. The skills speak in role and task names, never in tool names.
 
-## Profile Composition and Ownership
+## Profile Overrides and Ownership
 
 After merging repo config over shipped roles, overlay only keys present in the
 selected `.herdrpowers/profiles/<name>.yaml`, repo-local first and shipped only
 if absent locally. Invalid names, files, or targets are explicit errors. Profiles
-contain only `planning-design`, `orchestrator`, `coder`, `reviewers`, and `generalist`;
-omitted slots keep resolved roles. Planning-design/coder/generalist `orchestrator`, `null`, `[]`, or `none` binds to the
+allow `planning-design`, `orchestrator`, `coder`, `reviewers`, `generalist`,
+`fallbacks`, `delegation`, and `assignments`. Omitted slots keep resolved roles. Planning-design/coder/generalist `orchestrator`, `null`, `[]`, or `none` binds to the
 owner (solo coder); owner reviewers
 (`[orchestrator]`, `[]`, null, `none`) select the owner without disabling a gate. Lists replace.
-Preserve planning-design/generalist bindings the profile omits,
-added roles, assignments, modes, and gates. A concrete coder matching the owner
+Merge profile `fallbacks`, `delegation`, and `assignments` per key, including
+each task's fields; omitted keys retain config/default values. Empty maps
+change nothing; fallback lists replace, including `[]`. Composition keys alone
+leave modes and gates intact; explicit assignment fields can override them.
+Preserve custom roles and omitted bindings. A concrete coder matching the owner
 is still a separate worker.
 
 A mismatched reception pane always asks **unused or relay** before owner handoff
@@ -101,7 +104,7 @@ Separate list targets need different kinds or distinct pinned models of one kind
 - **Separate targets and no-profile `review-fixes` keep rounds 4-5 escalation.** Profile self-targets retain their resolved mode, including mandatory fresh subagents for `delegate`; the five-round cap stays fixed.
 - **The report names the test writer and transport**, whatever test-authoring assignments resolve to. Disabled gates remain off (except strict mode's enabled-only override).
 
-**Every assignment the repo config changed away from the shipped default, and every disabled review, is named in the final report**, alongside any role that fell back and any review that degraded for lack of panes — so nobody later mistakes an unreviewed branch for a reviewed one. Configuration is input: it is read once before the first delegation and never written from inside a run.
+**Every assignment the repo config or profile changed away from the shipped default, and every disabled review, is named in the final report**, alongside any role that fell back and any review that degraded for lack of panes — so nobody later mistakes an unreviewed branch for a reviewed one. Configuration is input: it is read once before the first delegation and never written from inside a run.
 
 ## Delegation Scope and Execution Strategy
 

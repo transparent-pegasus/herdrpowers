@@ -15,7 +15,7 @@ const fixture = (name) => resolve(here, '../pane-model/fixtures', name);
 const ALLOW = 'allow_agent_lifecycle: true\n';
 const AGENT_PID = 4242;
 
-function lifecycle(args, { config, panes = {}, start = 'ready', startScreen, ledger, git = false } = {}) {
+function lifecycle(args, { config, scope, panes = {}, start = 'ready', startScreen, ledger, git = false } = {}) {
   const dir = mkdtempSync(join(tmpdir(), 'herdr-lifecycle-test-'));
   try {
     const repo = join(dir, 'repo');
@@ -51,6 +51,7 @@ function lifecycle(args, { config, panes = {}, start = 'ready', startScreen, led
         HERDR_TAB_ID: 'w1:t1',
         HERDR_WORKSPACE_ID: 'w1',
         HERDRPOWERS_REPO_ROOT: repo,
+        ...(scope === undefined ? {} : { HERDRPOWERS_PANE_SCOPE: scope }),
         HERDR_TEST_LOG: log,
         HERDR_TEST_STATE: join(dir, 'state.json'),
         HERDR_LIFECYCLE_SETTLE_SECONDS: '0',
@@ -148,6 +149,28 @@ test('workspace scope permits a shell pane in another tab of the same workspace'
   const result = lifecycle(startCodex, { config, panes: { 'w1:p2': { tab: 'w1:t9' } } });
   assert.equal(result.status, 0, result.stderr);
   assert.deepEqual(result.sent, [discardLine, agentStart('codex')]);
+});
+
+for (const [name, scope, pane, config, status] of [
+  ['workspace permits another tab', 'workspace', { tab: 'w1:t9' }, ALLOW, 0],
+  ['session permits another workspace', 'session', { tab: 'w2:t1', workspace: 'w2' }, ALLOW, 0],
+  ['tab refuses another tab despite session config', 'tab', { tab: 'w1:t9' }, `${ALLOW}delegation:\n  pane_scope: session\n`, 2],
+  ['an invalid value refuses the start', 'everywhere', {}, ALLOW, 2],
+  ['an explicit empty value refuses the start', '', {}, ALLOW, 2],
+]) {
+  test(`resolved profile scope: ${name}`, () => {
+    const result = lifecycle(startCodex, { config, scope, panes: { 'w1:p2': pane } });
+    assert.equal(result.status, status, result.stderr);
+    assert.deepEqual(result.sent, status === 0 ? [discardLine, agentStart('codex')] : []);
+    assert.equal(result.ledger, status === 0 ? entry('codex') : '');
+  });
+}
+
+test('resolved profile scope cannot grant lifecycle permission', () => {
+  const result = lifecycle(startCodex, { config: 'allow_agent_lifecycle: false\n', scope: 'session', panes: shell });
+  assert.equal(result.status, 6, result.stderr);
+  assert.deepEqual(result.sent, []);
+  assert.equal(result.ledger, '');
 });
 
 for (const [name, cwd, status] of [['a subdirectory of the same git repository', 'REPO/sub', 0], ['a different git repository', 'ELSEWHERE', 2]]) {
