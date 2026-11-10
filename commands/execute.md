@@ -20,7 +20,7 @@ Do not edit workflow files unless the user's current request explicitly asks to 
 
 ## Orchestration
 
-Read `orchestration`, its [profiles contract](../skills/orchestration/references/profiles.md), and `using-herdr-sibling-panes` before routing work. Resolve repo config over shipped roles, then only composition keys present in the selected profile. Freeze the active owner, targets, assignments, gates, scope, strategy, and lifecycle policy. A profile never rewrites modes or gate enablement; a disabled gate is skipped and named in the report.
+Read `orchestration`, its [profiles contract](../skills/orchestration/references/profiles.md), and `using-herdr-sibling-panes` before routing work. Resolve repo config over shipped roles, then only keys present in the selected profile. Freeze the active owner, targets, assignments, gates, scope, strategy, and lifecycle policy. Profile assignment overrides resolve before routing; a resolved disabled gate is skipped and named in the report.
 
 Routing comes from `assignments:`, not from this file, and the resolved YAML is the source of truth for every default — read each task's `role` and `mode` there rather than recalling one. This workflow touches `complex-coding` / `simple-coding`, `test-authoring`, `fix-round-test-authoring`, `review-fixes`, `chores`, `verification`, `documentation-impact-review`, `task-review`, `fix-round-re-review`, and `final-branch-review`. A review task whose effective role binds to a list runs once per entry.
 - Plan revisions follow `plan-and-design`; final synthesis stays with the active owner.

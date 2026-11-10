@@ -7,7 +7,7 @@ description: Use when implementing any feature or bugfix, before writing impleme
 
 ## Who Writes the Test (READ FIRST)
 
-**The resolved `test-authoring` assignment says** — read it through `orchestration` and its [profiles contract](../orchestration/references/profiles.md), including the selected composition. Profiles never rewrite modes or gate enablement. The writer's session determines the rules below.
+**The resolved `test-authoring` assignment says** — read it through `orchestration` and its [profiles contract](../orchestration/references/profiles.md), including the selected composition. Apply present profile assignment overrides before choosing the writer. The writer's session determines the rules below.
 
 **A fresh worker writes them (`mode: delegate`).** Separate targets use reset-backed Herdr panes; selected-profile owner targets require fresh in-process subagents, including solo composition. Missing subagent capability is a reported inability, never inline test authoring. The worker gets the task brief alone in its own worktree at BASE and never sees implementation. `pane-driven-development`'s test-author contract binds it: tests only, never production code, expected RED evidence, and no re-delegation. The implementer follows the exact stated interface and does not write those tests.
 

@@ -9,7 +9,7 @@ not this directory or the target repository.
 Routing is `orchestration`'s job, not this skill's. Resolve the whole
 `assignments:` table at the start of execution from the merged configuration it
 describes, including its [profiles contract](../../orchestration/references/profiles.md):
-repo config over shipped roles, then only composition keys present in the
+repo config over shipped roles, then only keys present in the
 selected profile. Freeze effective targets, modes, gates, scope, and lifecycle
 policy up front; do not resolve them anew per task.
 

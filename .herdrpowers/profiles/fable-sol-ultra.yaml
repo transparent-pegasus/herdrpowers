@@ -1,11 +1,11 @@
-planning-design: orchestrator
 orchestrator:
   claude:
     model: Fable 5.2
     effort: max
+planning-design: orchestrator
 coder:
-  claude:
-    model: Opus 5.5
+  codex:
+    model: GPT-6.1-Sol
     effort: max
 reviewers:
   - codex:

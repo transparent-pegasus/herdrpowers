@@ -7,11 +7,11 @@ target repository. Resolve them before invoking a script.
 ## Task routing
 
 Before classifying or routing, read [profiles.md](profiles.md) and resolve the
-active owner, per-key composition overlay, and separate lifecycle policy.
+active owner, per-key profile overlay, and separate lifecycle policy.
 Freeze them for the run. Routing then names the task and reads its assignment.
 
 1. **Name the task.** Classify the work against the task list in [SKILL.md](../SKILL.md#delegation-tasks-and-their-assignments): design work is `plan-and-design`; coding splits into `complex-coding` and `simple-coding` at the boundary below; lookups, moves, log gathering, and lint/format runs are `chores`; running verification commands is `verification`. When a piece of work spans tasks, use the heavier one (`plan-and-design` > `complex-coding` > `simple-coding` > `chores`).
-2. **Read its assignment.** Take `role` and `mode` from `assignments:`; the profile never rewrites them. `delegate` to a separate target uses a matching idle in-scope pane and reset-backed submission. With a selected profile, `delegate` resolved to the active owner requires a fresh in-process subagent, including empty-reviewer reviews; lack of that capability is a reported inability, never inline delegation. `orchestrator` uses the active owner: profile-selected self-review may be same-session or use an optional subagent; no-profile reviews still require a fresh subagent. `implementer` continues in the task's existing session. Follow the profile routing table for self-targets; do not substitute a different route.
+2. **Read its assignment.** Take `role` and `mode` from resolved `assignments:` after the profile overlay. `delegate` to a separate target uses a matching idle in-scope pane and reset-backed submission. With a selected profile, `delegate` resolved to the active owner requires a fresh in-process subagent, including empty-reviewer reviews; lack of that capability is a reported inability, never inline delegation. `orchestrator` uses the active owner: profile-selected self-review may be same-session or use an optional subagent; no-profile reviews still require a fresh subagent. `implementer` continues in the task's existing session. Follow the profile routing table for self-targets; do not substitute a different route.
 
 Every worker receives the [delegation contract](../SKILL.md#delegation-contract)
 and executes without re-delegation. Owner handoff uses the separate contract
