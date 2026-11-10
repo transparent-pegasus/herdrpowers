@@ -1,3 +1,4 @@
+planning-design: orchestrator
 orchestrator:
   claude:
     model: Fable 5.2
@@ -6,4 +7,5 @@ coder:
   claude:
     model: Opus 5.5
     effort: max
-reviewers: []
+reviewers: [orchestrator]
+generalist: orchestrator

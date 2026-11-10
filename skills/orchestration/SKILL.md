@@ -31,9 +31,9 @@ The base files share this schema:
 - **`allow_agent_lifecycle`** — top-level strict boolean, separate from composition/delegation; defaults false. False starts and ends no agent. True lets the active owner start a resolved target that has no live match and end idle agents the task started, only through `agent-lifecycle.sh`, which enforces the value. Read the profiles reference before any startup, exit, or recovery action, including owner handoff and fallback.
 
 Merging is per key, not per file. Lists replace rather than concatenate.
-Profile keys override conflicting role bindings only when present; omitted
-keys preserve them. A profile never changes assignments, gate enablement, or
-delegation defaults. Empty profile reviewers select the owner, while a legacy
+Profile keys override the planning-design, orchestrator, coder, reviewer, or generalist binding
+only when present; omitted keys preserve them. A profile never changes
+assignments, gate enablement, or delegation defaults. Empty profile reviewers select the owner, while a legacy
 empty role list keeps its disabling semantics if no profile overrides it.
 
 Report assignment keys not defined by `roles.yaml`: otherwise their intended
@@ -119,7 +119,7 @@ Resolve every task the workflow will touch before its first delegation, not when
 A role declared with `agents:` runs **one delegation per entry**, and you wait
 for all before acting. A one-entry list is a deliberate single delegation.
 A legacy empty role list disables that task unless a profile overrides the
-binding. Profile `reviewers: []`/null/`none` instead selects the active owner;
+binding. Profile `reviewers: [orchestrator]`/`[]`/null/`none` instead selects the active owner;
 an enabled review still runs and `delegate` still requires a fresh subagent.
 
 Three rules bind wherever a list role is used:
