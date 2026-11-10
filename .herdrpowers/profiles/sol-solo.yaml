@@ -2,6 +2,6 @@ orchestrator:
   codex:
     model: GPT-6.1-Sol
     effort: max
-generalist: orchestrator
 coder: null
 reviewers: []
+generalist: orchestrator
