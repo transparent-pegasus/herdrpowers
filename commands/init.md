@@ -88,8 +88,11 @@ top-level `allow_agent_lifecycle` boolean. A new config selects no profile
 Repeat init preserves the existing selection and permission. Installing
 templates does not select one; a profile named in a task selects only that
 run. Explain that a selected profile overrides
-only composition keys present in its file; missing keys retain resolved
-roles, explicit empties override them, and modes/gate enablement stay intact.
+only keys present in its file. Composition slots replace bindings;
+`fallbacks`, `delegation`, and `assignments` merge per key, including each
+task's fields. Missing keys retain config/default values, lists replace
+(including `[]`), and explicit assignment fields may change modes or gates.
+Lifecycle permission remains config-only.
 Validate any selected name/file per the profiles reference; invalid or missing
 selection is an explicit error, not a reason to silently clear it.
 
@@ -126,7 +129,7 @@ fresh in-process subagent, for reviews too, even with empty reviewers.
 `orchestrator` uses the active owner: a selected profile permits same-session
 self-review or an optional subagent, while no-profile reviews still require
 a fresh subagent. `implementer` continues in the session owning the task.
-Profile selection never rewrites these modes or gate enablement.
+Resolve profile assignment overrides before presenting modes and gate enablement.
 
 **Read the shipped defaults out of `skills/orchestration/roles.yaml` and propose those values** — that file is the source of truth for what the pack ships, and it changes across releases. Do not propose defaults from memory or from this file; the tables below say only what each task covers.
 
@@ -307,9 +310,10 @@ Install profile templates by iterating the actual shipped
 if needed and copy a template **only when its destination is absent**.
 Preserve every existing file byte for byte, including a customized profile
 with a shipped filename; do not overwrite, merge, or refresh it on repeat
-init. Preserve custom profile filenames too. Profiles contain composition
-only, never assignments, delegation, fallbacks, lifecycle policy, or session
-pane IDs/scope. Installing templates is independent of selecting a profile.
+init. Preserve custom profile filenames too. Profiles allow composition slots
+and per-key `assignments`, `delegation`, and `fallbacks` overrides, never
+lifecycle policy, profile selection, or session pane IDs. Installing templates
+is independent of selecting a profile.
 Copy `<pack>/.herdrpowers/profiles/README.md` to the local profiles directory
 only when `.herdrpowers/profiles/README.md` is absent. Preserve an existing
 local README byte for byte on repeat init; do not overwrite, merge, or refresh it.
@@ -322,7 +326,7 @@ Re-read every written file and confirm:
 - top-level `profile` is null/`none` or a valid simple name whose selected local/shipped file exists and validates; errors remain explicit rather than clearing selection;
 - top-level `allow_agent_lifecycle` is a YAML boolean, not a string, null, or a field nested in a profile or `delegation`, and `bash <pack>/skills/using-herdr-sibling-panes/scripts/agent-lifecycle.sh policy`, run from the repository, prints the approved value — that helper is what enforces it at runtime;
 - new role targets are one-kind mappings with only optional nonempty model/effort strings, effort requires model, and bare `orchestrator` aliases/custom bindings were preserved;
-- profiles contain only the five composition keys with the absent/empty semantics above; original string spelling and reviewer order are intact;
+- profiles contain only the five composition keys and optional `fallbacks`, `delegation`, and `assignments` maps; validate their entries per the profiles reference, preserving omitted keys, original strings, and reviewer order;
 - all missing shipped templates were installed, every pre-existing profile file is byte-identical, and repeat init preserved the chosen profile, assignments, gate enablement, delegation, and permission;
 - the shipped profiles README was installed only if absent; any pre-existing local README is byte-identical;
 - `delegation.pane_scope` is one of `tab`, `workspace`, `session`, and `delegation.execution` is one of `parallel`, `serial`;

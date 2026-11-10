@@ -226,8 +226,8 @@ If you find issues, fix them inline. No need to re-review — just fix and move 
 
 Before offering execution methods, read `orchestration` and its
 [profiles contract](../orchestration/references/profiles.md). Resolve the active
-owner, targets, and modes; a profile changes composition, not assignments or
-gate enablement. A concrete coder matching the owner's model remains separate.
+owner, targets, and modes after applying present profile composition and
+routing overrides per key, including assignment fields. A concrete coder matching the owner's model remains separate.
 Do not offer inline execution as a substitute for profile `delegate` routes:
 owner targets require fresh subagents, separate targets reset-backed workers.
 Other owner-session modes permit inline work/self-review and optional subagents

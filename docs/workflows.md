@@ -2,7 +2,7 @@
 
 Workflows tie roles and skills into end-to-end development procedures. They live in `commands/`, the default command directory of the Claude Code, Codex, and Cursor plugin conventions; the OpenCode plugin registers them at startup. Each file carries YAML frontmatter `description: ...` so supporting platforms expose it as a slash command.
 
-Every development workflow reads `orchestration` and its [profiles contract](../skills/orchestration/references/profiles.md), resolving repo config over shipped roles and then only present composition slots. Separate delegated targets use reset-backed in-scope Herdr panes. Profile self-target `delegate` requires fresh subagents for work and reviews, even with empty reviewers; other owner-session modes permit inline work/self-review and optional subagents. Without a profile, legacy independence and unavailable-pane degradation remain. Workers never re-delegate. Scope, modes, gates, and lifecycle permission stay frozen.
+Every development workflow reads `orchestration` and its [profiles contract](../skills/orchestration/references/profiles.md), resolving repo config over shipped roles and then only present selected-profile keys. Separate delegated targets use reset-backed in-scope Herdr panes. Profile self-target `delegate` requires fresh subagents for work and reviews, even with empty reviewers; other owner-session modes permit inline work/self-review and optional subagents. Without a profile, legacy independence and unavailable-pane degradation remain. Workers never re-delegate. Scope, modes, gates, and lifecycle permission stay frozen.
 
 ## Available Workflows
 
