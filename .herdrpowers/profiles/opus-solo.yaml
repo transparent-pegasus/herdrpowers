@@ -3,5 +3,5 @@ orchestrator:
     model: Opus 5.5
     effort: max
 coder: orchestrator
-reviewers: []
+reviewers: [orchestrator]
 generalist: orchestrator

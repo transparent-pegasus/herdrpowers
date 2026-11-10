@@ -3,5 +3,5 @@ orchestrator:
     model: GPT-6.1-Sol
     effort: max
 coder: orchestrator
-reviewers: []
+reviewers: [orchestrator]
 generalist: orchestrator

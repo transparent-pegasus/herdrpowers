@@ -39,10 +39,14 @@ test('the profile contract binds coder and generalist orchestrator or none to th
   }
 });
 
-test('solo profiles bind coder to the orchestrator alias', () => {
+test('solo profiles bind coder and reviewers to the orchestrator alias', () => {
   for (const name of ['opus-solo.yaml', 'sol-solo.yaml']) {
-    assert.match(readFileSync(join(profiles, name), 'utf8'), /^coder: orchestrator$/m, name);
+    const source = readFileSync(join(profiles, name), 'utf8');
+    assert.match(source, /^coder: orchestrator$/m, name);
+    assert.match(source, /^reviewers: \[orchestrator\]$/m, name);
   }
+  const contract = readFileSync(join(root, 'skills/orchestration/references/profiles.md'), 'utf8');
+  assert.match(contract, /\| `reviewers` \|[^\n]*`\[orchestrator\]`, `\[\]`, null, or literal `none` binds it to the active owner/);
 });
 
 test('npm distribution includes the six orchestration profiles and their README, nothing else local', () => {

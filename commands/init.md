@@ -111,7 +111,7 @@ and write nested targets. Fallback keys/substitutes keep bare-kind or
 the unequal `muse-1.0-wonder` / `muse-wonder-1.0` spellings; no fuzzy aliases.
 
 State the empty-value rules explicitly: profile `coder`/`generalist`
-`orchestrator`/null/`[]`/`none` binds to the owner; `reviewers: []`/null/`none` means owner review.
+`orchestrator`/null/`[]`/`none` binds to the owner; `reviewers: [orchestrator]`/`[]`/null/`none` means owner review.
 Legacy `roles.<role>.agents: []` still disables the task when no profile
 overrides that binding. Lists replace, and a matched empty fallback list is
 authoritative. A fallback never inherits the primary effort.

@@ -55,7 +55,7 @@ assets, which are the source of truth for their values and reviewer order.
 | `orchestrator` | Keep the legacy owner, the pane receiving the user's task | One nested target selects the active owner; null, `none`, and lists are invalid |
 | `generalist` | Keep the resolved `roles.generalist` binding | One nested target replaces that binding; bare `orchestrator`, null, `[]`, or literal `none` binds it to the active owner |
 | `coder` | Keep the resolved `roles.coder` binding | One nested target replaces that binding; bare `orchestrator`, null, `[]`, or literal `none` binds it to the active owner, with no separate coder |
-| `reviewers` | Keep the resolved `roles.reviewer` binding | A nonempty list of nested targets replaces that binding in order; `[]`, null, or literal `none` binds it to the active owner, with no external reviewers |
+| `reviewers` | Keep the resolved `roles.reviewer` binding | A nonempty list of nested targets replaces that binding in order; `[orchestrator]`, `[]`, null, or literal `none` binds it to the active owner, with no external reviewers |
 
 **Empty profile reviewers choose a reviewer; they do not disable a gate.**
 An enabled review still runs, and an explicitly delegated review still needs
