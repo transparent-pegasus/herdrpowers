@@ -32,10 +32,17 @@ test('every shipped profile routes generalist tasks to its selected owner', () =
   }
 });
 
-test('the profile contract lets generalist targets override config and none preserve it', () => {
+test('the profile contract binds coder and generalist orchestrator or none to the owner', () => {
   const contract = readFileSync(join(root, 'skills/orchestration/references/profiles.md'), 'utf8');
-  assert.match(contract, /\| `generalist` \|[^\n]*nested target[^\n]*overrides `roles\.generalist`/);
-  assert.match(contract, /literal `none` preserves the resolved `roles\.generalist` binding/);
+  for (const key of ['generalist', 'coder']) {
+    assert.match(contract, new RegExp(`\\| \`${key}\` \\|[^\\n]*bare \`orchestrator\`, null, \`\\[\\]\`, or literal \`none\` binds it to the active owner`));
+  }
+});
+
+test('solo profiles bind coder to the orchestrator alias', () => {
+  for (const name of ['opus-solo.yaml', 'sol-solo.yaml']) {
+    assert.match(readFileSync(join(profiles, name), 'utf8'), /^coder: orchestrator$/m, name);
+  }
 });
 
 test('npm distribution includes the six orchestration profiles and their README, nothing else local', () => {
