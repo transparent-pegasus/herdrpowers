@@ -10,7 +10,7 @@ Implementers (panes, profile subagents, or the active owner) record one of four
 statuses. Handle each through the frozen target/mode; a retry never changes
 the profile or grants a worker re-delegation authority.
 
-**DONE:** If task review is enabled, generate its package (`bash scripts/review-package PLAN_FILE BASE HEAD`, from this skill's directory; BASE is the recorded pre-task commit, never `HEAD~1`) and run the review through its resolved target/mode with the printed path. If disabled, consume the implementer's report and proceed to §5, naming the skipped gate.
+**DONE:** If task review is enabled, generate its package (`bash scripts/review-package PLAN_FILE BASE HEAD` by its absolute path, from the working tree you're executing in; BASE is the recorded pre-task commit, never `HEAD~1`) and run the review through its resolved target/mode with the printed path. If disabled, consume the implementer's report and proceed to §5, naming the skipped gate.
 
 **DONE_WITH_CONCERNS:** The pane completed the work but flagged doubts. Read the concerns before proceeding. If they are about correctness or scope, address them before review. If they are observations (e.g., "this file is getting large"), note them and proceed to review.
 

@@ -194,7 +194,7 @@ unsure about.
 ## Placeholders
 
 - **worktree path** — REQUIRED, absolute; the pane does not inherit the orchestrator's cwd
-- **requirements file** — REQUIRED: `bash scripts/task-brief PLAN_FILE N` prints the path (inside the plan's workspace). Read-only; every pane on this task reads it
+- **requirements file** — REQUIRED: `bash scripts/task-brief PLAN_FILE N`, run by its absolute path, from the working tree you're executing in, prints the path (inside the plan's workspace). Read-only; every pane on this task reads it
 - **contract file** — REQUIRED: this contract written to `task-N-implementer.md` beside it, naming the requirements file. Never appended to the requirements file
 - **report file** — REQUIRED: name it after the brief (`task-N-brief.md` → `task-N-report.md`)
 - **marker** — REQUIRED, unique per delegation, ≤16 chars, split into fragments in the instruction

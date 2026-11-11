@@ -27,7 +27,7 @@ self-review, using the same requirements, package, and two verdicts.
   open list and deduplicate. Reviews that disagree are yours to adjudicate,
   not to average.
 - Hand the reviewer its diff as a file: run this skill's
-  `bash scripts/review-package PLAN_FILE BASE HEAD` and pass the reviewer the file
+  `bash scripts/review-package PLAN_FILE BASE HEAD` by its absolute path, from the working tree you're executing in, and pass the reviewer the file
   path it prints (or, without bash: `git log --oneline`, `git diff --stat`,
   and `git diff -U10` for the range, redirected to one uniquely named
   file). A delegated reviewer reads the package without loading its diff into

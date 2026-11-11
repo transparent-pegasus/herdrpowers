@@ -173,7 +173,7 @@ about.
 ## Placeholders
 
 - **worktree path** — REQUIRED, absolute; choose a unique child of the shared `WORKTREE_DIRECTORY`, resolved from the primary checkout and verified per `using-git-worktrees`. For example, ensure the resolved parent `LOCATION` exists, then use `mktemp -d "$LOCATION/tests-task-N-XXXXXX"`. The test author's worktree is **detached**, never on a named branch: `git worktree add --detach <test-worktree-path> BASE` (implementation round) or `--detach <test-worktree-path> FIX_BASE` (fix round). Unique paths avoid collisions across plans, tracks, and rounds; `-b` would also leave a branch behind after `git worktree remove`. Remove the worktree once its commit is cherry-picked in
-- **requirements file** — REQUIRED: `task-N-brief.md`, the same file the implementer reads (`bash scripts/task-brief PLAN_FILE N`). Read-only for both panes
+- **requirements file** — REQUIRED: `task-N-brief.md`, the same file the implementer reads (`bash scripts/task-brief PLAN_FILE N`, run by its absolute path, from the working tree you're executing in). Read-only for both panes
 - **contract file** — REQUIRED: this contract written to `task-N-tests.md`, or `task-N-fix-R-tests.md` for a fix round. Never appended to the requirements file
 - **findings** — fix round only: the open findings this round must cover, in place of the task's requirements
 - **report file** — REQUIRED: `task-N-tests-report.md`, or `task-N-fix-R-tests-report.md`. Separate from the implementer's report — the two panes write concurrently

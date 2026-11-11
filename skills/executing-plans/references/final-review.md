@@ -12,7 +12,7 @@ configuration` to the ledger, go straight to Finish, and say the branch is
 unreviewed.
 
 Run `bash ../pane-driven-development/scripts/review-package PLAN_FILE MERGE_BASE HEAD`
-(MERGE_BASE = the commit the branch started from, e.g.
+by its absolute path, from the working tree you're executing in (MERGE_BASE = the commit the branch started from, e.g.
 `git merge-base <BASE_BRANCH> HEAD`); the file it prints is the review's
 diff.
 

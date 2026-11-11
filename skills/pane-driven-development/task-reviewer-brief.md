@@ -218,12 +218,12 @@ obvious).
 ## Placeholders
 
 - **worktree path** — REQUIRED, absolute
-- `[BRIEF_FILE]` — REQUIRED: the same task brief the implementer worked from (`bash scripts/task-brief PLAN N`)
+- `[BRIEF_FILE]` — REQUIRED: the same task brief the implementer worked from (`bash scripts/task-brief PLAN N`, run by its absolute path, from the working tree you're executing in)
 - `[GLOBAL_CONSTRAINTS]` — binding requirements copied verbatim from the plan's Global Constraints section or the spec: exact values, formats, and stated relationships between components (not process rules — those are in the contract already)
 - `[REPORT_FILE]` — REQUIRED: the file the implementer wrote its detailed report to
 - `[TEST_REPORT_FILE]` — REQUIRED when a separate pane wrote the tests: its report, carrying the RED evidence. Say in the instruction which pane wrote the tests; omit this path only when the implementer wrote them
 - `[BASE_SHA]` / `[HEAD_SHA]` — the recorded task base and the current commit
-- `[DIFF_FILE]` — REQUIRED: the path printed by `bash scripts/review-package PLAN_FILE BASE HEAD` (the package never enters the orchestrator's context)
+- `[DIFF_FILE]` — REQUIRED: the path printed by `bash scripts/review-package PLAN_FILE BASE HEAD`, run by its absolute path, from the working tree you're executing in (the package never enters the orchestrator's context)
 - **review output file + marker** — REQUIRED
 
 **Reviewer returns:** Spec Compliance verdict (✅/❌/⚠️), Strengths, Issues

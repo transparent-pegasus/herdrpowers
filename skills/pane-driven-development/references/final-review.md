@@ -10,7 +10,7 @@ Skipped when the calling workflow's `assignments.final-branch-review` gate is
 disabled; go straight to Finish and say the branch is unreviewed.
 
 The final whole-branch review gets a package too: run
-`bash scripts/review-package PLAN_FILE MERGE_BASE HEAD` (MERGE_BASE = the commit the
+`bash scripts/review-package PLAN_FILE MERGE_BASE HEAD` by its absolute path, from the working tree you're executing in (MERGE_BASE = the commit the
 branch started from, e.g. `git merge-base <BASE_BRANCH> HEAD`) and include the
 printed path in the final review brief, so the final reviewer reads
 one file instead of re-deriving the branch diff with git commands. Route the
@@ -35,7 +35,7 @@ Profile self-targets retain their mode; separate targets use their worker route.
 Per-finding fixers each rebuild context and re-run suites; a real
 session's final-review fix wave cost more than all its tasks combined.
 Then run exactly one scoped re-review of the fix wave
-(`bash scripts/review-package PLAN_FILE FIX_BASE HEAD`,
+(`bash scripts/review-package PLAN_FILE FIX_BASE HEAD` by its absolute path, from the working tree you're executing in,
 [re-review-brief.md](../re-review-brief.md)).
 Adjudicate any residual findings as in the task loop's breaker: park with
 rulings, or rule on the load-bearing ones and ledger what you decided. Only

@@ -16,7 +16,7 @@ self-contained contract and no-re-delegation instruction; owner-session
 self-review uses the same requirements/package and a written verdict. The
 composer-specific submission rules below apply to Herdr transport.
 
-- **Requirements file:** `bash scripts/task-brief PLAN_FILE N` writes the task's
+- **Requirements file:** `bash scripts/task-brief PLAN_FILE N`, run by its absolute path, from the working tree you're executing in, writes the task's
   full text into the plan workspace and prints the path. It stays the single
   source of requirements, read by every pane on the task and edited by none —
   role contracts go in their own files beside it (`task-N-implementer.md`,
