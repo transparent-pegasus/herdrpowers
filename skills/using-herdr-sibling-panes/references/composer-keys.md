@@ -99,6 +99,22 @@ remains required. Launch flags, help, transcript, header and config text cannot
 replace renderer evidence. Changed layouts need a safely captured visible
 fixture and regression coverage before adding a rule.
 
+**Muse `/clear` can end the CLI.** Muse Code 1.4.15, observed 2026-11-12 in a
+reset-backed pane: `/clear` on a session that had done substantial work (81
+tool calls, a 2.8 MB session log) ended the CLI 1.9 seconds later, with no
+further input, printing `runtime host failed to start: prepared fresh
+session.start refused before admission (CommandRejected InvalidTarget …):
+source session … is still live; teardown must precede construct`. Muse's
+local traces show the same exit after seven earlier resets on 1.4.14 and
+1.4.15, each following 37 to 168 tool calls; resets of short sessions
+survived. It is intermittent: three later resets of 4.3 to 4.4 MB sessions on
+a restarted muse survived. herdr can keep reporting `muse` `idle` at the shell for a while.
+The helper therefore watches a muse reset for five seconds and checks the
+agent again before every Enter; it exits `2` without submitting once the
+agent has left. A freshly started muse resets an empty session and takes its
+first delegation; a later one usually needs a restart, under the lifecycle
+policy below.
+
 For startup/exit authorization, first read the core
 [profiles policy](../../orchestration/references/profiles.md). Top-level
 `allow_agent_lifecycle: false` forbids starting, exiting or restarting an agent

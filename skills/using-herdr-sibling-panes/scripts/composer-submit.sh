@@ -11,7 +11,9 @@ set -euo pipefail
 #
 # exit 0  instruction submitted and the pane started working
 # exit 2  bad usage (including an instruction holding a bare "/word" slash
-#         trigger), or the pane is not a usable idle agent pane
+#         trigger), or the pane is not a usable idle agent pane — including an
+#         agent that left the foreground during the reset or before an Enter;
+#         no instruction was submitted
 # exit 3  instruction did not submit (composer key sequence is wrong for this
 #         agent CLI, or the pane stopped responding) — before retrying, check
 #         whether the task already finished by matching its completion marker
@@ -39,7 +41,7 @@ if [[ $# -eq 4 && ( -z ${effort//[[:space:]]/} || $effort == *$'\n'* || $effort 
 fi
 pane_model=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/pane-model.sh
 input_settle_seconds=${HERDR_COMPOSER_INPUT_SETTLE_SECONDS:-0.40}
-clear_settle_seconds=${HERDR_COMPOSER_CLEAR_SETTLE_SECONDS:-1.20}
+clear_settle_seconds=${HERDR_COMPOSER_CLEAR_SETTLE_SECONDS-}
 confirm_timeout_seconds=${HERDR_COMPOSER_CONFIRM_TIMEOUT_SECONDS:-10}
 composer_min_cols=${HERDR_COMPOSER_MIN_COLS:-40}
 
@@ -95,6 +97,27 @@ f=d["foreground_processes"]
 print(f[0].get("pid","") if f else "", d.get("shell_pid",""))'
 }
 
+# The agent checked idle below is still the pane's foreground process. An agent
+# that exits drops the pane to its shell, which then receives every later key.
+agent_alive() {
+  local now
+  now=$(foreground_pids) && [[ ${now%% *} == "$pid" ]]
+}
+
+# Stop before anything else reaches the pane. When the shell has the
+# foreground, ctrl+u discards what already landed on its command line, so a
+# later Enter in that pane cannot run it.
+agent_gone() {
+  local now
+  if now=$(foreground_pids) && [[ ${now%% *} == "${now##* }" ]]; then
+    herdr pane send-keys "$pane_id" ctrl+u >/dev/null || true
+  fi
+  echo "pane $pane_id: $agent (pid $pid) left the foreground $1; no instruction was submitted." >&2
+  echo "The agent exited: restart it in that pane before retrying." >&2
+  herdr pane read "$pane_id" --source recent --lines 40 >&2 || true
+  exit 2
+}
+
 tty_cols() {
   python3 - "$1" <<'PY'
 import fcntl
@@ -124,6 +147,13 @@ fi
 if [[ $status != idle && $status != done ]]; then
   echo "pane $pane_id is '$status' — never submit to a working or blocked pane" >&2
   exit 2
+fi
+
+# Muse Code 1.4.15 can exit about two seconds after /clear on a session that
+# did substantial work ("source session ... is still live; teardown must
+# precede construct"), so its reset is watched past that point.
+if [[ -z $clear_settle_seconds ]]; then
+  if [[ $agent == muse ]]; then clear_settle_seconds=5; else clear_settle_seconds=1.20; fi
 fi
 
 model_matches() {
@@ -250,6 +280,8 @@ submit_line() {
   # esc dismisses the slash/mention popup that would otherwise eat the Enter.
   herdr pane send-keys "$pane_id" esc
   sleep "$input_settle_seconds"
+  # In a shell, Enter would run the line: send it only while the agent holds the pane.
+  agent_alive || agent_gone "before Enter"
   ensure_zoom_width
   herdr pane send-keys "$pane_id" enter
 }
@@ -275,7 +307,13 @@ if [[ $agent == opencode ]]; then
 else
   submit_line "/clear"
 fi
-sleep "$clear_settle_seconds"
+# Settle while watching the agent: a reset can end the CLI, and the
+# instruction must never be typed into the shell it leaves behind.
+settle_polls=$(awk -v s="$clear_settle_seconds" 'BEGIN { print int(s / 0.2) }')
+for ((poll = 0; poll <= settle_polls; poll++)); do
+  ((poll == 0)) || sleep 0.2
+  agent_alive || agent_gone "after the session reset"
+done
 
 # A reset redraws the screen, so give the footer time to come back.
 if [[ -n $model ]]; then
@@ -298,6 +336,7 @@ if ! started; then
   # re-send the text — that concatenates onto whatever is already there.
   herdr pane send-keys "$pane_id" esc
   sleep "$input_settle_seconds"
+  agent_alive || agent_gone "before Enter"
   ensure_zoom_width
   herdr pane send-keys "$pane_id" enter
   if ! started; then

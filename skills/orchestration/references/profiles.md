@@ -22,7 +22,9 @@ the directory holding `skills/`, three levels above this file.
    must be a strict YAML boolean; omission uses the shipped false. Strings
    such as `"false"`, null, and collections are errors for this policy.
    A lifecycle policy nested under `delegation` or inside a profile is invalid
-   and cannot authorize lifecycle actions.
+   and cannot authorize lifecycle actions. `reviewer_usage_limit` is `wait` or
+   `skip`; omission uses the shipped value. Any other value, or the key nested
+   under `delegation` or inside a profile, is an error.
 
    A profile the user names in the task itself ("run this with `sol-astra`"),
    or an explicit request to use none, selects the profile for that run
@@ -87,8 +89,8 @@ values are lists of effort-free target strings; `pane_scope` is `tab`,
 roles must exist, modes are `delegate`, `orchestrator`, or `implementer`, and
 review `enabled` is a strict boolean. Report unknown settings, tasks, or
 assignment fields rather than silently ignoring them. Work tasks cannot be
-disabled. A profile cannot contain `profile` or `allow_agent_lifecycle`;
-lifecycle permission remains config-only.
+disabled. A profile cannot contain `profile`, `allow_agent_lifecycle`, or
+`reviewer_usage_limit`; lifecycle permission and the limit policy remain config-only.
 
 For example, `assignments: {plan-and-design: {mode: delegate}}` changes only
 that mode. It preserves the task's role, every other task, and every review

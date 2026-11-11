@@ -102,6 +102,23 @@ for (const modelArgs of [[], ['gpt-5.6-luna']]) {
   });
 }
 
+// Muse Code 1.4.15 exits about two seconds after /clear on a session that did
+// substantial work; its shell then receives every later key.
+test('an agent that exits during the reset gets no instruction', () => {
+  const result = submit(['test-pane', instruction], { kind: 'muse', agentExits: 'reset' });
+  assert.equal(result.status, 2, result.stderr);
+  assert.match(result.stderr, /left the foreground after the session reset/);
+  assert.deepEqual(mutatingCalls(result), [...clear, key('ctrl+u')], 'the reset, then the shell line is discarded');
+});
+
+test('an agent that exits before Enter never gets Enter in its shell', () => {
+  const result = submit(['test-pane', instruction], { agentExits: 'typed' });
+  assert.equal(result.status, 2, result.stderr);
+  assert.match(result.stderr, /left the foreground before Enter/);
+  assert.deepEqual(mutatingCalls(result),
+    [...clear, key('ctrl+u'), text(instruction), key('esc'), key('ctrl+u')], 'no Enter after the instruction text');
+});
+
 test('legacy model-only mismatch is rejected before any key', () => {
   const result = submit(['test-pane', instruction, 'GPT-6-Astra']);
   assert.equal(result.status, 5, result.stderr);

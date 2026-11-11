@@ -30,7 +30,7 @@ sys.exit(result.returncode)
 `;
 
 export function runHelper(script, args, {
-  kind = 'codex', before = 'codex.txt', after = before, withTerminal = false,
+  kind = 'codex', before = 'codex.txt', after = before, withTerminal = false, agentExits = '',
 } = {}) {
   const dir = mkdtempSync(join(tmpdir(), 'herdr-helper-test-'));
   try {
@@ -50,6 +50,7 @@ export function runHelper(script, args, {
           HERDR_TEST_LOG: log,
           HERDR_TEST_STATE: join(dir, 'state.json'),
           HERDR_TEST_KIND: kind,
+          HERDR_TEST_AGENT_EXITS: agentExits,
           HERDR_TEST_BEFORE: join(fixtures, before),
           HERDR_TEST_AFTER: join(fixtures, after),
           HERDR_COMPOSER_INPUT_SETTLE_SECONDS: '0',

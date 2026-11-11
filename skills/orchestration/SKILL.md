@@ -29,6 +29,7 @@ The base files share this schema:
 - **`assignments:`** — every delegation task, each with the role that performs it.
 - **`profile`** — optional preset name; its present composition and routing entries override the base configuration.
 - **`allow_agent_lifecycle`** — top-level strict boolean, separate from composition/delegation; defaults false. False starts and ends no agent. True lets the active owner start a resolved target that has no live match and end idle agents the task started, only through `agent-lifecycle.sh`, which enforces the value. Read the profiles reference before any startup, exit, or recovery action, including owner handoff and fallback.
+- **`reviewer_usage_limit`** — top-level `wait` or `skip`, config-only: how a review gate treats a usage-limited reviewer with no substitute (see below).
 
 Merging is per key, not per file. Lists replace rather than concatenate.
 Present profile `roles:` entries replace their bindings. Profile
@@ -232,7 +233,7 @@ of one pinned model does not exhaust another model of that kind.
 
 1. Read the fallback rules in the profiles reference. A nested target becomes `kind@model`; consult bare kind only if that exact key is absent. A matched `[]` is authoritative. Take the first usable in-scope substitute, subject to distinct review slots. Substitutes retain string syntax and have no effort constraint; discard the primary effort.
 2. Re-delegate the same self-contained instruction to the substitute. Do not rewrite the task to suit it.
-3. If no substitute can run, report degradation: without a profile, safe work may run in the owner as before. With a profile, a task resolving back to the owner obeys its mode — `delegate` still requires a fresh subagent. If that route cannot run, report inability rather than disguising inline work as delegation.
+3. If no substitute can run, report degradation: without a profile, safe work may run in the owner as before. With a profile, a task resolving back to the owner obeys its mode — `delegate` still requires a fresh subagent. If that route cannot run, report inability rather than disguising inline work as delegation. A usage-limited reviewer follows `reviewer_usage_limit` instead (`using-herdr-sibling-panes` failure handling).
 4. Remember the exhausted target, including its pinned model, for the rest of the task; do not mark other models of that kind exhausted.
 
 Report which role fell back, to which target, why, and which constraints were

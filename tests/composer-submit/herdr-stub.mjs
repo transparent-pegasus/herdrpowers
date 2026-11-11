@@ -25,9 +25,17 @@ if (resource === 'pane' && action === 'get' && pane === 'test-pane' && rest.leng
   process.stdout.write('Working on the supplied task\n');
 } else if (resource === 'pane' && action === 'process-info' && pane === '--pane'
     && rest.length === 1 && rest[0] === 'test-pane') {
+  // HERDR_TEST_AGENT_EXITS drops the pane to its shell once the reset ran
+  // (`reset`) or once instruction text reached the composer (`typed`).
+  const exits = process.env.HERDR_TEST_AGENT_EXITS;
+  const gone = (exits === 'reset' && state.reset)
+    || (exits === 'typed' && Boolean(state.composer) && state.composer !== '/clear');
+  if (gone) state.exited = true;
+  save();
+  const shell = Number(process.env.HERDR_TEST_SHELL_PID);
   reply({ process_info: {
-    foreground_processes: [{ pid: Number(process.env.HERDR_TEST_FOREGROUND_PID) }],
-    shell_pid: Number(process.env.HERDR_TEST_SHELL_PID),
+    foreground_processes: [{ pid: state.exited ? shell : Number(process.env.HERDR_TEST_FOREGROUND_PID) }],
+    shell_pid: shell,
   } });
 } else if (resource === 'pane' && action === 'send-text' && pane === 'test-pane' && rest.length === 1) {
   state.composer = rest[0];
