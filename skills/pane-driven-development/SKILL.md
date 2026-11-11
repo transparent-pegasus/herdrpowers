@@ -93,7 +93,7 @@ sequences — the single most expensive failure observed. Track progress in
 a ledger file, not only in todos.
 
 - Each plan owns a workspace: at skill start, run this skill's
-  `bash scripts/pdd-workspace PLAN_FILE` — it prints the plan's git-ignored
+  `bash scripts/pdd-workspace PLAN_FILE` by its absolute path, from the working tree you're executing in — it prints the plan's git-ignored
   directory (under `<repo-root>/.herdrpowers/pdd/`), home to
   every artifact for THIS plan: ledger, briefs, reports, review packages.
   Another plan's directory is never yours to read or write.
@@ -145,7 +145,7 @@ holds the mechanics.
 Record BASE (`git rev-parse HEAD`) before delegating — the review package,
 the test author's worktree, and fix-round diffs all need it.
 
-Run `bash scripts/task-brief PLAN_FILE N` to extract the task's full text into the
+Run `bash scripts/task-brief PLAN_FILE N` by its absolute path, from the working tree you're executing in to extract the task's full text into the
 plan workspace. Never make a pane read the whole plan file. Exact values
 (numbers, magic strings, signatures, test cases) appear only in the brief.
 
@@ -157,7 +157,7 @@ pointing back at the requirements:
 
 | File | Content | Template |
 |---|---|---|
-| `task-N-brief.md` | The task's requirements. Written once, read by every pane, appended to by none. | `scripts/task-brief` |
+| `task-N-brief.md` | The task's requirements. Written once, read by every pane, appended to by none. | the `task-brief` helper |
 | `task-N-implementer.md` | The implementer contract, pointing at the requirements file. | [implementer-brief.md](implementer-brief.md) |
 | `task-N-tests.md` | The test author contract, same pointer. Only when `test-authoring` is delegated. | [test-author-brief.md](test-author-brief.md) |
 
@@ -270,14 +270,14 @@ contract pointer with the absolute worktree path and split marker.
 - Let a delegated pane re-delegate: every brief carries the no-re-delegation clause
 - Run two implementation panes against the same worktree
 - Make a pane read the whole plan file (hand it its task brief —
-  `scripts/task-brief` — instead)
+  the `task-brief` helper writes it — instead)
 - Skip scene-setting context (the pane needs to understand where the task fits)
 - Ignore a pane's questions (answer before letting it proceed)
 - Tell a reviewer what not to flag, or pre-rate a finding's severity in the
   brief ("treat it as Minor at most") — the plan's example code is
   a starting point, not evidence that its weaknesses were chosen
 - Delegate a task review or re-review without a diff file — generate it first
-  (`bash scripts/review-package PLAN_FILE BASE HEAD`) and name the printed path in
+  (`bash scripts/review-package PLAN_FILE BASE HEAD`, run by its absolute path, from the working tree you're executing in) and name the printed path in
   the brief
 - Trust "tests pass" without reading the quoted output in the report file
 - Re-delegate a task the progress ledger already marks complete — check

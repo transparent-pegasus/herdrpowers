@@ -95,7 +95,7 @@ worktree once its commit is in.
 disabled — the round then closes on the fix report's covering tests, command,
 and output, and the cap still counts it. Otherwise: run
 `bash scripts/review-package PLAN_FILE FIX_BASE HEAD`
-where FIX_BASE is the head the previous review saw, and delegate
+by its absolute path, from the working tree you're executing in, where FIX_BASE is the head the previous review saw, and delegate
 [re-review-brief.md](../re-review-brief.md) through the resolved review route —
 reset-backed panes for separate delegated targets, mandatory fresh subagents
 for profile self-target `delegate`, or permitted owner-session self-review —

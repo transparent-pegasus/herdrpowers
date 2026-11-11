@@ -1,6 +1,6 @@
 {
   "name": "herdrpowers",
-  "version": "1.23.0",
+  "version": "1.24.0",
   "description": "Development framework for herdr: structured skills and workflows with configurable profiles, model/effort targets, TDD, and explicit work and review routes.",
   "author": {
     "name": "transparent-pegasus",

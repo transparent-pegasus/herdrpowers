@@ -138,6 +138,7 @@ output file path, and the completion marker.
 - `[FIX_BASE_SHA]` — the head the previous review saw
 - `[HEAD_SHA]` — current commit
 - `[DIFF_FILE]` — the path `bash scripts/review-package PLAN_FILE FIX_BASE HEAD` printed
+  (run by its absolute path, from the working tree you're executing in)
 - **output file + marker** — REQUIRED, marker unique per round
 
 **Re-reviewer returns:** per-finding verdicts (ADDRESSED / NOT ADDRESSED),
