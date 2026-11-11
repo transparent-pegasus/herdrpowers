@@ -85,7 +85,8 @@ Repository settings stay outside the plugin and survive updates:
 - `AGENTS.md` / `CLAUDE.md`: base branch, verification commands, and shared
   worktree directory (`WORKTREE_DIRECTORY`, default `.worktrees/`).
 - `.herdrpowers/config.yaml`: agent roles, task assignments, delegation scope,
-  review settings, the selected `profile`, and `allow_agent_lifecycle`.
+  review settings, the selected `profile`, `allow_agent_lifecycle`, and
+  `reviewer_usage_limit`.
 - `.herdrpowers/profiles/`: presets for role targets, models/effort, and
   optional fallback, delegation, and assignment overrides. Init installs the six
   shipped ones without overwriting yours; their
@@ -94,6 +95,7 @@ Repository settings stay outside the plugin and survive updates:
 ```yaml
 profile: fable-sol-ultra      # or name one in the task; null selects none
 allow_agent_lifecycle: false  # true: the orchestrator may start and end agents in panes
+reviewer_usage_limit: skip    # wait: hold a review gate until a usage-limited reviewer resets
 ```
 
 A profile overrides only present keys. Omitted keys keep config/default

@@ -11,7 +11,7 @@ Every development workflow reads `orchestration` and its [profiles contract](../
 Repository initialization, re-runnable to update. Detects tooling, confirms a concrete configuration, and writes three deliverables:
 
 - the `Herdrpowers Configuration` section into the repo's `CLAUDE.md` / `AGENTS.md` — the section every other workflow and skill uses to resolve `<KEY>` placeholders (`<BASE_BRANCH>`, `<REPORT_DIRECTORY>`, `<WORKTREE_DIRECTORY>`, `<PLAN_PATH_PATTERN>`, `<BASELINE_VERIFICATION_COMMAND>`, …);
-- `.herdrpowers/config.yaml` — roles, task assignments, delegation, optional `profile`, and separate top-level strict boolean `allow_agent_lifecycle`. New targets use nested kind/model/effort settings; fallback strings remain exact and effort-free;
+- `.herdrpowers/config.yaml` — roles, task assignments, delegation, optional `profile`, separate top-level strict boolean `allow_agent_lifecycle`, and the top-level `reviewer_usage_limit` policy (`wait` or `skip`). New targets use nested kind/model/effort settings; fallback strings remain exact and effort-free;
 - missing shipped `.herdrpowers/profiles/*.yaml` templates and their `README.md`. Preserve existing files, local README, and selection on repeat init; installation selects nothing. Config, profile YAML, and the directory README are tracked; report scratch is ignored.
 
 Pack files themselves are never edited. On Claude Code plugin installs it surfaces as `/herdrpowers:init`. See [Roles](./roles.md) for the schema and the full delegation-task table.

@@ -82,10 +82,11 @@ If the repository has no test suite or verification tooling yet, record the hone
 3. Propose the Role List
 Present each role and the agent type(s) it binds to, with the shipped default beside the proposed value. Default to the shipped values — propose a change only when the repository or the session gives a reason, such as an agent type that does not appear in this session's `herdr pane list`.
 
-Also present the available profile names, proposed selection, and separate
-top-level `allow_agent_lifecycle` boolean. A new config selects no profile
-(`profile: null`) and ships lifecycle false unless the user chooses otherwise.
-Repeat init preserves the existing selection and permission. Installing
+Also present the available profile names, proposed selection, the separate
+top-level `allow_agent_lifecycle` boolean, and top-level `reviewer_usage_limit`
+(`wait` or `skip`). A new config selects no profile (`profile: null`) and ships
+lifecycle false and the shipped limit policy unless the user chooses otherwise.
+Repeat init preserves the existing selection, permission, and limit policy. Installing
 templates does not select one; a profile named in a task selects only that
 run. Explain that a selected profile overrides
 only keys present in its file. Its `roles:` entries replace bindings;
@@ -186,6 +187,7 @@ Rules to state while proposing:
 - `execution: parallel` shapes plans too: plans get a `## Tracks` table with owned files per track, and `/full_cycle` runs that partition in per-track worktrees off a coordination branch. It attempts parallelism; a plan with one track, or a session with one usable pane, still runs serially.
 - `/execute` and `/execute_parallel` are the user's explicit choice and ignore `execution`. `/strict_full_cycle` overrides `enabled` only — it never widens the scope or switches the strategy.
 - `allow_agent_lifecycle` is not a delegation key, and it is enforced: `agent-lifecycle.sh` starts or ends nothing unless the value is the literal `true`, whatever a chat message says. False prohibits start/exit/restart, including recovery, fallback, and owner startup. With true, the active owner starts each selected target that has no live in-scope match — before any fallback substitute — in an idle shell pane the user left in scope, verifies its live model/effort, and ends the idle agents it started before the final report. It never creates or closes panes, interrupts working agents, or answers a startup dialog. Say what true costs: agents appear and disappear in the user's panes without a prompt each time.
+- `reviewer_usage_limit` decides what a review gate does when a reviewer hits a usage limit and no fallback substitute can take its review. `wait` holds the gate until that limit resets; a weekly limit can hold it for days. `skip` passes the gate on the remaining reviewers, names the skipped one in the report, and holds only when none is left. Neither lets the owner's own review stand in. It is config-only.
 - A profile-owner mismatch always asks whether reception is unused or relay before handoff or startup, regardless of lifecycle permission or existing matching agents. A relay retains no decision authority; describe the explicit owner handoff from the profiles reference.
 
 6. Write Configuration
@@ -215,8 +217,9 @@ herdrpowers skills and commands resolve `<KEY>` placeholders from this section.
 Create `.herdrpowers/` and write the approved configuration. Materialize the
 resolved roles, fallbacks, assignments, and delegation keys from `roles.yaml`
 plus existing customizations, not the illustrative entry counts below. Write
-top-level `profile` (null for no selection) and a strict boolean
-`allow_agent_lifecycle`. Preserve the existing selection on repeat init.
+top-level `profile` (null for no selection), a strict boolean
+`allow_agent_lifecycle`, and `reviewer_usage_limit`. Preserve the existing
+selection on repeat init.
 Use canonical nested role targets, leaving bare `orchestrator` aliases and
 custom planning-design/generalist bindings intact. Remove optional model or
 effort keys that were not chosen; a kind-only settings map is `{}`.
@@ -227,9 +230,10 @@ effort keys that were not chosen; a kind-only settings map is `{}`.
 # key by key. Anything omitted here falls back to those defaults.
 # Written by the herdrpowers init workflow; safe to edit by hand.
 
-# --- composition selection and separate process-lifecycle permission ---
+# --- composition selection, process-lifecycle permission, reviewer limit policy ---
 profile: <approved name, or null for no selection>
 allow_agent_lifecycle: <true|false>
+reviewer_usage_limit: <wait|skip>
 
 # --- roles: a nested target, the bare active-owner alias, or a list ---
 # Key comments say what each role does (copied from roles.yaml); give a
@@ -330,9 +334,10 @@ Re-read every written file and confirm:
 - `.herdrpowers/config.yaml` parses as YAML, has no angle-bracket placeholders left, carries a `fallbacks:` key, and defines every role that any assignment references;
 - top-level `profile` is null/`none` or a valid simple name whose selected local/shipped file exists and validates; errors remain explicit rather than clearing selection;
 - top-level `allow_agent_lifecycle` is a YAML boolean, not a string, null, or a field nested in a profile or `delegation`, and `bash <pack>/skills/using-herdr-sibling-panes/scripts/agent-lifecycle.sh policy`, run from the repository, prints the approved value — that helper is what enforces it at runtime;
+- top-level `reviewer_usage_limit` is `wait` or `skip`, not a field nested in a profile or `delegation`;
 - new role targets are one-kind mappings with only optional nonempty model/effort strings, effort requires model, bare `orchestrator` aliases/custom bindings were preserved, and no role keeps `agent:`/`agents:`/`description:` sub-keys or the `reviewer` name;
 - profiles contain only optional top-level `orchestrator`, `roles`, `fallbacks`, `delegation`, and `assignments` (pre-1.22 top-level role keys are reported as deprecated, not rewritten); validate their entries per the profiles reference, preserving omitted keys, original strings, and reviewer order;
-- all missing shipped templates were installed, every pre-existing profile file is byte-identical, and repeat init preserved the chosen profile, assignments, gate enablement, delegation, and permission;
+- all missing shipped templates were installed, every pre-existing profile file is byte-identical, and repeat init preserved the chosen profile, assignments, gate enablement, delegation, permission, and limit policy;
 - the shipped profiles README was installed only if absent; any pre-existing local README is byte-identical;
 - `delegation.pane_scope` is one of `tab`, `workspace`, `session`, and `delegation.execution` is one of `parallel`, `serial`;
 - every delegation task named in `skills/orchestration/roles.yaml` appears under `assignments:` with a `role` that exists in `roles:` and a valid `mode`, and every review task there also has `enabled` — count them from that file rather than from a number written here, which goes stale;

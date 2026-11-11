@@ -15,6 +15,7 @@ Both share one schema — a **role list**, a fallback map, and a **role assigned
 - `assignments:` — every delegation task, each with the role that performs it and where it runs.
 - `profile` — optional composition name; missing/null/literal `none` selects none.
 - `allow_agent_lifecycle` — separate top-level strict boolean, false by default.
+- `reviewer_usage_limit` — top-level `wait` or `skip`, config-only: what a review gate does when a reviewer hits a usage limit and no substitute can review (see [Exhaustion and Fallback](#exhaustion-and-fallback)).
 
 Customize the repo file, not `roles.yaml` — plugin installs are read-only, and editing a checked-in copy makes the pack diff-dirty against upstream. The skills speak in role and task names, never in tool names.
 
@@ -172,6 +173,8 @@ An agent target is exhausted when its output reports a usage limit, or two deleg
 For a nested target, look up the exact `kind@model` fallback key using its preserved spelling; only an absent key permits bare-kind lookup. A matched `[]` is authoritative. Substitutes keep string syntax and have no effort constraint: discard primary effort and report that loss. Preserve `Calude`. No fuzzy aliases or list concatenation. Re-submit the same self-contained task to the first usable substitute.
 
 Without a profile, safe inline degradation remains available for work. With a profile, a fallback to the owner obeys its mode: `delegate` requires a fresh subagent. Report unavailable mandatory capability instead of claiming inline delegation. Lifecycle permission still applies during fallback: with it, a target that is unavailable but not exhausted is started before its substitutes.
+
+A reviewer exhausted by a usage limit, with no substitute that can review, follows `reviewer_usage_limit`. `wait` holds the gate until the limit resets, then finishes that review. `skip` passes the gate on the remaining reviewers and reports the skipped one; with none left, it holds the gate like `wait`. The owner's own review never stands in. Claude Code keeps a limited request and resumes it by itself; Codex drops it, so the same brief is resubmitted after the reset time the pane shows.
 
 **Separate-target escalation selects a different eligible live target**, rather than changing an existing agent's model/effort. Apply it for lack-of-reasoning BLOCKED reports and rounds 4-5; profile self-target fixes retain their mode. Record the swap and lost constraints. All requested model/effort constraints need live footer evidence before keys and after reset; unknown effort fails closed, and Cursor's bare Max plan label is not reasoning evidence.
 

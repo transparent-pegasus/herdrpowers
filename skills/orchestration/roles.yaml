@@ -14,8 +14,16 @@
 # using-herdr-sibling-panes/scripts/agent-lifecycle.sh reads this boolean (and
 # the frozen resolved delegation.pane_scope): only a literal `true` in the
 # repository's config lets the orchestrator start or end agents in panes.
+#
+# reviewer_usage_limit decides what a review gate does when a reviewer hits a
+# usage limit and no fallback substitute can take its review (config-only):
+#   wait  hold the gate until that reviewer's limit resets, then finish its review
+#   skip  pass the gate on the remaining reviewers and report the skipped one;
+#         with no reviewer left, hold the gate as with wait
+# See "Exhaustion and fallback" in SKILL.md.
 profile: null
 allow_agent_lifecycle: false
+reviewer_usage_limit: skip
 
 # ---------------------------------------------------------------------------
 # Role list. Roles bind to agent types, not to reserved panes: at delegation
