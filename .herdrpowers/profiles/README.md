@@ -1,12 +1,12 @@
 # Profiles
 
-Names put the owner first. `ultra` means four external reviewers; `solo` means no separate coder.
+Names put the owner first. `ultra` means two external reviewers; `solo` means no separate coder.
 YAML keys start with `orchestrator` when present, then `roles` (`planning-design` first, `generalist` last), then override maps such as `assignments`.
 
 | File | Composition and purpose |
 |---|---|
-| `fable-sol-ultra.yaml` | `Fable 5.2` owner, `GPT-6.1-Sol` coder, four external reviewers. Largest composition. |
-| `fable-opus-ultra.yaml` | `Fable 5.2` owner, separate `Opus 5.5` coder, four external reviewers. Largest composition. |
+| `fable-sol-ultra.yaml` | `Fable 5.2` owner, `GPT-6.1-Sol` coder, two external reviewers. Largest composition. |
+| `fable-opus-ultra.yaml` | `Fable 5.2` owner, separate `Opus 5.5` coder, two external reviewers. Largest composition. |
 | `sol-astra.yaml` | `GPT-6.1-Sol` owner executes; `GPT-6-Astra` handles planning and reviews. Conserves Codex tokens. |
 | `opus-fable.yaml` | `Opus 5.5` owner executes; `Fable 5.2` handles planning and reviews. Conserves Claude tokens. |
 | `sol-solo.yaml` | `GPT-6.1-Sol` only. |
