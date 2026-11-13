@@ -12,13 +12,7 @@ roles:
     - codex:
         model: GPT-6-Astra
         effort: max
-    - muse:
-        model: muse-wonder-1.0
-        effort: max
     - agy:
         model: Gemini 4 Argon
         effort: High
-    - cursor:
-        model: Grok 4.7
-        effort: Extra High
   generalist: orchestrator
