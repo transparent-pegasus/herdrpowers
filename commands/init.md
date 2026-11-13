@@ -118,7 +118,7 @@ their value directly on the role key. A legacy `description:` becomes that
 key's end-of-line comment. Rename a legacy `reviewer` role, and every
 `role: reviewer` assignment, to `reviewers`. Tell the user about each
 migration. Fallback keys/substitutes keep bare-kind or
-`kind@model` string syntax. Preserve supplied strings, including `Calude`; no fuzzy aliases.
+`kind@model` string syntax. Preserve supplied strings; no fuzzy aliases.
 
 State the empty-value rules explicitly: profile `planning-design`/`coder`/`generalist`
 `orchestrator`/null/`[]`/`none` binds to the owner; `reviewers: [orchestrator]`/`[]`/null/`none` means owner review.
