@@ -149,7 +149,7 @@ effort. Report pane id and observed footer for each constrained delegation.
 Fallback resolution belongs to `orchestration`: nested kind/model becomes the
 exact `kind@model` key, then bare kind. An explicit empty list is authoritative.
 Fallbacks have no effort constraint; never inherit the primary effort or change
-exact user names such as `Calude` or the distinct Muse spellings.
+exact user names such as the distinct Muse spellings.
 
 ## Agent lifecycle
 

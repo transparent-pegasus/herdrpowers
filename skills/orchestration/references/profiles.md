@@ -314,9 +314,8 @@ it into helper arguments, and do not invent a replacement. A pinned
 substitute still needs its own model footer match and an in-scope candidate.
 Record the loss of the primary effort constraint with the fallback result.
 
-The shipped strings deliberately include `Calude`; leave it intact. The exact shipped map is
-in `roles.yaml`; profiles contain only intentional overrides, not copies of
-inherited entries.
+The exact shipped map is in `roles.yaml`; profiles contain only intentional overrides,
+not copies of inherited entries.
 
 ## Init and run record
 

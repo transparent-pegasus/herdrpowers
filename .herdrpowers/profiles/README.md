@@ -44,6 +44,6 @@ Use `solo` for tasks that need neither complex decisions nor coding.
   Apply resolved modes and gates after profile overrides; a resolved disabled gate stays off.
 - If the reception pane does not match the owner, always ask whether it should be `unused` or a `relay` before handoff or startup.
 - Fallback strings may be overridden per key in a profile. They do not inherit the original target's `effort`.
-  Preserve `Calude` exactly. Do not merge distinct names through fuzzy matching or spelling repairs.
+  Preserve exact user strings. Do not merge distinct names through fuzzy matching or spelling repairs.
 
 See the [composition, selection, and handoff contract](https://github.com/transparent-pegasus/herdrpowers/blob/main/skills/orchestration/references/profiles.md) for details.

@@ -73,12 +73,12 @@ roles:
 # Nested kind+model becomes kind@model for lookup, then bare kind only if the
 # exact key is absent. A matched [] is authoritative; lists never concatenate.
 # Fallback keys/substitutes keep string syntax and have no effort constraint.
-# Calude and the two different Wonder spellings are intentional user strings;
+# The two different Wonder spellings are intentional user strings;
 # do not repair them or add fuzzy aliases (see references/profiles.md).
 # An agent with no entry here has no substitute.
 fallbacks:
   claude@Fable 5.2: [cursor@Claude Fable 5.2]
-  claude@Opus 5.5: [cursor@Calude Opus 5.5, claude]
+  claude@Opus 5.5: [cursor@Claude Opus 5.5, claude]
   codex@GPT-6-Astra: []
   codex@GPT-6.1-Sol: [codex]
   muse@muse-wonder-1.0: [cursor@Muse Wonder]
