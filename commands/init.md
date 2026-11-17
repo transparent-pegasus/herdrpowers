@@ -109,7 +109,7 @@ delegation per task; a list means one delegation per entry.
 | `fallbacks.<agent>` | a list of string targets | Ordered substitutes for unavailable/exhausted agents; no effort constraint |
 
 Write new role targets as one-key mappings, e.g.
-`{codex: {model: GPT-6.1-Sol, effort: max}}`. `model` and `effort` are optional
+`{codex: {model: GPT-6.2-Sol, effort: max}}`. `model` and `effort` are optional
 nonempty strings; effort requires model. A kind-only target uses `{kind: {}}`.
 Keep the bare `orchestrator` alias for roles that use it. Read legacy bare
 kinds and `kind@model`; normalize non-fallback pins with a deprecation notice

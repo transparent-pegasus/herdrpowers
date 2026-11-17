@@ -120,7 +120,7 @@ A new target is a one-key mapping from an agent kind to a settings mapping:
 roles:
   coder:
     codex:
-      model: GPT-6.1-Sol
+      model: GPT-6.2-Sol
       effort: max
 ```
 

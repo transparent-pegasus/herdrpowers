@@ -1,16 +1,16 @@
 orchestrator:
   codex:
-    model: GPT-6.1-Sol
+    model: GPT-6.2-Sol
     effort: max
 roles:
   planning-design:
     codex:
-      model: GPT-6-Astra
+      model: GPT-6.2-Astra
       effort: max
   coder: orchestrator
   reviewers:
     - codex:
-        model: GPT-6-Astra
+        model: GPT-6.2-Astra
         effort: max
   generalist: orchestrator
 assignments:

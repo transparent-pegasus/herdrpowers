@@ -42,7 +42,7 @@ test('every shipped profile orders owner, then roles from planning to generalist
 });
 
 for (const [name, kind, owner, model] of [
-  ['sol-astra.yaml', 'codex', 'GPT-6.1-Sol', 'GPT-6-Astra'],
+  ['sol-astra.yaml', 'codex', 'GPT-6.2-Sol', 'GPT-6.2-Astra'],
   ['opus-fable.yaml', 'claude', 'Opus 5.5', 'Fable 5.2'],
 ]) {
   test(`${name} delegates planning and review while keeping execution with its cheaper owner`, () => {

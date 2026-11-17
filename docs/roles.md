@@ -9,7 +9,7 @@ Read the canonical [profiles contract](../skills/orchestration/references/profil
 
 Both share one schema — a **role list**, a fallback map, and a **role assigned to every delegation task**:
 
-- `roles:` — each role key's value is its binding: one target, `orchestrator`, or a list. New targets use nested settings, e.g. `{codex: {model: GPT-6.1-Sol, effort: max}}`; effort requires model. Bare `orchestrator` dynamically aliases the active owner. Legacy bare kinds remain readable; `agent:`/`agents:` sub-keys, the old `reviewer` key, and non-fallback `kind@model` are migration input normalized with a deprecation notice, and init writes nested targets.
+- `roles:` — each role key's value is its binding: one target, `orchestrator`, or a list. New targets use nested settings, e.g. `{codex: {model: GPT-6.2-Sol, effort: max}}`; effort requires model. Bare `orchestrator` dynamically aliases the active owner. Legacy bare kinds remain readable; `agent:`/`agents:` sub-keys, the old `reviewer` key, and non-fallback `kind@model` are migration input normalized with a deprecation notice, and init writes nested targets.
 - `fallbacks:` — exact string keys and ordered string substitutes (`kind` or `kind@model`), without effort constraints.
 - `delegation:` — defaults applying to every task: `pane_scope` and `execution` (see [Delegation Scope and Execution Strategy](#delegation-scope-and-execution-strategy)).
 - `assignments:` — every delegation task, each with the role that performs it and where it runs.

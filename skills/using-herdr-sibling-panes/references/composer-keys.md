@@ -52,7 +52,7 @@ Use `pane run` normally for shells and other terminal programs; this workaround 
 ### Footer model and effort evidence
 
 New target settings are nested, for example
-`{codex: {model: GPT-6.1-Sol, effort: max}}`. Pass both strings unchanged:
+`{codex: {model: GPT-6.2-Sol, effort: max}}`. Pass both strings unchanged:
 `bash scripts/composer-submit.sh PANE INSTRUCTION MODEL EFFORT`.
 The fourth argument is optional, requires a non-empty model, and is checked by
 `pane-model.sh` before any key and again after reset. All script paths resolve

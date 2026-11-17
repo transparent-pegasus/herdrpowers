@@ -10,7 +10,7 @@ roles:
       effort: max
   reviewers:
     - codex:
-        model: GPT-6-Astra
+        model: GPT-6.2-Astra
         effort: max
     - agy:
         model: Gemini 4 Argon
