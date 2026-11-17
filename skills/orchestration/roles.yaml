@@ -81,8 +81,6 @@ fallbacks:
   claude@Opus 5.5: [cursor@Claude Opus 5.5, claude]
   codex@GPT-6.2-Astra: []
   codex@GPT-6.2-Sol: [codex]
-  codex@GPT-6-Astra: [] # previous release; kept for configs still pinned to it
-  codex@GPT-6.1-Sol: [codex] # previous release; kept for configs still pinned to it
   muse@muse-wonder-1.0: [cursor@Muse Wonder]
   agy@Gemini 4 Argon: [cursor@Gemini 4 Argon, opencode@Gemini 4 Argon]
   grok@Grok 4.7: [cursor@Grok 4.7, opencode@Grok 4.7]
