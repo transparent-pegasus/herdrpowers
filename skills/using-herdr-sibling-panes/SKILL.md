@@ -81,7 +81,7 @@ An absolute path in the instruction does not make a cross-repository pane safe. 
 ## Target model and effort
 
 New profiles and newly written roles use nested targets, for example
-`{codex: {model: GPT-6.1-Sol, effort: max}}`. Each target has one kind and a
+`{codex: {model: GPT-6.2-Sol, effort: max}}`. Each target has one kind and a
 settings mapping; optional model/effort strings are non-empty and effort requires
 model. Preserve the user's spelling. Legacy bare kinds and `orchestrator` stay
 readable; non-fallback `kind@model` is read-only migration input, normalized with
@@ -124,9 +124,9 @@ settings. The submit helper checks before any key and again after reset, exiting
 `5` on mismatch without submitting the instruction:
 
 ```bash
-# Resolved from {codex: {model: GPT-6.1-Sol, effort: max}}:
+# Resolved from {codex: {model: GPT-6.2-Sol, effort: max}}:
 kind=codex
-model=GPT-6.1-Sol
+model=GPT-6.2-Sol
 effort=max
 target_settings=()
 [[ -z $model ]] || target_settings+=("$model")

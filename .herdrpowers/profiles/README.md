@@ -5,11 +5,11 @@ YAML keys start with `orchestrator` when present, then `roles` (`planning-design
 
 | File | Composition and purpose |
 |---|---|
-| `fable-sol-ultra.yaml` | `Fable 5.2` owner, `GPT-6.1-Sol` coder, two external reviewers. Largest composition. |
+| `fable-sol-ultra.yaml` | `Fable 5.2` owner, `GPT-6.2-Sol` coder, two external reviewers. Largest composition. |
 | `fable-opus-ultra.yaml` | `Fable 5.2` owner, separate `Opus 5.5` coder, two external reviewers. Largest composition. |
-| `sol-astra.yaml` | `GPT-6.1-Sol` owner executes; `GPT-6-Astra` handles planning and reviews. Conserves Codex tokens. |
+| `sol-astra.yaml` | `GPT-6.2-Sol` owner executes; `GPT-6.2-Astra` handles planning and reviews. Conserves Codex tokens. |
 | `opus-fable.yaml` | `Opus 5.5` owner executes; `Fable 5.2` handles planning and reviews. Conserves Claude tokens. |
-| `sol-solo.yaml` | `GPT-6.1-Sol` only. |
+| `sol-solo.yaml` | `GPT-6.2-Sol` only. |
 | `opus-solo.yaml` | `Opus 5.5` only. |
 
 For the two largest compositions, choose the coder from whichever subscription has the larger token allowance.
@@ -29,7 +29,7 @@ Use `solo` for tasks that need neither complex decisions nor coding.
   `true`: the owner starts missing targets in available shell panes within scope and ends only idle agents it started.
   Do not create or close panes. Prepare available shell panes beforehand. Chat instructions cannot grant this permission.
 - Target keys are the agent kind names shown in `herdr pane list` under `agent` (`claude`, `codex`, etc.). Pane aliases such as `hp-coder` and pane IDs are invalid.
-  Use the form `roles: {coder: {codex: {model: GPT-6.1-Sol, effort: max}}}`.
+  Use the form `roles: {coder: {codex: {model: GPT-6.2-Sol, effort: max}}}`.
   Settings are nested. `model` and `effort` are optional nonempty strings; `effort` requires `model`.
   Do not write new `kind@model` targets except in fallback strings.
 - `model` and `effort` must match the pane's footer. Do not infer them from provider names.

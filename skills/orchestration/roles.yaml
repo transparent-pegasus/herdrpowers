@@ -52,7 +52,7 @@ roles:
   planning-design: orchestrator # planning and design work
   reviewers: # independent review: plans, designs, code; one per entry
     - opencode:
-        model: GPT-6 Astra
+        model: GPT-6.2 Astra
     - cursor:
         model: Gemini 4 Argon
     - cursor:
@@ -61,7 +61,7 @@ roles:
         model: Muse Spark 1.3
   coder: # complex coding (see "Complex coding boundary" in SKILL.md), test authoring, whole-branch final review
     opencode:
-      model: GPT-6.1 Sol
+      model: GPT-6.2 Sol
   generalist: orchestrator # simple coding, search, file inspection, tests, lint, routine operations
 
 # Substitutes for an agent that cannot take work right now — usage/rate limit
@@ -79,8 +79,10 @@ roles:
 fallbacks:
   claude@Fable 5.2: [cursor@Claude Fable 5.2]
   claude@Opus 5.5: [cursor@Claude Opus 5.5, claude]
-  codex@GPT-6-Astra: []
-  codex@GPT-6.1-Sol: [codex]
+  codex@GPT-6.2-Astra: []
+  codex@GPT-6.2-Sol: [codex]
+  codex@GPT-6-Astra: [] # previous release; kept for configs still pinned to it
+  codex@GPT-6.1-Sol: [codex] # previous release; kept for configs still pinned to it
   muse@muse-wonder-1.0: [cursor@Muse Wonder]
   agy@Gemini 4 Argon: [cursor@Gemini 4 Argon, opencode@Gemini 4 Argon]
   grok@Grok 4.7: [cursor@Grok 4.7, opencode@Grok 4.7]

@@ -69,8 +69,8 @@ reuse a ledger an earlier task left behind.
    ```bash
    LEDGER="<REPORT_DIRECTORY>/lifecycle-agents.tsv"
    HERDRPOWERS_PANE_SCOPE="$RESOLVED_PANE_SCOPE" \
-     bash "$LIFECYCLE" start "$LEDGER" "$PANE" codex hp-coder-1 "GPT-6.1-Sol" max \
-     -- -m gpt-6.1-sol -c 'model_reasoning_effort="max"'
+     bash "$LIFECYCLE" start "$LEDGER" "$PANE" codex hp-coder-1 "GPT-6.2-Sol" max \
+     -- -m gpt-6.2-sol -c 'model_reasoning_effort="max"'
    ```
 
    The helper refuses (exit `2`, nothing sent) a pane outside
@@ -119,15 +119,15 @@ There is no `herdr agent stop`; do not invent one, and do not kill processes.
 
 ## Observed operations
 
-Observed 2026-11-10 on herdr 0.9.5 in an isolated session, each with
-`herdr agent start` and one `herdr pane send-keys` call on an idle, empty
-composer. Re-verify after a CLI upgrade; a kind missing here has no exit keys
+Observed 2026-11-10 on herdr 0.9.5 in an isolated session (the `codex` row
+re-verified 2026-11-18 with GPT-6.2), each with `herdr agent start` and one
+`herdr pane send-keys` call on an idle, empty composer. Re-verify after a CLI upgrade; a kind missing here has no exit keys
 in the helper.
 
 | kind | observed CLI | start that produced a verified footer | exit keys |
 | --- | --- | --- | --- |
 | `claude` | Claude Code 2.1.321 | `-- --model fable --effort max --settings '<statusLine JSON below>'` → `Fable 5.2 max` | `ctrl+c ctrl+c` (one `ctrl+d` does nothing) |
-| `codex` | codex-cli 0.167.0 | `-- -m gpt-6-astra -c 'model_reasoning_effort="max"'` → `GPT-6-Astra max` | `ctrl+c` |
+| `codex` | codex-cli 0.167.0 | `-- -m gpt-6.2-astra -c 'model_reasoning_effort="max"'` → `GPT-6.2-Astra max` | `ctrl+c` |
 | `cursor` | cursor-agent 2026.11.05-86047df | no arguments → the account default, `Claude Fable 5.2 300K Max`; no effort field, so an effort constraint exits `5` | `ctrl+d` (two `ctrl+c` do nothing) |
 | `opencode` | opencode 2.0.32 | no arguments, kind-only | `ctrl+c` |
 | `agy`, `muse`, `grok` | agy 1.4.12, Muse Code 1.4.14; grok not installed | not verified: both stopped at a login or trust screen before any composer | none — `stop` exits `3` |

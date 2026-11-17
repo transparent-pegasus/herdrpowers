@@ -20,7 +20,7 @@ delegate use a fresh in-process subagent, including reviews, or report missing
 capability; other modes run in the owner session and may use a subagent at its
 judgment. Report same-session self-review honestly and preserve disabled gates.
 
-Record a nested target such as `{codex: {model: GPT-6.1-Sol, effort: max}}`
+Record a nested target such as `{codex: {model: GPT-6.2-Sol, effort: max}}`
 with its exact strings and observed footer. Submit as
 `composer-submit.sh PANE INSTRUCTION MODEL EFFORT` (effort is argument four).
 Do not carry effort onto string fallbacks. Top-level `allow_agent_lifecycle`
@@ -62,8 +62,8 @@ their work is still running; see **still running** under "Failure handling".
 
 ```bash
 PANE=w2:p18
-# Resolved target: {codex: {model: GPT-6.1-Sol, effort: max}}
-MODEL=GPT-6.1-Sol
+# Resolved target: {codex: {model: GPT-6.2-Sol, effort: max}}
+MODEL=GPT-6.2-Sol
 EFFORT=max
 # The brief carries the worktree, no-edit/no-redelegation clauses, report path
 # and split marker, keeping the submitted pointer short.
