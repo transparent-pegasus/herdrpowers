@@ -17,11 +17,11 @@ Before the loop starts, two routes leave it immediately:
   before merge. A roll-up nobody reads is a silent discard. Minor findings
   never enter the loop.
 - A finding labeled plan-mandated — or any finding that conflicts with
-  what the plan's text requires — is yours to rule on: weigh the finding
-  against the plan text, decide with the spec as the binding authority, and
-  ledger the ruling before you act on it. Do not dismiss the finding because
-  the plan mandates it, and do not delegate a fix that contradicts the plan
-  without a recorded ruling.
+  what the plan's text requires — goes through `decision-making` (`decision-maker`)
+  to rule on: supply the finding, the plan text, and the spec as the binding
+  authority, and ledger the ruling before you act on it. Do not dismiss the
+  finding because the plan mandates it, and do not delegate a fix that
+  contradicts the plan without a recorded ruling.
 
 Everything else enters the loop. A fix round is one fix delegation plus one
 scoped re-review. Five rounds maximum per task. Resolve `review-fixes` using
@@ -113,8 +113,9 @@ Fix inline only when the resolved route permits it. Profile self-target fixes
 keep their mode, and every enabled re-review still runs through its own route.
 
 **The breaker.** When round 5's re-review still leaves findings open, stop
-delegating. Adjudicate each open finding yourself — you hold the plan and
-the cross-task context the reviewer lacks:
+fix delegation. Route each open finding through `decision-making`
+(`decision-maker`) for adjudication, supplying the plan, spec, and cross-task
+ledger context the reviewer lacks:
 
 - **The reviewer is wrong, or the point is contestable:** park it —
   `Task <N>: parked — <finding> — Ruling: <why the code stands>`. The final
@@ -122,13 +123,14 @@ the cross-task context the reviewer lacks:
 - **Real, but nothing downstream builds on it:** park it the same way, with
   a ruling that says it's real and deferred.
 - **Real and load-bearing** — a later task builds on it, or it reveals a
-  plan defect: rule on the smallest change that unblocks the dependent work,
-  ledger it as `Task <N>: Ruling: <finding> — <what you decided and why>`,
+  plan defect: rule through `decision-maker` on the smallest change that
+  unblocks the dependent work, ledger it as
+  `Task <N>: Ruling: <finding> — <what was decided and why>`,
   and carry it into the next task's brief. Parking a structural failure
   silently lets every dependent task build on it and hands the final review a
   problem it cannot fix either. Stop only when the defect leaves every path
   forward a guess.
 
-Adjudicate only at the cap. Adjudicating earlier to end a loop is
+Adjudicate through `decision-making` only at the cap. Adjudicating earlier to end a loop is
 pre-judging with a different name. Every adjudication is a ledger entry —
 a silent discard is forbidden.

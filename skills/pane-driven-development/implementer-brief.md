@@ -52,7 +52,8 @@ Do not block on missing codegraph.
 If you have questions about the requirements or acceptance criteria, the
 approach, dependencies or assumptions, or anything unclear above — **stop and
 report them now** with status NEEDS_CONTEXT. Raise concerns before starting
-work; the orchestrator will answer and re-delegate.
+work; the active owner (via the `decision-maker` when a ruling is needed) will
+answer and re-delegate.
 
 Stay inside the working directory named in your instruction — never edit any
 other checkout of this repository. Never execute `git checkout`, `git restore`,
@@ -147,8 +148,9 @@ Fix what you find before reporting.
 
 ### After Review Findings
 
-If the task review finds issues, the orchestrator sends the findings back to
-this same pane — your context is intact, so pick up where you left off. Fix
+If the task review finds issues that stand after `decision-maker` triage, the
+orchestrator sends the findings back to this same pane — your context is
+intact, so pick up where you left off. Fix
 them, re-run the verification that covers the amended code, and append a fix
 report to your report file: what you changed, the covering tests you ran, the
 command, and the output. Reviewers will not re-run tests for you — your report

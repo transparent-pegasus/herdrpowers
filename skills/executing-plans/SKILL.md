@@ -34,6 +34,9 @@ Required `delegate` routes run through `pane-driven-development` instead:
 separate targets use reset-backed workers, while owner targets require fresh
 subagents, including a solo coder. Missing panes or subagent capability cannot
 turn mandatory delegation into inline work. No worker may re-delegate.
+Even when implementation runs inline in the owner session, rulings and
+final-review adjudication still follow the resolved `decision-making` assignment
+(`decision-maker`).
 
 **Core principle:** The plan already did the thinking. Execute it exactly,
 prove each step with a test you watched fail and then pass, and leave a
@@ -47,10 +50,14 @@ between tasks. Inline execution exists to spend less, not to ask "should I
 continue?" after every task. Execute all tasks from the plan without
 stopping.
 
-**Rulings, not stalls.** Conflicts, ambiguities, plan defects — decide them.
-The spec is the binding authority, the plan is its argument, and your
-judgment settles what neither answers. Record every decision in the ledger
-as `Ruling: <what you decided> — <why> — <what it costs if wrong>`, and keep
+**Rulings, not stalls.** Conflicts, ambiguities, plan defects — resolve them
+through the resolved `decision-making` assignment (`decision-maker`).
+The spec is the binding authority, the plan is its argument, and the
+`decision-maker` settles what neither answers (your judgment directly in
+`mode: orchestrator`, or a self-contained read-only decision brief per
+[decision-maker-brief.md](../pane-driven-development/decision-maker-brief.md)
+in `mode: delegate`). Record every decision in the ledger as
+`Ruling: <what was decided> — <why> — <what it costs if wrong>`, and keep
 going. Deviating from the plan without a ledgered ruling is a decision made
 in secret.
 
@@ -188,10 +195,10 @@ Interfaces blocks tell you where to look: for every task that consumes
 what an earlier task produces, one ledger row — the two tasks, what one
 produces against what the other consumes, and what you found. Tasks that
 share nothing get no row; a plan whose tasks share nothing gets the single
-line `Pre-flight: no shared interfaces`. Rule on each conflict a row
-surfaces with the spec as the binding authority, record the ruling beside
-its row, and start Task 1. Each task's own text is checked when you read
-its brief, not here.
+line `Pre-flight: no shared interfaces`. Route each conflict a row
+surfaces through `decision-making` (`decision-maker`) with the spec as the
+binding authority, record the ruling beside its row, and start Task 1. Each
+task's own text is checked when you read its brief, not here.
 
 ## The Task Loop
 
@@ -228,8 +235,9 @@ read its output, and compare. Three outcomes:
   patch the symptom to make the step's output match.
 - **The plan is wrong** — a step contradicts the spec, an interface from an
   earlier task doesn't match what this task consumes, a command that
-  cannot work. Rule on the smallest change that satisfies the spec, ledger
-  it as `Task <N>: Ruling: <finding> — <what you decided and why>`, and
+  cannot work. Route it through `decision-making` (`decision-maker`) for the
+  smallest change that satisfies the spec, ledger it as
+  `Task <N>: Ruling: <finding> — <what was decided and why>`, and
   continue. The ruling is carried, not remembered: later tasks that touch
   the same interface read it from the ledger.
 
@@ -283,12 +291,12 @@ Every ruling and deferred minor must reach the final report.
 | "I remember what Task N says" | You remember a summary. The brief has the exact values. Read it. |
 | "The plan's code is right, skip watching the test fail" | A test you never saw fail proves nothing. It is one step. Run it. |
 | "I'll run the full suite at the end instead of per step" | Per-step runs are how you learn which step broke it. The end-of-task run is the contract, not a substitute. |
-| "The plan is wrong here, I'll just do the right thing" | Do the right thing and ledger the ruling. Unledgered deviation is a decision made in secret. |
+| "The plan is wrong here, I'll just do the right thing" | Route the deviation through `decision-making` (`decision-maker`) and ledger the ruling. Unledgered or unilateral deviation is a decision made in secret. |
 | "I'll write the ledger lines after a few tasks" | Compaction does not wait for a convenient moment. One line per task, in the same message as the commit. |
 | "Let me check in before the next task" | Keep executing between tasks. Respect the four general stops and required profile-owner reception question; routine check-ins do not pause the loop. |
 | "I read my own diff carefully; the final reviewer is redundant" | The enabled final gate still runs through its resolved route. Profile owner-session self-review uses the full review contract and is reported as self-review. |
 | "Tests should pass, the change was trivial" | "Should" is not evidence. The contract requires the command and its output. |
 | "Panes are slow and expensive, I'll skip the final review too" | Inline does not disable the final gate or change its mode. A mandatory subagent that cannot spawn is an unavailable review, never a passed one. |
-| "The reviewer said Minor, so it's Minor" | The label graded the spec's silence. Grade what the person gets. Re-grade, then gate. |
+| "The reviewer said Minor, so it's Minor" | The label graded the spec's silence. The `decision-maker` re-grades what the person gets before the gate. |
 | "The fix is obvious, no need for a failing test first" | The failing test is the only proof the finding was real and is now gone. Without it you have a diff and a hope. |
 | "I'll fix the minors too while I'm in there" | Every minor you fix is a test, a fix, and a suite run your human partner did not ask for. Ledger them; they decide. |

@@ -10,7 +10,7 @@ Before classifying or routing, read [profiles.md](profiles.md) and resolve the
 active owner, per-key profile overlay, and separate lifecycle policy.
 Freeze them for the run. Routing then names the task and reads its assignment.
 
-1. **Name the task.** Classify the work against the task list in [SKILL.md](../SKILL.md#delegation-tasks-and-their-assignments): design work is `plan-and-design`; coding splits into `complex-coding` and `simple-coding` at the boundary below; lookups, moves, log gathering, and lint/format runs are `chores`; running verification commands is `verification`. When a piece of work spans tasks, use the heavier one (`plan-and-design` > `complex-coding` > `simple-coding` > `chores`).
+1. **Name the task.** Classify the work against the task list in [SKILL.md](../SKILL.md#delegation-tasks-and-their-assignments): design work is `plan-and-design`; judgment calls — plan resolution and finding disposition, reviewer disagreement adjudication, mid-execution rulings and breaker adjudication, and final synthesis decisions — are `decision-making`; coding splits into `complex-coding` and `simple-coding` at the boundary below; lookups, moves, log gathering, and lint/format runs are `chores`; running verification commands is `verification`. When a piece of work spans tasks, use the heavier one (`plan-and-design` > `decision-making` > `complex-coding` > `simple-coding` > `chores`).
 2. **Read its assignment.** Take `role` and `mode` from resolved `assignments:` after the profile overlay. `delegate` to a separate target uses a matching idle in-scope pane and reset-backed submission. With a selected profile, `delegate` resolved to the active owner requires a fresh in-process subagent, including empty-reviewer reviews; lack of that capability is a reported inability, never inline delegation. `orchestrator` uses the active owner: profile-selected self-review may be same-session or use an optional subagent; no-profile reviews still require a fresh subagent. `implementer` continues in the task's existing session. Follow the profile routing table for self-targets; do not substitute a different route.
 
 Every worker receives the [delegation contract](../SKILL.md#delegation-contract)
@@ -20,6 +20,25 @@ when a matching owner exists. Lifecycle false prohibits start/exit/restart
 during handoff, fallback, and recovery; true still requires verified installed
 operations and protects working/unrelated agents.
 
+## Decision-making routing
+
+Judgment calls never stay hardcoded in the orchestrator pane when `decision-making` routes them elsewhere:
+
+- **With `mode: delegate`** (separate target or profile self-target subagent), the active owner constructs a self-contained, read-only decision brief (see [decision-maker-brief.md](../../pane-driven-development/decision-maker-brief.md)) naming the spec/design doc, plan, relevant reports/diff package/ledger rulings, and the exact disagreement, conflict, or synthesis question, and writes the rulings returned in its report file into the ledger before dispatching follow-up work or edits.
+- **With `mode: orchestrator`**, the active owner decides directly (or via an optional subagent when a profile is selected) and records the rulings in the ledger.
+
+The active owner retains orchestration, transport, ledger bookkeeping, worktrees, and mechanical branch integration; the `decision-maker` decides plan resolution, review finding acceptance/disagreements, execution rulings, and final synthesis judgment. User decisions (design/plan approval, phase confirmation, reception `unused` vs `relay`, integration option) remain with the human partner.
+
+## Delegation scope
+
+Tabs usually separate projects; a reset-backed submit in another tab can discard that project's session. Respect the configured `delegation.pane_scope` filter even when a matching agent exists outside it.
+
+An out-of-scope pane is neither a candidate nor a fallback and does not count toward availability. When no in-scope target exists, wait, use allowed fallbacks, or report degradation. Never widen scope mid-run. `using-herdr-sibling-panes` applies the filter — see "Delegation scope" there for the exact `herdr pane list` query.
+
+## Builder check
+
+`brainstorming`'s builder check is the `plan-review` gate, earlier: before the user reads a project's full design, each reader gets `brainstorming/builder-check-brief.md` and lists what it would still need to ask to plan from the document. The same resolution and rules apply, and brainstorming merges the readers' questions into one round for the user. A workflow that writes a full project design and then a plan therefore runs this gate twice; both runs count toward the report. A small change's short design skips the builder check; the plan's review still runs when the workflow includes one.
+
 ## Development-cycle routing
 
 When this skill drives one of the pack's workflows (`/herdrpowers:execute`, `execute_parallel`, `full_cycle`, `quick`), the same table governs — there is no separate hard-coded mapping. Each kind of work maps to a task name; the resolved assignment says who and where:
@@ -27,6 +46,7 @@ When this skill drives one of the pack's workflows (`/herdrpowers:execute`, `exe
 * **Implementation tasks** → `complex-coding` / `simple-coding`.
 * **Tests** → `test-authoring` for the implementation round, `fix-round-test-authoring` for each fix round. Whichever mode they resolve to, say so in the brief and in the report.
 * **Code review** → `task-review` per task, `final-branch-review` at the end.
+* **Judgment calls (plan resolution, review finding acceptance and disagreements, mid-execution rulings and breaker adjudication, final synthesis decisions)** → `decision-making`.
 * **Chores that come up while executing a plan** → `chores`.
 * **Plan and design** → `plan-and-design`, gated by `plan-review`.
 

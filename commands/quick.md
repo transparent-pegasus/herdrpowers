@@ -24,7 +24,7 @@ Do not edit workflow files unless the user's current request explicitly asks to 
 
 Resolve repo config over shipped roles, then only profile keys present. Freeze the owner, targets, modes, gates, scope, and lifecycle policy. Profile assignment overrides resolve before routing. A gate resolved to `enabled: false` is skipped and named in the report; empty profile reviewers instead select the owner.
 
-Routing comes from `assignments:` and effective targets. Without a profile, retain the legacy small-scope inline implementation choice. With a profile, read `complex-coding` / `simple-coding` and preserve their modes; small scope cannot replace required delegation with inline work. `test-authoring`, `chores`, `verification`, and review assignments follow their resolved routes. List roles run once per effective entry.
+Routing comes from `assignments:` and effective targets. Without a profile, retain the legacy small-scope inline implementation choice. With a profile, read `complex-coding` / `simple-coding` and preserve their modes; small scope cannot replace required delegation with inline work. `decision-making`, `test-authoring`, `chores`, `verification`, and review assignments follow their resolved routes. List roles run once per effective entry.
 - Separate delegated targets use reset-backed Herdr panes, even when a concrete target matches the owner's model. With a selected profile, self-target `delegate` requires a fresh in-process subagent for work and reviews, including empty reviewers; other owner-session modes permit inline work/self-review and optional subagents at the active owner's judgment. Report self-review honestly. Without a profile, keep legacy routing and fresh-subagent orchestrator-mode reviews. Workers never re-delegate.
 
 **Every delegation** states the worktree's absolute path (and requires the pane to confirm it is there first), the exact scope, the edit policy, the report-file path under `<REPORT_DIRECTORY>`, a unique completion marker, and the prohibition on re-delegating. Read results from the report file, not from pane scrollback.
@@ -81,8 +81,8 @@ Proceed to Step 7 only when verification evidence is fresh, successful, and the 
 Gate: `assignments.final-branch-review`. When it is disabled, skip this step and tell the user the change is shipping unreviewed — for a workflow whose only independence is this review, say it plainly.
 Inform the user that the final review is starting.
 Read requesting-code-review and run the whole-changeset gate through its resolved target and mode.
-Fix any critical or important issues reported.
-Proceed to Step 8 only when the review assesses it as Ready to merge and the user confirms.
+Route finding triage, reviewer disagreements, "Declined to judge" items, and final synthesis judgment through `decision-making` (`decision-maker`), and fix accepted critical or important issues through the resolved `review-fixes` assignment.
+Proceed to Step 8 only when the `decision-maker` assesses the branch as ready for the user's integration decision (after any required re-review) and the user confirms.
 
 8. Integration and Cleanup
 Inform the user that the change is complete, and name its branch and the worktree's absolute path.

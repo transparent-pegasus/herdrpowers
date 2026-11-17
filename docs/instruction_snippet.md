@@ -12,7 +12,9 @@ Rules:
 1. Direct user tasks resolve through `orchestration` and its canonical
    profiles reference. Without a profile, reception owns the task. A selected
    owner mismatch always asks unused versus relay before explicit handoff or
-   startup. Only that handoff transfers authority; workers never re-delegate.
+   startup. Only that handoff transfers orchestration authority; judgment calls
+   and final synthesis follow `decision-making` (`decision-maker`), and workers
+   never re-delegate.
 2. Separate delegated targets use reset-backed Herdr panes, including the
    implementing pane after reset. With a selected profile, self-target
    `delegate` requires fresh subagents for work and reviews, even with empty

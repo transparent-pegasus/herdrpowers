@@ -193,8 +193,8 @@ the implementer trust the rest of the feedback.
 - ✅ Spec compliant | ❌ Issues found: [what's missing/extra/misunderstood, with
   file:line references]
 - ⚠️ Cannot verify from diff: [requirements you could not verify from the diff
-  alone, and what the orchestrator should check — report alongside the ✅/❌
-  verdict for everything you could verify]
+  alone, and what the orchestrator and `decision-maker` should check and
+  resolve — report alongside the ✅/❌ verdict for everything you could verify]
 
 #### Strengths
 [What's well done? Be specific.]

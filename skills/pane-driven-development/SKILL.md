@@ -27,10 +27,14 @@ Execute each task and its tests through their resolved routes, then run enabled 
 **Continuous execution:** Do not pause for routine check-ins between tasks. Execute the plan under the frozen routing contract, respecting the general stops and required profile-owner reception question below.
 
 **Rulings, not stalls.** A running plan does not wait on a human. Conflicts,
-ambiguities, plan defects, a fix round that ended at the cap — decide them. The
-spec is the binding authority, the plan is its argument, and your judgment
-settles what neither answers. Record every decision in the ledger as
-`Ruling: <what you decided> — <why> — <what it costs if wrong>`, and keep
+ambiguities, plan defects, a fix round that ended at the cap — resolve them
+through the resolved `decision-making` assignment (`decision-maker`). The
+spec is the binding authority, the plan is its argument, and the
+`decision-maker` settles what neither answers (the active owner directly in
+`mode: orchestrator`, or a self-contained read-only decision brief per
+[decision-maker-brief.md](decision-maker-brief.md) in `mode: delegate`).
+Record every decision in the ledger as
+`Ruling: <what was decided> — <why> — <what it costs if wrong>`, and keep
 going. A wrong ruling costs rework your human partner can see and undo; a
 session parked on a question costs their whole day and buys nothing.
 
@@ -115,7 +119,8 @@ against it. A plan with no reachable spec gets a ledger note saying so —
 rulings made without one are provisional.
 
 Before delegating Task 1, read [references/preflight.md](references/preflight.md)
-and perform its conflict scan. Write the table and every ruling to the ledger.
+and perform its conflict scan. Write the table, route any surfaced conflict
+through `decision-making` (`decision-maker`), and record every ruling in the ledger.
 
 ## Delegation Assignments
 
@@ -236,6 +241,7 @@ contract pointer with the absolute worktree path and split marker.
 
 ## Brief Templates
 
+- [decision-maker-brief.md](decision-maker-brief.md) - Decision-maker pane brief, for `decision-making` in `mode: delegate`
 - [implementer-brief.md](implementer-brief.md) - Implementer pane brief
 - [test-author-brief.md](test-author-brief.md) - Test author pane brief, for `test-authoring` / `fix-round-test-authoring` in `mode: delegate`
 - [task-reviewer-brief.md](task-reviewer-brief.md) - Task reviewer pane brief (spec compliance + code quality), one per reviewer agent type
@@ -246,19 +252,19 @@ contract pointer with the absolute worktree path and split marker.
 
 | Excuse | Reality |
 |--------|---------|
-| "Close enough on spec compliance" | Reviewer found spec gaps = not done. Fix or hit the cap and adjudicate — those are the only exits. |
+| "Close enough on spec compliance" | Reviewer found spec gaps = not done. Fix or hit the cap and route to `decision-maker` to adjudicate — those are the only exits. |
 | "I'll fix it myself, delegating is overhead" | Follow `review-fixes`: separate targets use workers; profile self-targets retain their mode. Convenience cannot replace mandatory delegation. |
-| "One more round will converge" | Past the cap, rounds don't converge — the failure is structural. Adjudicate and route. |
+| "One more round will converge" | Past the cap, rounds don't converge — the failure is structural. Route through `decision-making` (`decision-maker`) to adjudicate. |
 | "The reviewer will just find something new anyway" | Scoped re-reviews verify fixes; they cannot wander. New findings on untouched code go to the ledger, not the loop. |
-| "This finding is obviously wrong, I'll drop it" | You adjudicate only at the cap, and every ruling is a ledger entry. Silent discards are forbidden. |
+| "This finding is obviously wrong, I'll drop it" | Adjudication through `decision-making` happens only at the cap, and every ruling is a ledger entry. Silent discards are forbidden. |
 | "The fix was small, skip the re-review" | Unreviewed fixes are how regressions land. Every round ends with a scoped re-review. |
 | "Reviews slow the loop down" | The loop without reviews is just unverified churn. Reviews are the loop's brakes and steering. |
 | "Ledger bookkeeping is overhead" | The ledger is what survives compaction. Orchestrators without one have re-delegated entire completed task sequences. |
 | "The implementing pane is idle — it can review its own work" | Separate delegated reviews require reset, even on the same pane. Profile owner-session reviews may be self-review; delegated self-targets require fresh subagents. |
-| "The plan mandates it, so the finding is invalid" | Plan-vs-review conflicts are yours to rule on, with the spec as the binding authority. Record the ruling — a conflict you never ledgered is a decision made in secret. |
-| "This call is big enough that I should ask first" | Honor the general stop conditions and mandatory unused-versus-relay question above. Otherwise decide, record the ruling and its cost if wrong, and continue. |
+| "The plan mandates it, so the finding is invalid" | Plan-vs-review conflicts go through `decision-making` (`decision-maker`) to rule on, with the spec as the binding authority. Record the ruling — a conflict you never ledgered is a decision made in secret. |
+| "This call is big enough that I should ask first" | Honor the general stop conditions and mandatory unused-versus-relay question above. Otherwise route through `decision-making` (`decision-maker`), record the ruling and its cost if wrong, and continue. |
 | "A delegated pane spun up its own panes — free extra assurance" | A duplicate seat on the same diff; the task review is the gate. Every brief forbids re-delegation, so a pane that did it is a finding to report, not rigor. |
-| "I'll turn the gate off in `.herdrpowers/config.yaml` to get past this loop" | The config is the user's declaration, read once at start. Changing it mid-run to escape a review is falsifying the run's terms. Hit the cap and adjudicate. |
+| "I'll turn the gate off in `.herdrpowers/config.yaml` to get past this loop" | The config is the user's declaration, read once at start. Changing it mid-run to escape a review is falsifying the run's terms. Hit the cap and route to `decision-maker` to adjudicate. |
 | "Task review is disabled, so the pane can review its own work" | Disabling removes that gate. Every remaining gate keeps its profile/mode requirements. |
 
 ## Red Flags

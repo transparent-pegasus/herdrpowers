@@ -50,6 +50,7 @@ reviewer_usage_limit: skip
 # ---------------------------------------------------------------------------
 roles:
   planning-design: orchestrator # planning and design work
+  decision-maker: orchestrator # plan resolution, review-finding acceptance, execution rulings, and final synthesis decisions
   reviewers: # independent review: plans, designs, code; one per entry
     - opencode:
         model: GPT-6.2 Astra
@@ -137,6 +138,13 @@ assignments:
     description: Brainstorming, design docs, and implementation plans
     role: planning-design
     mode: orchestrator # the orchestrator holds the design context; delegating loses it
+  decision-making:
+    description: >-
+      Plan resolution and finding disposition, reviewer disagreement
+      adjudication, mid-execution rulings and breaker adjudication, and final
+      integration synthesis decisions
+    role: decision-maker
+    mode: orchestrator # active owner decides unless a profile or config delegates decisions
   complex-coding:
     description: Implementation tasks over the "Complex coding boundary" in SKILL.md
     role: coder

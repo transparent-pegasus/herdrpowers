@@ -7,6 +7,10 @@ roles:
     codex:
       model: GPT-6.2-Astra
       effort: max
+  decision-maker:
+    codex:
+      model: GPT-6.2-Astra
+      effort: max
   coder: orchestrator
   reviewers:
     - codex:
@@ -15,4 +19,6 @@ roles:
   generalist: orchestrator
 assignments:
   plan-and-design:
+    mode: delegate
+  decision-making:
     mode: delegate

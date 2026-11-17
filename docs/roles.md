@@ -26,7 +26,7 @@ selected `.herdrpowers/profiles/<name>.yaml`, repo-local first and shipped only
 if absent locally. Invalid names, files, or targets are explicit errors. Profiles
 allow top-level `orchestrator`, `roles`, `fallbacks`, `delegation`, and
 `assignments`: `orchestrator` first, then `roles`, then the maps. `roles` uses the config form; its custom keys add
-roles, while unknown top-level keys are errors. Omitted roles keep resolved bindings. Planning-design/coder/generalist `orchestrator`, `null`, `[]`, or `none` binds to the
+roles, while unknown top-level keys are errors. Omitted roles keep resolved bindings. Planning-design/decision-maker/coder/generalist `orchestrator`, `null`, `[]`, or `none` binds to the
 owner (solo coder); owner reviewers
 (`[orchestrator]`, `[]`, null, `none`) select the owner without disabling a gate. Lists replace.
 Merge profile `fallbacks`, `delegation`, and `assignments` per key, including
@@ -38,7 +38,9 @@ is still a separate worker.
 
 A mismatched reception pane always asks **unused or relay** before owner handoff
 or startup, even if a matching owner exists. The explicit handoff transfers
-decision authority, user instruction, paths, and frozen settings; workers never
+orchestration authority (and owner-bound decision authority when
+`decision-maker` resolves to `orchestrator`; otherwise judgment calls follow
+`decision-making`), user instruction, paths, and frozen settings; workers never
 re-delegate, while the newly selected owner may orchestrate. A relay only relays.
 
 `allow_agent_lifecycle` works at runtime through
@@ -71,6 +73,7 @@ Work tasks — these always happen; the assignment decides who and where:
 | Task | Covers |
 |---|---|
 | `plan-and-design` | Brainstorming, design docs, implementation plans |
+| `decision-making` | Plan resolution, review-finding acceptance and disagreements, mid-execution rulings and breaker adjudication, final synthesis decisions |
 | `complex-coding` | Implementation over the complex-coding boundary |
 | `simple-coding` | Localized, pattern-following edits under that boundary |
 | `chores` | Lookups, file moves, log gathering, mechanical edits, lint/format runs |
@@ -89,7 +92,7 @@ Review tasks — same knobs plus `enabled`, which removes the gate:
 | `fix-round-re-review` | the fix loop | Fix rounds close on the fixing pane's word; the five-round cap still applies |
 | `final-branch-review` | `/execute`, `/execute_parallel`, `/full_cycle`, `/quick` | The branch reaches the integration decision unreviewed |
 
-Work tasks are never disabled — `mode: orchestrator` is how one stops being delegated. A repo may also define a role beyond the shipped four and assign tasks to it.
+Work tasks are never disabled — `mode: orchestrator` is how one stops being delegated. A repo may also define a role beyond the shipped five and assign tasks to it.
 
 One workflow overrides this column: `/strict_full_cycle` ignores `enabled` and runs every gate above, naming each one it forced on in its report. It changes nothing else — no `role`, no `mode`, no invariant — and never writes the configuration file.
 
@@ -130,13 +133,19 @@ Under `parallel`, plans are written for it: `writing-plans` emits a `## Tracks` 
 
 ### Orchestrator
 
-Without a profile, the reception pane owns the task. A selected profile may name a verified different owner through the explicit handoff above. The active owner integrates results and makes decisions; a relay retains no decision authority. Ordinary workers execute delegated instructions directly and never re-delegate.
+Top-level `orchestrator` identifies the active owner (the conductor). Without a profile, the reception pane owns the task. A selected profile may name a verified different owner through the explicit handoff above. The active owner coordinates delegation, worktrees, ledger bookkeeping, and mechanical branch integration, and acts as `decision-maker` only when `decision-maker` resolves to `orchestrator`; a relay retains no routing or decision authority. Ordinary workers execute delegated instructions directly and never re-delegate.
 
-Its judgment is final: reviewers advise, the orchestrator decides.
+### Planning-Design
+
+Handles brainstorming, design documents, and implementation plans through the resolved `plan-and-design` assignment.
+
+### Decision-Maker
+
+Handles judgment calls across the cycle through the resolved `decision-making` assignment: plan resolution and finding disposition, reviewer disagreement adjudication, mid-execution plan/conflict rulings and five-round breaker adjudication, and final integration synthesis decisions. Its judgment is final: reviewers advise, the `decision-maker` decides. By default (`decision-maker: orchestrator`, `mode: orchestrator`), the active owner decides directly; compositions such as `opus-fable` or `sol-astra` bind `decision-maker` to the upper model (`assignments.decision-making.mode: delegate`) so an executing orchestrator routes judgment calls there instead of deciding itself.
 
 ### Reviewers
 
-Reviews plans, designs, and code where assigned. A list binding supplies one review per entry with the same self-contained request. Separate delegated reviewers share no draft opinion. A profile may instead select the owner, whose mode decides fresh-subagent review versus permitted self-review. The active owner compares findings and resolves disagreements.
+Reviews plans, designs, and code where assigned. A list binding supplies one review per entry with the same self-contained request. Separate delegated reviewers share no draft opinion. A profile may instead select the owner, whose mode decides fresh-subagent review versus permitted self-review. The active owner collects and compares findings, and routes disagreements and finding acceptance through `decision-making` (`decision-maker`).
 
 If fallback duplicates a separate slot's kind/model, leave that slot unavailable and report fewer reviews. Different effort on the same model does not create another independent review.
 

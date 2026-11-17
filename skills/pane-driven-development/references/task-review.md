@@ -24,8 +24,8 @@ self-review, using the same requirements, package, and two verdicts.
   Without a profile, keep legacy review independence. Use the same
   review package for every route. Wait for every
   review to return before acting on any of them; merge the findings into one
-  open list and deduplicate. Reviews that disagree are yours to adjudicate,
-  not to average.
+  open list and deduplicate. Reviews that disagree go through `decision-making`
+  (`decision-maker`) to adjudicate, not to average.
 - Hand the reviewer its diff as a file: run this skill's
   `bash scripts/review-package PLAN_FILE BASE HEAD` by its absolute path, from the working tree you're executing in, and pass the reviewer the file
   path it prints (or, without bash: `git log --oneline`, `git diff --stat`,
@@ -62,8 +62,8 @@ self-review, using the same requirements, package, and two verdicts.
   same code — the implementer's report carries the test evidence
 - Do not pre-judge findings for the reviewer — never instruct a reviewer to
   ignore or not flag a specific issue. If you believe a finding would be a
-  false positive, let the reviewer raise it and adjudicate it in the review
-  loop. If the brief you are writing contains "do not flag," "don't treat X
+  false positive, let the reviewer raise it and route it through `decision-making`
+  (`decision-maker`) in the review loop. If the brief you are writing contains "do not flag," "don't treat X
   as a defect," "at most Minor," or "the plan chose" — stop: you are
   pre-judging, usually to spare yourself a review loop.
 

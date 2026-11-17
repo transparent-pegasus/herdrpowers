@@ -1,26 +1,26 @@
 # Profiles
 
 Names put the owner first. `ultra` means two external reviewers; `solo` means no separate coder.
-YAML keys start with `orchestrator` when present, then `roles` (`planning-design` first, `generalist` last), then override maps such as `assignments`.
+YAML keys start with `orchestrator` when present, then `roles` (`planning-design` first, `decision-maker` next, `generalist` last), then override maps such as `assignments`.
 
 | File | Composition and purpose |
 |---|---|
 | `fable-sol-ultra.yaml` | `Fable 5.2` owner, `GPT-6.2-Sol` coder, two external reviewers. Largest composition. |
 | `fable-opus-ultra.yaml` | `Fable 5.2` owner, separate `Opus 5.5` coder, two external reviewers. Largest composition. |
-| `sol-astra.yaml` | `GPT-6.2-Sol` owner executes; `GPT-6.2-Astra` handles planning and reviews. Conserves Codex tokens. |
-| `opus-fable.yaml` | `Opus 5.5` owner executes; `Fable 5.2` handles planning and reviews. Conserves Claude tokens. |
+| `sol-astra.yaml` | `GPT-6.2-Sol` owner executes; `GPT-6.2-Astra` handles planning, decisions, and reviews. Conserves Codex tokens. |
+| `opus-fable.yaml` | `Opus 5.5` owner executes; `Fable 5.2` handles planning, decisions, and reviews. Conserves Claude tokens. |
 | `sol-solo.yaml` | `GPT-6.2-Sol` only. |
 | `opus-solo.yaml` | `Opus 5.5` only. |
 
 For the two largest compositions, choose the coder from whichever subscription has the larger token allowance.
-The two smaller compositions keep execution on the cheaper owner and delegate only planning and reviews to the upper model.
-They override `assignments.plan-and-design.mode` to `delegate`; other assignment fields retain config/default values.
+The two smaller compositions keep execution on the cheaper owner and delegate planning, decisions, and reviews to the upper model.
+They override `assignments.plan-and-design.mode` and `assignments.decision-making.mode` to `delegate`; other assignment fields retain config/default values.
 Use `solo` for tasks that need neither complex decisions nor coding.
 
 - Select a profile by setting `profile` in `.herdrpowers/config.yaml` to the filename without its extension.
   Naming a profile in the task instructions selects it for that run only; leave the config unchanged.
   Profiles allow top-level `orchestrator`, `roles`, `fallbacks`, `delegation`, and `assignments`; other top-level keys are errors.
-  `roles` takes `planning-design`, `coder`, `reviewers`, `generalist`, and custom roles, which act only through `assignments`.
+  `roles` takes `planning-design`, `decision-maker`, `coder`, `reviewers`, `generalist`, and custom roles, which act only through `assignments`.
   Role entries replace bindings; override maps merge per key, including each assignment's fields. Omitted keys keep config/default values.
   Lists replace, including `[]`; empty override maps change nothing. Null, scalars, and lists are invalid override maps.
   An omitted `orchestrator` keeps the reception pane as owner. Lifecycle permission remains config-only.
@@ -38,7 +38,7 @@ Use `solo` for tasks that need neither complex decisions nor coding.
   Add this to `~/.claude/settings.json` (`jq` required):
   `{"statusLine": {"type": "command", "command": "jq -r '\"\\(.model.display_name) \\(.effort.level // \"\")\"'"}}`
 - `null` is standard YAML null. Bare `none` is a supported literal alias, not YAML null.
-  `roles.planning-design`/`coder`/`generalist`: `orchestrator` / `null` / `[]` / `none` binds to the owner.
+  `roles.planning-design`/`decision-maker`/`coder`/`generalist`: `orchestrator` / `null` / `[]` / `none` binds to the owner.
   `roles.reviewers: [orchestrator]` / `[]` / `null` / `none` selects owner review; it does not disable reviews.
 - `delegate` requires a fresh subagent every time, even when targeting the owner. An empty composition does not waive this requirement.
   Apply resolved modes and gates after profile overrides; a resolved disabled gate stays off.

@@ -4,6 +4,7 @@ orchestrator:
     effort: max
 roles:
   planning-design: orchestrator
+  decision-maker: orchestrator
   coder: orchestrator
   reviewers: [orchestrator]
   generalist: orchestrator

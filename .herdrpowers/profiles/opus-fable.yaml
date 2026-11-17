@@ -7,6 +7,10 @@ roles:
     claude:
       model: Fable 5.2
       effort: max
+  decision-maker:
+    claude:
+      model: Fable 5.2
+      effort: max
   coder: orchestrator
   reviewers:
     - claude:
@@ -15,4 +19,6 @@ roles:
   generalist: orchestrator
 assignments:
   plan-and-design:
+    mode: delegate
+  decision-making:
     mode: delegate

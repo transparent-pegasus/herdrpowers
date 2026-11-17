@@ -13,11 +13,12 @@ repo config over shipped roles, then only keys present in the
 selected profile. Freeze effective targets, modes, gates, scope, and lifecycle
 policy up front; do not resolve them anew per task.
 
-Seven tasks in that table drive this loop. Read each one's `role` and `mode`
+Eight tasks in that table drive this loop. Read each one's `role` and `mode`
 from the resolved configuration — this table only says where each lands:
 
 | Task | Where it lands in this skill |
 |---|---|
+| `decision-making` | Preflight, task review, §4 fix loop/breaker, and final-review rulings |
 | `complex-coding` / `simple-coding` | §1, the implementer delegation |
 | `test-authoring` | §1, the test-author delegation |
 | `task-review` | §3 |
@@ -26,7 +27,8 @@ from the resolved configuration — this table only says where each lands:
 | `fix-round-re-review` | §4's scoped re-review |
 | `chores` | Lookups, file moves, log gathering, mechanical edits found mid-plan |
 
-Plan revisions follow `plan-and-design`; the active owner retains decisions.
+Plan revisions follow `plan-and-design`; judgment calls, finding acceptance,
+and execution rulings follow `decision-making` (`decision-maker`).
 
 Four resolved values change the loop's shape:
 

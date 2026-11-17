@@ -56,7 +56,7 @@ herdr pane wait-output "$PANE" --match "REVIEW_OK_<4-hex>" --timeout 900000
 
     Before your verdict, list every behavior you considered and set aside
     as outside the plan or spec, one line each, with the reason. The
-    orchestrator rules on each line; nothing you set aside is dropped
+    `decision-maker` rules on each line; nothing you set aside is dropped
     silently. An empty list means you set nothing aside.
 
     ## Read-Only Review

@@ -22,8 +22,8 @@ Do not edit workflow files unless the user's current request explicitly asks to 
 
 Read `orchestration`, its [profiles contract](../skills/orchestration/references/profiles.md), and `using-herdr-sibling-panes` before routing work. Resolve repo config over shipped roles, then only keys present in the selected profile. Freeze the active owner, targets, assignments, gates, scope, strategy, and lifecycle policy. Profile assignment overrides resolve before routing; a resolved disabled gate is skipped and named in the report.
 
-Routing comes from `assignments:`, not from this file, and the resolved YAML is the source of truth for every default — read each task's `role` and `mode` there rather than recalling one. This workflow touches `complex-coding` / `simple-coding`, `test-authoring`, `fix-round-test-authoring`, `review-fixes`, `chores`, `verification`, `documentation-impact-review`, `task-review`, `fix-round-re-review`, and `final-branch-review`. A review task whose effective role binds to a list runs once per entry.
-- Plan revisions follow `plan-and-design`; final synthesis stays with the active owner.
+Routing comes from `assignments:`, not from this file, and the resolved YAML is the source of truth for every default — read each task's `role` and `mode` there rather than recalling one. This workflow touches `decision-making`, `complex-coding` / `simple-coding`, `test-authoring`, `fix-round-test-authoring`, `review-fixes`, `chores`, `verification`, `documentation-impact-review`, `task-review`, `fix-round-re-review`, and `final-branch-review`. A review task whose effective role binds to a list runs once per entry.
+- Plan revisions follow `plan-and-design`; mid-execution rulings, review-finding triage and disagreements, and final integration synthesis decisions follow `decision-making` (`decision-maker`). The active owner keeps orchestration and coordination.
 - Separate delegated targets use reset-backed Herdr panes, even when a concrete target matches the owner's model. With a selected profile, self-target `delegate` requires a fresh in-process subagent for work and reviews, including empty reviewers; other owner-session modes permit inline work/self-review and optional subagents at the active owner's judgment. Report self-review honestly. Without a profile, keep legacy routing and fresh-subagent orchestrator-mode reviews. Workers never re-delegate.
 
 **Every delegation** states the absolute worktree path (and requires the pane to confirm it is there first), the exact scope, the edit policy, the report-file path under `<REPORT_DIRECTORY>`, a unique completion marker, and the prohibition on re-delegating. Read results from the report file, not from pane scrollback, and re-run the decisive command rather than trusting a "verified" claim.
@@ -75,8 +75,8 @@ Proceed to Step 6 only when verification evidence is fresh and successful.
 Gate: `assignments.final-branch-review`. When it is disabled, skip this step and tell the user the branch is reaching the integration decision unreviewed.
 Inform the user that the final review is starting.
 Read and use requesting-code-review to run the whole-branch gate over the entire changeset through its resolved target and mode.
-Fix critical or important issues through `review-fixes`: one fix wave carrying the complete findings list, with profile self-targets retaining their mode.
-Proceed to Step 7 only when the review assesses it as Ready to merge.
+Route finding triage, reviewer disagreements, "Declined to judge" items, and final synthesis judgment through `decision-making` (`decision-maker`); fix accepted critical or important issues through `review-fixes`: one fix wave carrying the complete findings list, with profile self-targets retaining their mode.
+Proceed to Step 7 only when the `decision-maker` assesses the branch as ready for the user's integration decision (after any required re-review).
 
 7. Integration and Cleanup
 Inform the user that the implementation is complete and ready for integration.

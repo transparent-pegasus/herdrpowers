@@ -54,8 +54,9 @@ the directory holding `skills/`, three levels above this file.
 Config, shipped defaults, and profiles share one role form: under `roles:`,
 each role key's value is its binding. A single target or `orchestrator` means
 one delegation per task. A list means one delegation per entry. The shipped
-keys are `planning-design`, `coder`, `reviewers`, and `generalist`; any other
-key is a custom role, used only through an assignment's `role`.
+keys are `planning-design`, `decision-maker`, `coder`, `reviewers`, and
+`generalist`; any other key is a custom role, used only through an assignment's
+`role`.
 Legacy `agent:`/`agents:`/`description:` sub-keys and the old `reviewer` key
 remain readable as migration input; report the deprecation, and init rewrites
 them in the canonical form.
@@ -66,7 +67,8 @@ Profiles allow top-level `orchestrator`, `roles`, `fallbacks`, `delegation`,
 and `assignments`. Each is optional; any other top-level key is an error.
 The six shipped YAML assets are the source of truth for preset values and
 reviewer order. Keep preset keys ordered: `orchestrator` when present, then
-`roles` with `planning-design` first and `generalist` last, then override maps.
+`roles` with `planning-design` first, `decision-maker` next, and `generalist`
+last, then override maps.
 Pre-1.22 profiles with top-level role keys read as their `roles:` entries,
 with a deprecation notice; a role set both ways is an error.
 
@@ -74,9 +76,10 @@ with a deprecation notice; a role set both ways is an error.
 |---|---|---|
 | `orchestrator` | Keep the legacy owner, the pane receiving the user's task | One nested target selects the active owner; null, `none`, and lists are invalid |
 | `roles.planning-design` | Keep the resolved binding | One nested target replaces that binding; bare `orchestrator`, null, `[]`, or literal `none` binds it to the active owner |
-| `roles.generalist` | Keep the resolved binding | One nested target replaces that binding; bare `orchestrator`, null, `[]`, or literal `none` binds it to the active owner |
+| `roles.decision-maker` | Keep the resolved binding | One nested target replaces that binding; bare `orchestrator`, null, `[]`, or literal `none` binds it to the active owner |
 | `roles.coder` | Keep the resolved binding | One nested target replaces that binding; bare `orchestrator`, null, `[]`, or literal `none` binds it to the active owner, with no separate coder |
 | `roles.reviewers` | Keep the resolved binding | A nonempty list of nested targets replaces that binding in order; `[orchestrator]`, `[]`, null, or literal `none` binds it to the active owner, with no external reviewers |
+| `roles.generalist` | Keep the resolved binding | One nested target replaces that binding; bare `orchestrator`, null, `[]`, or literal `none` binds it to the active owner |
 | `roles.<custom>` | Keep the resolved binding, if any | A target, `orchestrator`, or list, as in config; adds the role when config lacks it |
 | `fallbacks` | Keep the resolved fallback map | Override each present string key's entire substitute list, including `[]`; keep omitted entries |
 | `delegation` | Keep the resolved delegation settings | Override each present `pane_scope` or `execution`; keep omitted settings |
@@ -106,9 +109,9 @@ reactivate it. The profile's explicit empty `coder` or `reviewers` replaces
 that binding, so empty-list disabling no longer applies to it.
 
 An existing `orchestrator` binding is a dynamic alias for the active owner;
-custom `planning-design`/`generalist` bindings remain intact when the profile
+custom `planning-design`/`decision-maker`/`generalist` bindings remain intact when the profile
 omits that key, as do all user-added roles.
-A concrete coder/reviewer target remains a separate worker even when its
+A concrete `planning-design`/`decision-maker`/`coder`/reviewer target remains a separate worker even when its
 kind/model equals the owner's. Only an owner alias or a mode resolving to
 the owner is a self-target.
 
@@ -204,15 +207,18 @@ Send an explicit **orchestrator handoff**, containing:
 - The primary and effective owner targets, any fallback key/substitute used,
   and lost constraints. Keep the profile file unchanged; owner aliases bind
   to the verified effective owner.
-- An explicit transfer of decision authority to the verified effective owner,
-  the reception pane's chosen unused/relay role, and the communication path.
+- An explicit transfer of orchestration authority (and owner-bound decision
+  authority when `decision-maker` resolves to `orchestrator`; otherwise judgment
+  calls follow the resolved `decision-making` assignment) to the verified
+  effective owner, the reception pane's chosen unused/relay role, and the
+  communication path.
 - That this is ownership transfer, not worker delegation: the new owner may
   orchestrate; workers may not. The handoff must not bounce ownership back.
 
 Use the verified sibling-pane submission transport, with the effective target's
 own model/effort constraints (no effort argument for a fallback). A relay carries
-messages and results; it retains no routing or
-final-decision authority. An unused reception pane takes no further work.
+messages and results; it retains no routing or decision authority. An unused
+reception pane takes no further work.
 If verification fails, report the failed handoff rather than treating the
 mismatched reception pane as the owner. Runtime pane IDs belong in the run's
 handoff/report, never in profile templates.
@@ -284,9 +290,11 @@ means the owner is the reviewer; the mode still decides how that review is
 executed. If the runtime cannot spawn the required fresh subagent, report an
 inability/degraded gate without claiming it passed. Do not silently run it
 inline or disable it. This also applies if fallback leaves a delegated task
-resolved to the owner. Give each subagent the self-contained task/review
-brief and the no-re-delegation constraint; the active owner keeps synthesis
-and decisions. Workers in any transport never re-delegate.
+resolved to the owner. Give each subagent the self-contained task/review brief
+and the no-re-delegation constraint; the active owner keeps orchestration and
+coordination, while judgment calls and final synthesis follow the resolved
+`decision-making` assignment (`roles.decision-maker`). Workers in any transport
+never re-delegate.
 
 Report same-session self-review honestly as self-review, not independent
 review. A selected-profile nondelegated review permits that choice. A
@@ -330,7 +338,7 @@ profile is still an explicit error.
 
 The final run report names the selected profile or no selection, effective
 owner and reception role, target/model/effort evidence, transport for each
-task/review, self-review versus independent review, fallbacks and lost
+task/review/decision, self-review versus independent review, fallbacks and lost
 constraints, unavailable routes, lifecycle actions and task-owned agents
 left running, test writer, changed assignments, and disabled/forced gates.
 Do not confuse an empty reviewer composition, a disabled gate, and an

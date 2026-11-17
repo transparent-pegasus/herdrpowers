@@ -30,12 +30,14 @@ The agent reads the existing project and supplied context first, draws out what 
 Drafting follows `plan-and-design`; the active owner then runs the enabled
 `plan-review` gate through its effective target and mode. Each separate review
 slot gets the same self-contained request without shared draft opinion. Profile
-owner targets follow the mode rules above. The owner resolves findings and
-presents the plan for approval, naming self-review, disabled gates, or inability.
+owner targets follow the mode rules above. Findings and reviewer disagreements
+route through `decision-making` (`decision-maker`); the active owner applies
+the resolved updates and presents the plan for approval, naming self-review,
+disabled gates, or inability.
 
 - **Purpose**: Create a clear, actionable roadmap, and catch its defects while they are still cheap.
 - **Outcome**: A reviewed, resolved, approved plan at `<PLAN_PATH_PATTERN>` (not committed), carrying a `## Tracks` table — which tasks can run concurrently, and which files each track owns — because Phase 5 runs those tracks in parallel by default.
-- **Skill**: `writing-plans`. **Routes**: resolved `plan-and-design` and `plan-review` assignments and profile targets.
+- **Skill**: `writing-plans`. **Routes**: resolved `plan-and-design`, `plan-review`, and `decision-making` assignments and profile targets.
 
 A plan reaches approval after its enabled review and findings are resolved; skipped or unavailable reviews remain explicit in the report.
 
@@ -69,8 +71,8 @@ The active coding phase. Each task follows its frozen target and assignment mode
     1. Extract the task brief to a file; delegate it with the worktree path, report path, and completion marker.
     2. Tests follow `test-authoring`: a fresh delegated worker (reset-backed pane or profile self-target subagent) gets requirements alone in its own BASE worktree, or the implementing session owns RED-GREEN-REFACTOR. Name the writer and transport.
     3. Each pane writes its full report to a file and replies with status + marker. A delegated test author's commit is cherry-picked into the task worktree and run: passing is **GREEN**, failing is a finding.
-    4. The owner builds a review package and runs enabled task reviews by effective target and mode, once per list entry, with **Spec Compliance** and **Task Quality** verdicts. Permitted owner-session self-review uses the same contract and is reported as self-review.
-    5. Critical/Important findings enter one fix loop. Separate targets and no-profile routing retain rounds 1-3 on the implementing pane and rounds 4-5 on an escalated fresh target; profile self-targets retain their mode throughout. Covering tests follow `fix-round-test-authoring`; enabled scoped re-reviews check only the fix diff. Five rounds remains the cap, followed by ledgered adjudication and rulings carried to dependent tasks.
+    4. The owner builds a review package and runs enabled task reviews by effective target and mode, once per list entry, with **Spec Compliance** and **Task Quality** verdicts; finding triage and disagreements route through `decision-making` (`decision-maker`). Permitted owner-session self-review uses the same contract and is reported as self-review.
+    5. Critical/Important findings enter one fix loop. Separate targets and no-profile routing retain rounds 1-3 on the implementing pane and rounds 4-5 on an escalated fresh target; profile self-targets retain their mode throughout. Covering tests follow `fix-round-test-authoring`; enabled scoped re-reviews check only the fix diff. Five rounds remains the cap, followed by `decision-making` adjudication ledgered and carried to dependent tasks.
 - **Skills**: `pane-driven-development`, `test-driven-development`, `systematic-debugging`.
 - **Routes**: read resolved assignments and profile targets; [`roles.yaml`](../skills/orchestration/roles.yaml) supplies defaults rather than this guide.
 
@@ -87,7 +89,7 @@ Every pane a phase delegates to sits in the orchestrator's own tab, unless the r
 
 ### Phase 6: Verification and Final Code Review
 
-Repository verification runs inside the worktree, then the enabled final review checks the entire changeset through its resolved target and mode.
+Repository verification runs inside the worktree, then the enabled final review checks the entire changeset through its resolved target and mode, with finding triage and final synthesis decisions routed through `decision-making` (`decision-maker`).
 
 - **Purpose**: Evidence before assertions, then a merge-level judgment on the whole branch.
 - **Outcome**: Verification output quoted from the report file (or re-run), plus a report with Critical / Important / Minor issues.
@@ -99,12 +101,12 @@ A pane reporting "tests pass" is a claim, not evidence. Read the quoted output, 
 
 ### Phase 7: Integration (Candidates & Cleanup)
 
-Work stops and waits for the owner's instruction. On that instruction, the options are **presented, not assumed**: merge locally into `<BASE_BRANCH>`, push and open a pull request, push only, or keep the branch as-is (discarding happens only on an explicit request). The owner picks; only that option runs, and the worktree and branch are cleaned up only as far as it requires.
+Work stops and waits for the user's instruction. On that instruction, the options are **presented, not assumed**: merge locally into `<BASE_BRANCH>`, push and open a pull request, push only, or keep the branch as-is (discarding happens only on an explicit request). The user picks; only that option runs, and the worktree and branch are cleaned up only as far as it requires.
 
 - **Purpose**: Hand the finished branch back with its integration choices open.
 - **Skill**: `finishing-a-development-branch`.
 
-A workflow that merges on its own has taken a decision that belongs to the owner.
+A workflow that merges on its own has taken a decision that belongs to the user.
 
 ---
 
