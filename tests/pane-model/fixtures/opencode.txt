@@ -6,7 +6,7 @@
   ┃
   ┃  Ask anything… "Fix a TODO in the codebase"
   ┃
-  ┃  Build · GPT-6.1 Sol OpenAI · max
+  ┃  Build · GPT-6.2 Sol OpenAI · max
   ╹▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
                                            tab agents  ctrl+p commands
 

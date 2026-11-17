@@ -187,9 +187,9 @@ for (const [name, args] of [
   ['start without a name', ['start', 'LEDGER', 'w1:p2', 'codex']],
   ['a name herdr would reject', ['start', 'LEDGER', 'w1:p2', 'codex', 'HP_Coder']],
   ['an empty model', [...startCodex, '']],
-  ['an empty effort', [...startCodex, 'GPT-5.6-Luna', ' ']],
-  ['a multiline model', [...startCodex, 'GPT-5.6-Luna\nOther']],
-  ['three settings', [...startCodex, 'GPT-5.6-Luna', 'medium', 'extra']],
+  ['an empty effort', [...startCodex, 'GPT-6.2-Sol', ' ']],
+  ['a multiline model', [...startCodex, 'GPT-6.2-Sol\nOther']],
+  ['three settings', [...startCodex, 'GPT-6.2-Sol', 'medium', 'extra']],
   ['stop without a pane', ['stop', 'LEDGER']],
   ['policy with an argument', ['policy', 'now']],
 ]) {
@@ -201,13 +201,13 @@ for (const [name, args] of [
 }
 
 test('start discards the prompt line, starts the agent with its native arguments, verifies the footer, and records it', () => {
-  const native = ['--', '-m', 'gpt-5.6-luna', '-c', 'model_reasoning_effort="medium"'];
-  const result = lifecycle([...startCodex, 'gpt-5.6-LUNA', 'Medium', ...native],
+  const native = ['--', '-m', 'gpt-6.2-sol', '-c', 'model_reasoning_effort="medium"'];
+  const result = lifecycle([...startCodex, 'gpt-6.2-SOL', 'Medium', ...native],
     { config: ALLOW, panes: shell, startScreen: fixture('codex.txt') });
   assert.equal(result.status, 0, result.stderr);
   assert.deepEqual(result.sent, [discardLine, agentStart('codex', ...native)]);
-  assert.equal(result.ledger, entry('codex', 'gpt-5.6-LUNA', 'Medium'));
-  assert.match(result.stdout, /^GPT-5\.6-Luna medium/);
+  assert.equal(result.ledger, entry('codex', 'gpt-6.2-SOL', 'Medium'));
+  assert.match(result.stdout, /^GPT-6\.2-Sol medium/);
 });
 
 test('a kind-only start needs no footer and records no model', () => {
@@ -218,8 +218,8 @@ test('a kind-only start needs no footer and records no model', () => {
 });
 
 for (const [name, settings, startScreen] of [
-  ['another model', ['GPT-6-Astra', 'medium'], 'codex.txt'],
-  ['another effort', ['GPT-5.6-Luna', 'max'], 'codex.txt'],
+  ['another model', ['GPT-6.2-Astra', 'medium'], 'codex.txt'],
+  ['another effort', ['GPT-6.2-Sol', 'max'], 'codex.txt'],
   ['a Claude footer without a statusLine', ['Opus 5.5', 'medium'], 'claude-no-statusline.txt'],
   ['Cursor\'s bare Max', ['Muse Spark', 'max'], 'cursor.txt'],
 ]) {
@@ -232,7 +232,7 @@ for (const [name, settings, startScreen] of [
 }
 
 test('a startup dialog exits 4 and the blocked agent is recorded, not answered', () => {
-  const result = lifecycle([...startCodex, 'GPT-5.6-Luna'], { config: ALLOW, panes: shell, start: 'blocked' });
+  const result = lifecycle([...startCodex, 'GPT-6.2-Sol'], { config: ALLOW, panes: shell, start: 'blocked' });
   assert.equal(result.status, 4, result.stderr);
   assert.deepEqual(result.sent, [discardLine, agentStart('codex')]);
   assert.equal(result.ledger, entry('codex'));

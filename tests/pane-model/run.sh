@@ -32,8 +32,8 @@ check() {
 }
 
 claude='Opus 5.5 medium'
-codex='GPT-5.6-Luna medium · weekly 99% left'
-opencode='Build · GPT-6.1 Sol OpenAI · max'
+codex='GPT-6.2-Sol medium · weekly 99% left'
+opencode='Build · GPT-6.2 Sol OpenAI · max'
 cursor='Muse Spark 1.3 1M Max'
 agy='Gemini 3.8 Flash (High) | 5h: 100% | 7d: 100%'
 grok='Grok 4.7 (xhigh) · always-approve · 1.3K / 500K (0%) · ctrl+o transcript'
@@ -47,8 +47,8 @@ check 'grok footer' 0 "$grok" grok.txt -- --kind grok
 
 # A match is a case-insensitive substring of the model line.
 check 'claude match' 0 "$claude" claude.txt -- --kind claude 'opus 5.5'
-check 'codex match' 0 "$codex" codex.txt -- --kind codex 'gpt-5.6-luna'
-check 'opencode match' 0 "$opencode" opencode.txt -- --kind opencode 'gpt-6.1 sol'
+check 'codex match' 0 "$codex" codex.txt -- --kind codex 'gpt-6.2-sol'
+check 'opencode match' 0 "$opencode" opencode.txt -- --kind opencode 'gpt-6.2 sol'
 check 'cursor match' 0 "$cursor" cursor.txt -- --kind cursor 'MUSE SPARK 1.3'
 check 'agy match' 0 "$agy" agy.txt -- --kind agy 'gemini 3.8 flash'
 check 'grok match' 0 "$grok" grok.txt -- --kind grok 'grok 4.7'
@@ -64,7 +64,7 @@ check 'cursor model picker' 1 '*' cursor-model-picker.txt -- --kind cursor 'Muse
 # Text above or inside the composer never becomes the model line.
 check 'transcript mentions above the codex composer' 1 "$codex" codex-transcript-mentions-grok.txt -- --kind codex 'grok'
 check 'cursor composer wrapped onto two lines' 0 "$cursor" cursor-wrapped-composer.txt -- --kind cursor 'Muse Spark 1.3'
-check 'codex composer wrapped onto two lines' 0 "$codex" codex-wrapped-composer.txt -- --kind codex 'GPT-5.6-Luna'
+check 'codex composer wrapped onto two lines' 0 "$codex" codex-wrapped-composer.txt -- --kind codex 'GPT-6.2-Sol'
 
 # Claude shows a model line only through a statusLine that prints one.
 check 'claude without that statusLine' 1 '*' claude-no-statusline.txt -- --kind claude 'Opus'

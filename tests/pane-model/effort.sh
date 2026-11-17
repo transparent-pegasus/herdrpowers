@@ -25,34 +25,34 @@ check() {
 }
 
 claude='Opus 5.5 medium'
-codex='GPT-5.6-Luna medium · weekly 99% left'
+codex='GPT-6.2-Sol medium · weekly 99% left'
 grok='Grok 4.7 (xhigh) · always-approve · 1.3K / 500K (0%) · ctrl+o transcript'
 cursor='Muse Spark 1.3 1M Max'
 agy='Gemini 3.8 Flash (High) | 5h: 100% | 7d: 100%'
-opencode='Build · GPT-6.1 Sol OpenAI · max'
+opencode='Build · GPT-6.2 Sol OpenAI · max'
 cursor_high='Grok 4.7 1M Max · Reasoning: High'
 cursor_extra_high='Grok 4.7 1M Max · Reasoning: Extra High'
 cursor_max='Grok 4.7 1M Max · Reasoning: Max'
 cursor_unknown='Grok 4.7 1M Max · Reasoning: Unknown'
-codex_xhigh='GPT-5.6-Luna xhigh · weekly 99% left'
+codex_xhigh='GPT-6.2-Sol xhigh · weekly 99% left'
 grok_high='Grok 4.7 (high) · always-approve · 1.3K / 500K (0%) · ctrl+o transcript'
 agy_extra_high='Gemini 3.8 Flash (Extra High) | 5h: 100% | 7d: 100%'
-no_effort='GPT-5.6-Luna · plan Max · context Max · weekly 99% left'
+no_effort='GPT-6.2-Sol · plan Max · context Max · weekly 99% left'
 
 # Model matching keeps the legacy case-insensitive substring contract; effort
 # matching must use a complete semantic token from the live footer.
 check 'observed medium effort matches case insensitively' 0 "$claude" claude.txt --kind claude 'oPUs 5.5' MEDIUM
-check 'Codex model substring with exact effort' 0 "$codex" codex.txt --kind codex 'gPt-5.6' MeDiUm
+check 'Codex model substring with exact effort' 0 "$codex" codex.txt --kind codex 'gPt-6.2' MeDiUm
 check 'Antigravity observed High' 0 "$agy" agy.txt --kind agy 'Gemini 3.8 Flash' HIGH
-check 'OpenCode observed max inside composer box' 0 "$opencode" opencode.txt --kind opencode 'GPT-6.1 Sol' MAX
+check 'OpenCode observed max inside composer box' 0 "$opencode" opencode.txt --kind opencode 'GPT-6.2 Sol' MAX
 check 'Grok observed xhigh' 0 "$grok" grok.txt --kind grok 'grok 4.7' XHIGH
 check 'wrong effort preserves the footer on stdout' 1 "$claude" claude.txt --kind claude 'Opus 5.5' max
-check 'matching effort cannot hide the wrong model' 1 "$codex" codex.txt --kind codex 'GPT-6-Astra' medium
-check 'partial effort is not an exact token' 1 "$codex" codex.txt --kind codex 'GPT-5.6-Luna' med
+check 'matching effort cannot hide the wrong model' 1 "$codex" codex.txt --kind codex 'GPT-6.2-Astra' medium
+check 'partial effort is not an exact token' 1 "$codex" codex.txt --kind codex 'GPT-6.2-Sol' med
 check 'High does not match observed xhigh' 1 "$grok" grok.txt --kind grok 'Grok 4.7' High
 check 'Extra High aliases observed xhigh' 0 "$grok" grok.txt --kind grok 'Grok 4.7' 'Extra High'
-check 'High does not match synthetic Codex xhigh' 1 "$codex_xhigh" codex-xhigh.txt --kind codex 'GPT-5.6-Luna' high
-check 'Codex xhigh accepts case-insensitive Extra High alias' 0 "$codex_xhigh" codex-xhigh.txt --kind codex 'GPT-5.6-Luna' 'eXtRa HiGh'
+check 'High does not match synthetic Codex xhigh' 1 "$codex_xhigh" codex-xhigh.txt --kind codex 'GPT-6.2-Sol' high
+check 'Codex xhigh accepts case-insensitive Extra High alias' 0 "$codex_xhigh" codex-xhigh.txt --kind codex 'GPT-6.2-Sol' 'eXtRa HiGh'
 check 'xhigh does not match synthetic Grok high' 1 "$grok_high" grok-high.txt --kind grok 'Grok 4.7' xhigh
 check 'Extra High does not match observed Antigravity High' 1 "$agy" agy.txt --kind agy 'Gemini 3.8 Flash' 'Extra High'
 check 'High does not match synthetic Antigravity Extra High' 1 "$agy_extra_high" agy-extra-high.txt --kind agy 'Gemini 3.8 Flash' High
@@ -77,23 +77,23 @@ check 'Cursor unknown reasoning cannot borrow context Max' 1 "$cursor_unknown" c
 # request when the last composer's footer differs or omits effort.
 check 'Claude stale header max is ignored' 1 "$claude" claude-stale-effort.txt --kind claude 'Opus 5.5' max
 check 'Claude current medium wins over stale header' 0 "$claude" claude-stale-effort.txt --kind claude 'Opus 5.5' medium
-check 'Codex stale header and older footer max are ignored' 1 "$codex" codex-stale-effort.txt --kind codex 'GPT-5.6-Luna' max
-check 'Codex transcript and wrapped composer Extra High are ignored' 1 "$codex" codex-stale-effort.txt --kind codex 'GPT-5.6-Luna' 'Extra High'
-check 'Codex latest footer medium wins' 0 "$codex" codex-stale-effort.txt --kind codex 'GPT-5.6-Luna' medium
-check 'missing effort cannot borrow plan context or stale header Max' 1 "$no_effort" codex-no-effort.txt --kind codex 'GPT-5.6-Luna' max
+check 'Codex stale header and older footer max are ignored' 1 "$codex" codex-stale-effort.txt --kind codex 'GPT-6.2-Sol' max
+check 'Codex transcript and wrapped composer Extra High are ignored' 1 "$codex" codex-stale-effort.txt --kind codex 'GPT-6.2-Sol' 'Extra High'
+check 'Codex latest footer medium wins' 0 "$codex" codex-stale-effort.txt --kind codex 'GPT-6.2-Sol' medium
+check 'missing effort cannot borrow plan context or stale header Max' 1 "$no_effort" codex-no-effort.txt --kind codex 'GPT-6.2-Sol' max
 check 'effort cannot be inferred from a hidden Claude statusLine' 1 '*' claude-no-statusline.txt --kind claude 'Opus 5.5' medium
 check 'effort cannot be inferred from a model picker' 1 '*' cursor-model-picker.txt --kind cursor 'Muse Spark' max
 check 'missing composer fails closed with effort' 1 '' cursor.txt --kind codex 'Muse Spark' max
-check 'empty screen fails closed with effort' 1 '' - --kind codex 'GPT-5.6-Luna' medium
-check 'unknown kind keeps exit 3 with effort' 3 '' codex.txt --kind unknown 'GPT-5.6-Luna' medium
+check 'empty screen fails closed with effort' 1 '' - --kind codex 'GPT-6.2-Sol' medium
+check 'unknown kind keeps exit 3 with effort' 3 '' codex.txt --kind unknown 'GPT-6.2-Sol' medium
 
 # Invalid arguments are usage errors, distinct from footer mismatch.
 check 'kind mode rejects effort without a model' 2 '' codex.txt --kind codex '' medium
-check 'kind mode rejects empty effort' 2 '' codex.txt --kind codex 'GPT-5.6-Luna' ''
-check 'kind mode rejects multiline effort' 2 '' codex.txt --kind codex 'GPT-5.6-Luna' $'high\nmax'
-check 'kind mode rejects multiline model with effort' 2 '' codex.txt --kind codex $'GPT-5.6-Luna\nOther' medium
-check 'kind mode rejects a fifth argument' 2 '' codex.txt --kind codex 'GPT-5.6-Luna' medium extra
-check 'kind mode rejects empty kind with effort' 2 '' codex.txt --kind '' 'GPT-5.6-Luna' medium
+check 'kind mode rejects empty effort' 2 '' codex.txt --kind codex 'GPT-6.2-Sol' ''
+check 'kind mode rejects multiline effort' 2 '' codex.txt --kind codex 'GPT-6.2-Sol' $'high\nmax'
+check 'kind mode rejects multiline model with effort' 2 '' codex.txt --kind codex $'GPT-6.2-Sol\nOther' medium
+check 'kind mode rejects a fifth argument' 2 '' codex.txt --kind codex 'GPT-6.2-Sol' medium extra
+check 'kind mode rejects empty kind with effort' 2 '' codex.txt --kind '' 'GPT-6.2-Sol' medium
 
 printf '\n%s pane-model effort check(s) failed\n' "$fails"
 exit $((fails > 0))
