@@ -20,7 +20,7 @@ Do not edit workflow files unless the user's current request explicitly asks to 
 
 ## Orchestration
 
-Read `orchestration`, its [profiles contract](../skills/orchestration/references/profiles.md), and `using-herdr-sibling-panes` before routing. Resolve repo config over shipped roles, then only present profile keys; freeze targets, modes, gates, scope, and lifecycle policy. Drafting follows `plan-and-design`; the active owner keeps decisions. Separate delegated targets use reset-backed panes. With a selected profile, self-target `delegate` requires fresh in-process subagents for work and reviews, even with empty reviewers; other owner-session modes permit inline work/self-review and optional subagents at the owner's judgment. Without a profile, preserve legacy independence, including fresh-subagent orchestrator-mode reviews. Workers never re-delegate. An explicit profile-owner handoff transfers ownership under the canonical contract; ordinary worker delegation does not.
+Read `orchestration`, its [profiles contract](../skills/orchestration/references/profiles.md), and `using-herdr-sibling-panes` before routing. Resolve repo config over shipped roles, then only present profile keys; freeze targets, modes, gates, scope, and lifecycle policy. Drafting follows `plan-and-design`, while plan resolution and disagreement rulings follow `decision-making` (`decision-maker`); the active owner keeps orchestration and coordination. Separate delegated targets use reset-backed panes. With a selected profile, self-target `delegate` requires fresh in-process subagents for work and reviews, even with empty reviewers; other owner-session modes permit inline work/self-review and optional subagents at the owner's judgment. Without a profile, preserve legacy independence, including fresh-subagent orchestrator-mode reviews. Workers never re-delegate. An explicit profile-owner handoff transfers ownership under the canonical contract; ordinary worker delegation does not.
 
 ## Execution Steps
 
@@ -45,7 +45,7 @@ Wait for every review to finish, read each report file, and compare the findings
 A separate delegated reviewer may reuse the drafting pane after reset. Degrade unavailable separate review sets honestly. Without a profile, retain the legacy critical self-review fallback when no delegated Reviewer is available; with a profile, a route resolving to the owner still obeys its mode. Missing mandatory subagent capability is an inability, never inline substitution or a passed gate.
 
 4. Resolution and Approval
-Resolve every finding: fix the plan, or record why the finding does not apply. Where reviews disagree, decide and state the reasoning — reviewers advise, the orchestrator judges.
+Resolve every finding through the resolved `decision-making` assignment (`decision-maker`): fix the plan, or record why the finding does not apply. Where reviews disagree, the `decision-maker` decides and states the reasoning — reviewers advise, the `decision-maker` judges. When `decision-making` runs in `mode: delegate`, send the plan, design doc, and review reports in a self-contained decision brief (see `pane-driven-development`'s `decision-maker-brief.md`) to `roles.decision-maker`, apply the resolved dispositions (through `plan-and-design` or the active owner), and record the rulings.
 Present the resolved plan, the findings, and their resolutions to the user, and ask for approval.
 
 ## Execution Requirements

@@ -60,15 +60,7 @@ and freeze it; never widen it during the run.
 | `workspace` | any pane in the orchestrator's `workspace_id`, in any tab |
 | `session` | every agent pane `herdr pane list` reports |
 
-Tabs usually separate projects; a reset-backed submit in another tab can
-discard that project's session. Respect the configured filter even when a
-matching agent exists outside it.
-
-An out-of-scope pane is neither a candidate nor a fallback and does not count
-toward availability. When no in-scope target exists, wait, use allowed
-fallbacks, or report degradation. Never widen scope mid-run.
-
-`using-herdr-sibling-panes` applies the filter — see "Delegation scope" there for the exact `herdr pane list` query.
+Read [references/routing.md](references/routing.md#delegation-scope) for scope rationale, out-of-scope rules, and `using-herdr-sibling-panes` for the exact `herdr pane list` query. Out-of-scope panes are never candidates or fallbacks; never widen scope mid-run.
 
 ## Execution strategy
 
@@ -95,6 +87,7 @@ Resolve every task the workflow will touch before its first delegation, not when
 | Task | Covers |
 |---|---|
 | `plan-and-design` | Brainstorming, design docs, implementation plans |
+| `decision-making` | Plan resolution, review finding acceptance/disagreements, mid-execution rulings and breaker adjudication, final synthesis decisions |
 | `complex-coding` | Implementation over the "Complex coding boundary" below |
 | `simple-coding` | Localized, pattern-following edits under that boundary |
 | `chores` | Lookups, file moves, log gathering, mechanical edits, lint/format runs |
@@ -131,7 +124,7 @@ Three rules bind wherever a list role is used:
 - **Degrade, never block.** A target counts as available only if an in-scope matching live agent exists, even if busy; wrong model/effort does not count. Wait for busy matches, never interrupt them. With lifecycle true, start a slot that has no live match before counting it missing. Run the available slots and report missing ones. If none can run, follow "Exhaustion and fallback" and the mandatory profile self-target mode, stating any lost independence.
 - **Say which it was.** Full set, degraded set, or single — the report names it, every time.
 
-Compare findings across the returned reviews, resolve disagreements, and only then act. Reviewers advise; the orchestrator decides.
+Compare findings across the returned reviews, route disagreements and finding acceptance through `decision-making` (`decision-maker`), and only then act. Reviewers advise; the `decision-maker` decides.
 
 ### Reviews in `mode: orchestrator`
 
@@ -182,7 +175,7 @@ Apply this skill only to direct user tasks. Without a profile the reception
 pane is the owner. With a profile, follow the profiles reference: a mismatched
 reception pane always asks unused versus relay before handoff/startup, and
 the verified selected owner receives explicit authority and frozen settings.
-The active owner keeps final synthesis and decisions; a relay only relays.
+The active owner keeps orchestration and coordination, while judgment calls and final synthesis follow `decision-making` (`decision-maker`); a relay only relays.
 
 **No re-delegation.** If your task arrived as a delegated instruction from another pane (not from the user), this skill does not apply: execute the task yourself in your own pane and never delegate it onward, even if it looks routine. Re-delegation creates cascades where multiple panes contend for the same siblings and no one does the work.
 
@@ -215,14 +208,15 @@ Runs when the `plan-review` gate is enabled, under "Roles that bind to a list" a
 
 Draft where `plan-and-design` resolves, then route the enabled reviews by
 their resolved assignment and profile rules. Wait for all, compare findings,
-and resolve disagreements before acting. The active owner decides.
+and route disagreements and plan resolution through `decision-making`.
+Reviewers advise; the `decision-maker` decides.
 
 Without a profile, each external review is reset-backed; if none of the listed
 types is available, the owner critically reviews the plan and reports no
 independent review. With a profile, self-target delegate reviews require fresh
 subagents; other owner-session modes permit reported self-review.
 
-`brainstorming`'s builder check is this gate too, earlier: before the user reads a project's full design, each reader gets `brainstorming/builder-check-brief.md` and lists what it would still need to ask to plan from the document. The same resolution and rules apply, and brainstorming merges the readers' questions into one round for the user. A workflow that writes a full project design and then a plan therefore runs this gate twice; both runs count toward the report. A small change's short design skips the builder check; the plan's review still runs when the workflow includes one.
+For `brainstorming`'s builder check under `plan-review`, read [references/routing.md](references/routing.md#builder-check).
 
 ## Exhaustion and fallback
 

@@ -4,6 +4,7 @@ orchestrator:
     effort: max
 roles:
   planning-design: orchestrator
+  decision-maker: orchestrator
   coder:
     claude:
       model: Opus 5.5

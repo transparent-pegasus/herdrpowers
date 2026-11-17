@@ -22,7 +22,7 @@ orchestrator:
 1. If it is a context problem, provide more context and re-delegate to the same pane
 2. If the task needs more reasoning, escalate separate targets per Delegation Assignments; profile self-targets keep their mode, including mandatory fresh subagents for `delegate`
 3. If the task is too large, break it into smaller pieces
-4. If the plan itself is wrong, rule on the correction, ledger it, and re-delegate with the ruling carried in the brief
+4. If the plan itself is wrong, route the correction through `decision-making` (`decision-maker`), ledger the ruling, and re-delegate with the ruling carried in the brief
 
 **No marker, no report:** that is not a status — it is a failed delegation, unless an agy or grok pane is still running. Diagnose it with `using-herdr-sibling-panes`' "Failure handling" table (crashed / blocked / still running / interrupted / errored / exhausted) before re-delegating anything.
 
@@ -38,7 +38,7 @@ before the merge step, not after it.** Both panes' statuses gate the task:
   already building to, send it the correction as well.
 - **BLOCKED from the test author** — the requirement cannot be observed, or the
   repo lacks the harness to observe it. Read [cannot-verify.md](cannot-verify.md)
-  and resolve it as a "⚠️ Cannot verify" item: decide whether the requirement is testable
+  and resolve it through `decision-making` (`decision-maker`) as a "⚠️ Cannot verify" item: decide whether the requirement is testable
   as written, and either amend the brief or record in the ledger that this
   requirement carries no test and why. Never let a task proceed with the gap
   unrecorded.

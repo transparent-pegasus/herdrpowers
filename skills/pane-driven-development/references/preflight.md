@@ -18,8 +18,8 @@ its own text agrees with itself — the tests it specifies against the code it
 specifies, the files it creates against the files it later touches. "The scan
 is clean" without those rows is not a scan you ran.
 
-Write the table to the ledger. Rule on each conflict it surfaces before
-execution begins — the spec is the binding authority, the plan is its argument
-— record the ruling beside its row, and delegate Task 1. If the scan is clean,
-proceed without comment. The review loop remains the net for conflicts that
-only emerge from implementation.
+Write the table to the ledger. Route each conflict it surfaces through
+`decision-making` (`decision-maker`) before execution begins — the spec is
+the binding authority, the plan is its argument — record the ruling beside
+its row, and delegate Task 1. If the scan is clean, proceed without comment.
+The review loop remains the net for conflicts that only emerge from implementation.

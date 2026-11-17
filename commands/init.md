@@ -103,6 +103,7 @@ delegation per task; a list means one delegation per entry.
 | Role | Binds to | Meaning |
 |---|---|---|
 | `planning-design` | one target, or `orchestrator` | Who plans and designs; the alias resolves to the active owner. Preserve custom target bindings |
+| `decision-maker` | one target, or `orchestrator` | Who makes judgment calls: plan resolution, review-finding acceptance, execution rulings, and final synthesis decisions. Preserve custom target bindings |
 | `reviewers` | a **list** of targets | One review per entry. A profile's explicit empty reviewers instead selects the owner; it does not disable reviews |
 | `coder` | one target, or `orchestrator` | The heavier-judgment role: complex coding, test authoring, whole-branch review |
 | `generalist` | one target, or `orchestrator` | Simple coding, inspection, tests, and routine operations; preserve custom target bindings |
@@ -120,13 +121,13 @@ key's end-of-line comment. Rename a legacy `reviewer` role, and every
 migration. Fallback keys/substitutes keep bare-kind or
 `kind@model` string syntax. Preserve supplied strings; no fuzzy aliases.
 
-State the empty-value rules explicitly: profile `planning-design`/`coder`/`generalist`
+State the empty-value rules explicitly: profile `planning-design`/`decision-maker`/`coder`/`generalist`
 `orchestrator`/null/`[]`/`none` binds to the owner; `reviewers: [orchestrator]`/`[]`/null/`none` means owner review.
 A config empty role list (`[]`, or legacy `agents: []`) still disables the task when no profile
 overrides that binding. Lists replace, and a matched empty fallback list is
 authoritative. A fallback never inherits the primary effort.
 
-A repo may add a role beyond these four and assign tasks to it; a profile's
+A repo may add a role beyond these five and assign tasks to it; a profile's
 `roles:` may add one too. Say so if the user asks.
 
 4. Assign a Role to Each Delegation Task
@@ -146,6 +147,7 @@ Work tasks — always happen; the assignment decides who and where:
 | Delegation task | Covers |
 |---|---|
 | `plan-and-design` | Brainstorming, design docs, implementation plans |
+| `decision-making` | Plan resolution, review-finding acceptance and disagreements, execution rulings and breaker adjudication, final synthesis decisions |
 | `complex-coding` | Implementation over the complex-coding boundary |
 | `simple-coding` | Localized, pattern-following edits under that boundary |
 | `chores` | Lookups, file moves, log gathering, mechanical edits, lint/format runs |
@@ -188,7 +190,7 @@ Rules to state while proposing:
 - `/execute` and `/execute_parallel` are the user's explicit choice and ignore `execution`. `/strict_full_cycle` overrides `enabled` only — it never widens the scope or switches the strategy.
 - `allow_agent_lifecycle` is not a delegation key, and it is enforced: `agent-lifecycle.sh` starts or ends nothing unless the value is the literal `true`, whatever a chat message says. False prohibits start/exit/restart, including recovery, fallback, and owner startup. With true, the active owner starts each selected target that has no live in-scope match — before any fallback substitute — in an idle shell pane the user left in scope, verifies its live model/effort, and ends the idle agents it started before the final report. It never creates or closes panes, interrupts working agents, or answers a startup dialog. Say what true costs: agents appear and disappear in the user's panes without a prompt each time.
 - `reviewer_usage_limit` decides what a review gate does when a reviewer hits a usage limit and no fallback substitute can take its review. `wait` holds the gate until that limit resets; a weekly limit can hold it for days. `skip` passes the gate on the remaining reviewers, names the skipped one in the report, and holds only when none is left. Neither lets the owner's own review stand in. It is config-only.
-- A profile-owner mismatch always asks whether reception is unused or relay before handoff or startup, regardless of lifecycle permission or existing matching agents. A relay retains no decision authority; describe the explicit owner handoff from the profiles reference.
+- A profile-owner mismatch always asks whether reception is unused or relay before handoff or startup, regardless of lifecycle permission or existing matching agents. A relay retains no routing or decision authority; describe the explicit owner handoff from the profiles reference.
 
 6. Write Configuration
 After the user approves the values, upsert the following section into `CLAUDE.md` at the repository root (create the file if it does not exist). If `AGENTS.md` exists, mirror the identical section there. Preserve all other content of both files; only add or replace this one section.
@@ -221,7 +223,7 @@ top-level `profile` (null for no selection), a strict boolean
 `allow_agent_lifecycle`, and `reviewer_usage_limit`. Preserve the existing
 selection on repeat init.
 Use canonical nested role targets, leaving bare `orchestrator` aliases and
-custom planning-design/generalist bindings intact. Remove optional model or
+custom planning-design/decision-maker/generalist bindings intact. Remove optional model or
 effort keys that were not chosen; a kind-only settings map is `{}`.
 
 ```yaml
@@ -240,6 +242,7 @@ reviewer_usage_limit: <wait|skip>
 # custom role its own terse comment.
 roles:
   planning-design: orchestrator # planning and design work; or the approved custom nested target
+  decision-maker: orchestrator # plan resolution, review-finding acceptance, execution rulings, and final synthesis decisions; or the approved custom nested target
   reviewers: # independent review: plans, designs, code; one per entry. Materialize every approved entry; do not infer a default count
     - <agent kind>:
         model: <model string>
@@ -265,6 +268,9 @@ assignments:
 
   # work tasks — always happen; `mode` decides whether they are delegated
   plan-and-design:
+    role: <role>
+    mode: <delegate|orchestrator>
+  decision-making:
     role: <role>
     mode: <delegate|orchestrator>
   complex-coding:
@@ -363,4 +369,4 @@ selected composition; installing templates alone does not change routes.
 - Preserve every byte of pre-existing instruction-file content outside the upserted section.
 - Mark proposed kinds/models/efforts unverified unless backed by current pane/footer evidence. Shipped profile strings remain exact even when unavailable; do not rewrite a template to fit the current session.
 - Separate Reviewer slots of one kind require distinct pinned models under the profiles reference's comparison rule. Reusing the implementing pane after reset is legitimate; profile-selected owner-session review is instead reported as self-review.
-- Adding a role beyond the shipped four is allowed — define it under `roles:` and reference it from the assignments that should use it. Never reference a role no `roles:` entry defines.
+- Adding a role beyond the shipped five is allowed — define it under `roles:` and reference it from the assignments that should use it. Never reference a role no `roles:` entry defines.

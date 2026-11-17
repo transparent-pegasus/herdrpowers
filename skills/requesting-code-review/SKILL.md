@@ -52,11 +52,11 @@ Write the contract from [review-brief.md](review-brief.md) to a file. Separate t
 
 **4. Act on feedback:**
 - Read the review from its output file, not from pane scrollback
-- Fix Critical issues immediately
-- Fix Important issues before proceeding
+- Route finding triage, reviewer disagreements, and every line of the reviewer's "Declined to judge" list through `decision-making` (`decision-maker`): each set-aside behavior either stands with a recorded reason or becomes a finding, and none is dropped silently
+- Fix accepted Critical issues immediately
+- Fix accepted Important issues before proceeding
 - Note Minor issues for later
-- Rule on every line of the reviewer's "Declined to judge" list: each set-aside behavior either stands, with your reason, or becomes a finding. None is dropped silently
-- Push back if the reviewer is wrong (with reasoning) — see `receiving-code-review`
+- Push back if the `decision-maker` determines the reviewer is wrong (with reasoning) — see `receiving-code-review`
 
 ## Example: separate delegated targets
 

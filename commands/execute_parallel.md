@@ -22,8 +22,8 @@ Do not edit workflow files unless the user's current request explicitly asks to 
 
 Read `orchestration`, its [profiles contract](../skills/orchestration/references/profiles.md), and `using-herdr-sibling-panes` before routing work. Resolve repo config over shipped roles, then only keys present in the selected profile. Freeze the active owner, targets, assignments, gates, scope, strategy, and lifecycle policy. Profile assignment overrides resolve before routing; a resolved disabled gate is skipped and named in the report.
 
-Routing comes from `assignments:`, not from this file, and the resolved YAML is the source of truth for every default — read each task's `role` and `mode` there rather than recalling one. This workflow touches implementation tracks (`complex-coding` / `simple-coding`), `test-authoring`, `fix-round-test-authoring`, `review-fixes`, `chores`, `verification`, `documentation-impact-review`, `task-review`, `fix-round-re-review`, and `final-branch-review`. A review task whose effective role binds to a list runs once per entry.
-- Track extraction, integration, and final synthesis stay with the orchestrator.
+Routing comes from `assignments:`, not from this file, and the resolved YAML is the source of truth for every default — read each task's `role` and `mode` there rather than recalling one. This workflow touches `decision-making`, implementation tracks (`complex-coding` / `simple-coding`), `test-authoring`, `fix-round-test-authoring`, `review-fixes`, `chores`, `verification`, `documentation-impact-review`, `task-review`, `fix-round-re-review`, and `final-branch-review`. A review task whose effective role binds to a list runs once per entry.
+- Track extraction and branch integration stay with the orchestrator; mid-execution rulings, review-finding triage and disagreements, and final synthesis decisions follow `decision-making` (`decision-maker`).
 - Separate delegated targets use reset-backed Herdr panes, even when a concrete target matches the owner's model. With a selected profile, self-target `delegate` requires a fresh in-process subagent for work and reviews, including empty reviewers; other owner-session modes permit inline work/self-review and optional subagents at the active owner's judgment. Report self-review honestly. Without a profile, keep legacy routing and fresh-subagent orchestrator-mode reviews. Workers never re-delegate.
 
 **Parallelism is bounded by resolved routes and worktrees.** One implementation writer per worktree, one worktree per track. Count the whole writer set: delegated implementation and test authoring each need a fresh worker and separate worktree. Separate targets need matching Herdr panes; selected-profile self-target `delegate` needs fresh-subagent capacity. Enabled reviews use their own resolved transport, including permitted owner-session self-review. Serializing tracks never changes these routes.
@@ -112,8 +112,8 @@ If any task is discovered to be coupled, conflicting, or blocked on another trac
 Gate: `assignments.final-branch-review`. When it is disabled, skip to Step 8 and tell the user the branch is reaching the integration decision unreviewed.
 Inform the user that the final review is starting.
 Read and use requesting-code-review to run the whole-branch gate over the fully integrated coordination branch through its resolved target and mode.
-Fix critical or important issues through `review-fixes`: one fix wave carrying the complete findings list, with profile self-targets retaining their mode.
-Proceed to Step 8 only when the review assesses it as Ready to merge.
+Route finding triage, reviewer disagreements, "Declined to judge" items, and final synthesis judgment through `decision-making` (`decision-maker`); fix accepted critical or important issues through `review-fixes`: one fix wave carrying the complete findings list, with profile self-targets retaining their mode.
+Proceed to Step 8 only when the `decision-maker` assesses the branch as ready for the user's integration decision (after any required re-review).
 
 8. Integration and Cleanup
 Inform the user that the implementation is complete and ready for integration.

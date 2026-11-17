@@ -42,10 +42,11 @@ by the author is not an independent review, and your human partner decides
 whether that is enough before merge. With a selected profile, fallback to an
 owner target must still obey its mode; `delegate` requires a fresh subagent.
 
-Sort the findings before you act on any of them. The reviewer's severity
-labels are advice; the gate is yours. Its "Declined to judge" list is
-yours too: every line there is a ruling you make and ledger, exactly like
-a plan conflict — `Final: Ruling: <behavior the reviewer set aside> —
+Route finding triage and re-grading through `decision-making`
+(`decision-maker`) before acting on any of them. The reviewer's severity
+labels are advice; the `decision-maker` sets the gate. The reviewer's
+"Declined to judge" list goes through `decision-making` too: every line there
+receives a ruling ledgered as `Final: Ruling: <behavior the reviewer set aside> —
 <what a reasonable person using this software gets, and why that stands
 or why it is now a finding> — <cost if wrong>`. Re-grade first, by effect:
 the spec is a vision document, and a finding's grade is what a reasonable
@@ -71,18 +72,19 @@ green after the pass means the pass is not over. Do not request a
 re-review: it would re-read a diff whose covering tests already answer
 "addressed" and whose suite run already answers "broke nothing".
 
-A finding you decide not to fix is a ruling — `Final: Ruling: <finding> —
+A finding the `decision-maker` decides not to fix is a ruling — `Final: Ruling: <finding> —
 <why the code stands> — <cost if wrong>` — and reaches your human partner
 in the rulings list. There is no second fix pass.
 
 ## Finish
 
 Before you delete anything, collect every ledger line containing
-`Ruling:` into your final message under "Rulings I made", in the order you
-made them, each with what it costs if wrong, and every `minor (deferred)`
+`Ruling:` into your final message under "Rulings made" (naming the
+`decision-maker` target and transport), in the order they were made,
+each with what it costs if wrong, and every `minor (deferred)`
 line under "Deferred minors". Both lists are exhaustive. Your final
-message is the only place the decisions you took on your human partner's
-behalf — and the findings you chose not to act on — reach them.
+message is the only place the decisions made on your human partner's
+behalf — and the findings not acted on — reach them.
 
 The same message names what inline execution gave up: no per-task review,
 the tests written by this session (the pane that implemented them), and

@@ -22,7 +22,8 @@ Do not edit workflow files unless the user's current request explicitly asks to 
 
 Read `orchestration`, its [profiles contract](../skills/orchestration/references/profiles.md), and `using-herdr-sibling-panes` before routing work. Resolve repo config over shipped roles, then only keys present in the selected profile. Freeze the active owner, targets, assignments, gates, scope, strategy, and lifecycle policy. Profile assignment overrides resolve before routing; a resolved disabled gate is skipped and named in the report.
 
-Routing comes from `assignments:`, not from this file, and the resolved YAML is the source of truth for every default — read each task's `role` and `mode` there rather than recalling one. This workflow touches `plan-and-design`, `complex-coding` / `simple-coding`, `test-authoring`, `fix-round-test-authoring`, `review-fixes`, `chores`, `verification`, and every review gate from `plan-review` through `final-branch-review`. A review task whose effective role binds to a list runs once per entry.
+Routing comes from `assignments:`, not from this file, and the resolved YAML is the source of truth for every default — read each task's `role` and `mode` there rather than recalling one. This workflow touches `plan-and-design`, `decision-making`, `complex-coding` / `simple-coding`, `test-authoring`, `fix-round-test-authoring`, `review-fixes`, `chores`, `verification`, and every review gate from `plan-review` through `final-branch-review`. A review task whose effective role binds to a list runs once per entry.
+- Plan resolution, review-finding triage and disagreements, mid-execution rulings, and final synthesis decisions follow `decision-making` (`decision-maker`). The active owner keeps orchestration, track extraction, and branch integration.
 - Separate delegated targets use reset-backed Herdr panes, even when a concrete target matches the owner's model. With a selected profile, self-target `delegate` requires a fresh in-process subagent for work and reviews, including empty reviewers; other owner-session modes permit inline work/self-review and optional subagents at the active owner's judgment. Report self-review honestly. Without a profile, keep legacy routing and fresh-subagent orchestrator-mode reviews. Workers never re-delegate.
 
 Resolve `delegation:` in the same pass, before Step 2 — both keys change what this workflow does:
@@ -48,7 +49,7 @@ Under `delegation.execution: parallel`, the plan must carry writing-plans' `## T
 Save the plan to `<PLAN_PATH_PATTERN>`.
 Gate: `assignments.plan-review`. When it is disabled, skip the review and say the plan is going to approval unreviewed.
 Otherwise run the gate through its resolved effective role and mode, using the same self-contained request for each list entry. Separate delegated targets use reset-backed panes; selected-profile owner targets in `delegate` require fresh subagents, even with empty reviewers. Other owner-session modes permit reported self-review. Preserve legacy no-profile degradation; missing mandatory subagent capability is inability, never a passed review.
-Resolve every finding, present the resolved plan with the findings and their resolutions, and ask the user to approve.
+Resolve every finding and any reviewer disagreements through `decision-making` (`decision-maker`) — reviewers advise, the `decision-maker` judges — apply the resolved edits, present the resolved plan with the findings and their resolutions, and ask the user to approve.
 Proceed to Step 3 only after the user approves the resolved plan. Code is not touched before that.
 
 3. Workspace Isolation
@@ -105,8 +106,8 @@ Proceed to Step 8 only when verification evidence is fresh and successful.
 Gate: `assignments.final-branch-review`. When it is disabled, skip to Step 9 and tell the user the branch is reaching the integration decision unreviewed.
 Inform the user that the final review is starting.
 Read and use requesting-code-review to run the whole-branch gate over the entire changeset through its resolved target and mode.
-Fix critical or important issues through `review-fixes`: one fix wave carrying the complete findings list, with profile self-targets retaining their mode.
-Proceed to Step 9 only when the review assesses it as Ready to merge.
+Route finding triage, reviewer disagreements, "Declined to judge" items, and final synthesis judgment through `decision-making` (`decision-maker`); fix accepted critical or important issues through `review-fixes`: one fix wave carrying the complete findings list, with profile self-targets retaining their mode.
+Proceed to Step 9 only when the `decision-maker` assesses the branch as ready for the user's integration decision (after any required re-review).
 
 9. Integration and Cleanup
 Inform the user that the implementation is complete and ready for integration.

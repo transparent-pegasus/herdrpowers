@@ -43,13 +43,13 @@ Use when: the branch must clear every gate the pack defines regardless of how th
 
 ### `/plan`
 
-Brainstorming, plan creation, and the enabled plan-review gate. Stops after the resolved plan is approved; reports actual independence or self-review.
+Brainstorming, plan creation, the enabled plan-review gate, and `decision-making` (`decision-maker`) resolution. Stops after the resolved plan is approved; reports actual independence or self-review.
 
 Use when: you want the design and the reviewed implementation plan, but intend to execute later (often in a different session with `/execute`).
 
 ### `/execute`
 
-Post-plan execution: workspace isolation from `<BASE_BRANCH>`, documentation impact review, pane-delegated implementation with per-task review, documentation update, repository verification, final code review, then stop and present the integration candidates.
+Post-plan execution: workspace isolation from `<BASE_BRANCH>`, documentation impact review, pane-delegated implementation with per-task review, documentation update, repository verification, final code review, and `decision-making` (`decision-maker`) rulings and final synthesis, then stop and present the integration candidates.
 
 Use when: a reviewed plan already exists and you want it carried through to a reviewed, ready-to-integrate branch.
 
@@ -76,7 +76,7 @@ All development workflows share the same guardrails:
 - **Transparency**: Each step blocks for user confirmation. Agents do not proceed autonomously through the whole cycle.
 - **Evidence**: `verification-before-completion` runs before any "done" claim, and a delegated pane's claim is verified against its report file — not taken on trust.
 - **Root cause over symptoms**: When tests fail, `systematic-debugging` drives the investigation.
-- **Owner and lifecycle policy**: Owner mismatch always asks unused versus relay before handoff/startup. `allow_agent_lifecycle` is a separate strict boolean, false by default and enforced by `agent-lifecycle.sh`: false starts and ends no agent; true lets the active owner start the selected composition's missing agents in idle in-scope shell panes and end the ones it started, never creating or closing panes. Only explicit owner handoff transfers orchestration authority.
+- **Owner and lifecycle policy**: Owner mismatch always asks unused versus relay before handoff/startup. `allow_agent_lifecycle` is a separate strict boolean, false by default and enforced by `agent-lifecycle.sh`: false starts and ends no agent; true lets the active owner start the selected composition's missing agents in idle in-scope shell panes and end the ones it started, never creating or closing panes. Only explicit owner handoff transfers orchestration authority; judgment calls and final synthesis follow `decision-making` (`decision-maker`).
 - **Honest degradation**: Reports name profile/owner, verified model/effort, transports, self-review versus independence, fallback constraints lost, lifecycle actions, changed assignments, disabled/forced gates, and actual concurrency. A mandatory subagent that cannot spawn is inability, never inline delegation or a passed gate.
 
 ## Invoking a Workflow

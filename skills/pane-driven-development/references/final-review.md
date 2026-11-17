@@ -23,13 +23,9 @@ modes permit reported self-review and optional subagents. Use
 the ledger's deferred-minor and parked lines so it can triage which must be
 fixed before merge.
 
-Rule on every line of the review's "Declined to judge" list as you would a
-plan conflict — `Final: Ruling: <behavior the reviewer set aside> — <why it
-stands, or why it is now a finding> — <cost if wrong>` — so nothing the
-reviewer set aside is dropped silently. One that becomes a finding joins the
-fix wave below.
+Route finding triage, disagreements, and every line of the review's "Declined to judge" list through `decision-making` (`decision-maker`) as you would a plan conflict — `Final: Ruling: <behavior the reviewer set aside> — <why it stands, or why it is now a finding> — <cost if wrong>` — so nothing the reviewer set aside is dropped silently. One that becomes a finding joins the fix wave below.
 
-If the final whole-branch review returns findings, route ONE fix wave through
+If the final whole-branch review returns accepted findings, route ONE fix wave through
 `review-fixes` with the complete findings list — not one worker per finding.
 Profile self-targets retain their mode; separate targets use their worker route.
 Per-finding fixers each rebuild context and re-run suites; a real
@@ -37,8 +33,8 @@ session's final-review fix wave cost more than all its tasks combined.
 Then run exactly one scoped re-review of the fix wave
 (`bash scripts/review-package PLAN_FILE FIX_BASE HEAD` by its absolute path, from the working tree you're executing in,
 [re-review-brief.md](../re-review-brief.md)).
-Adjudicate any residual findings as in the task loop's breaker: park with
-rulings, or rule on the load-bearing ones and ledger what you decided. Only
+Adjudicate any residual findings through `decision-making` (`decision-maker`) as in the task loop's breaker: park with
+rulings, or rule on the load-bearing ones and ledger what was decided. Only
 the four stop-classes named at the top of this skill stop you here. There is
 no second fix wave — residual load-bearing findings surface to your human
 partner when finishing-a-development-branch presents the options.
@@ -47,11 +43,12 @@ partner when finishing-a-development-branch presents the options.
 
 Before you delete anything, collect every ledger line containing `Ruling:` —
 preflight rulings, parked findings, breaker adjudications, all of them — into
-your final report under "Rulings I made", in the order you made them, each
+your final report under "Rulings made" (naming the `decision-maker` target and
+transport), in the order they were made, each
 with what it costs if wrong. The list is exhaustive: if the ledger holds a
-ruling, the list holds it. That list is the only place the decisions you took
+ruling, the list holds it. That list is the only place the decisions taken
 on your human partner's behalf reach them — they read it and rework whatever
-you got wrong. A ruling that dies with the workspace was a decision made in
+was got wrong. A ruling that dies with the workspace was a decision made in
 secret. It goes in the same report that names every assignment the repository
 changed and every disabled gate.
 
