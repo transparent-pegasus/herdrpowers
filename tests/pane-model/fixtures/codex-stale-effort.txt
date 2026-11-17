@@ -1,11 +1,11 @@
 SYNTHETIC: observed wrapped Codex composer with a stale header and transcript.
-OpenAI Codex · GPT-5.6-Luna max (stale header)
+OpenAI Codex · GPT-6.2-Sol max (stale header)
 › Previous task
 
-  GPT-5.6-Luna max · weekly 99% left
-• Previously used GPT-5.6-Luna with Extra High reasoning.
-› Please use GPT-5.6-Luna max and include the words
+  GPT-6.2-Sol max · weekly 99% left
+• Previously used GPT-6.2-Sol with Extra High reasoning.
+› Please use GPT-6.2-Sol max and include the words
   Extra High in your answer.
 
-  GPT-5.6-Luna medium · weekly 99% left
+  GPT-6.2-Sol medium · weekly 99% left
   ? for shortcuts

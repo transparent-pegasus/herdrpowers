@@ -14,16 +14,16 @@ function submit(args, options) {
 }
 
 test('effort mismatch exits 5 before any key or text is sent', () => {
-  const result = submit(['test-pane', instruction, 'GPT-5.6-Luna', 'max']);
+  const result = submit(['test-pane', instruction, 'GPT-6.2-Sol', 'max']);
   assert.equal(result.status, 5, result.stderr);
   assert.deepEqual(mutatingCalls(result), []);
   assert.ok(result.calls.some(visibleRead), 'the visible footer was checked');
 });
 
 for (const scenario of [
-  { name: 'model mismatch', model: 'GPT-6-Astra', effort: 'medium' },
-  { name: 'missing effort evidence', model: 'GPT-5.6-Luna', effort: 'max', before: 'codex-no-effort.txt' },
-  { name: 'stale header and transcript max', model: 'GPT-5.6-Luna', effort: 'max', before: 'codex-stale-effort.txt' },
+  { name: 'model mismatch', model: 'GPT-6.2-Astra', effort: 'medium' },
+  { name: 'missing effort evidence', model: 'GPT-6.2-Sol', effort: 'max', before: 'codex-no-effort.txt' },
+  { name: 'stale header and transcript max', model: 'GPT-6.2-Sol', effort: 'max', before: 'codex-stale-effort.txt' },
   { name: 'High versus xhigh', model: 'Grok 4.7', effort: 'High', kind: 'grok', before: 'grok.txt' },
   { name: 'Cursor bare Max', model: 'Muse Spark', effort: 'max', kind: 'cursor', before: 'cursor.txt' },
   { name: 'Cursor plan Max with labeled High', model: 'Grok 4.7', effort: 'max', kind: 'cursor', before: 'cursor-reasoning-high.txt' },
@@ -37,9 +37,9 @@ for (const scenario of [
 }
 
 for (const scenario of [
-  { name: 'effort changes', model: 'GPT-5.6-Luna', effort: 'medium', after: 'codex-xhigh.txt' },
-  { name: 'effort disappears', model: 'GPT-5.6-Luna', effort: 'medium', after: 'codex-no-effort.txt' },
-  { name: 'model changes', model: 'GPT-5.6-Luna', effort: 'medium', after: 'codex-other-model.txt' },
+  { name: 'effort changes', model: 'GPT-6.2-Sol', effort: 'medium', after: 'codex-xhigh.txt' },
+  { name: 'effort disappears', model: 'GPT-6.2-Sol', effort: 'medium', after: 'codex-no-effort.txt' },
+  { name: 'model changes', model: 'GPT-6.2-Sol', effort: 'medium', after: 'codex-other-model.txt' },
   { name: 'Cursor High becomes Extra High', model: 'Grok 4.7', effort: 'High', kind: 'cursor',
     before: 'cursor-reasoning-high.txt', after: 'cursor-reasoning-extra-high.txt' },
 ]) {
@@ -55,7 +55,7 @@ for (const scenario of [
 }
 
 for (const scenario of [
-  { name: 'case-insensitive model substring and medium', model: 'gPt-5.6', effort: 'MeDiUm' },
+  { name: 'case-insensitive model substring and medium', model: 'gPt-6.2', effort: 'MeDiUm' },
   { name: 'Extra High alias of observed xhigh', model: 'gRoK 4.7', effort: 'Extra High', kind: 'grok', before: 'grok.txt' },
   { name: 'xhigh alias of labeled Cursor Extra High', model: 'Grok 4.7', effort: 'XHIGH', kind: 'cursor', before: 'cursor-reasoning-extra-high.txt' },
   { name: 'labeled Cursor Max', model: 'Grok 4.7', effort: 'max', kind: 'cursor', before: 'cursor-reasoning-max.txt' },
@@ -74,7 +74,7 @@ for (const scenario of [
 }
 
 test('OpenCode checks max before and after its keybound new session', () => {
-  const result = submit(['test-pane', instruction, 'GPT-6.1 Sol', 'max'], {
+  const result = submit(['test-pane', instruction, 'GPT-6.2 Sol', 'max'], {
     kind: 'opencode', before: 'opencode.txt',
   });
   assert.equal(result.status, 0, result.stderr);
@@ -86,14 +86,14 @@ test('OpenCode checks max before and after its keybound new session', () => {
 });
 
 test('OpenCode effort loss after keybound reset sends no instruction', () => {
-  const result = submit(['test-pane', instruction, 'GPT-6.1 Sol', 'max'], {
+  const result = submit(['test-pane', instruction, 'GPT-6.2 Sol', 'max'], {
     kind: 'opencode', before: 'opencode.txt', after: 'opencode-no-effort.txt',
   });
   assert.equal(result.status, 5, result.stderr);
   assert.deepEqual(mutatingCalls(result), [key('ctrl+x'), key('n')]);
 });
 
-for (const modelArgs of [[], ['gpt-5.6-luna']]) {
+for (const modelArgs of [[], ['gpt-6.2-sol']]) {
   test(`legacy composer invocation with ${modelArgs.length ? 'model only' : 'no model'} still submits`, () => {
     const result = submit(['test-pane', instruction, ...modelArgs]);
     assert.equal(result.status, 0, result.stderr);
@@ -120,14 +120,14 @@ test('an agent that exits before Enter never gets Enter in its shell', () => {
 });
 
 test('legacy model-only mismatch is rejected before any key', () => {
-  const result = submit(['test-pane', instruction, 'GPT-6-Astra']);
+  const result = submit(['test-pane', instruction, 'GPT-6.2-Astra']);
   assert.equal(result.status, 5, result.stderr);
   assert.deepEqual(mutatingCalls(result), []);
   assert.ok(result.calls.some(visibleRead));
 });
 
 test('legacy model-only change after reset sends only the reset', () => {
-  const result = submit(['test-pane', instruction, 'GPT-5.6-Luna'], { after: 'codex-other-model.txt' });
+  const result = submit(['test-pane', instruction, 'GPT-6.2-Sol'], { after: 'codex-other-model.txt' });
   assert.equal(result.status, 5, result.stderr);
   assert.deepEqual(mutatingCalls(result), clear);
   const resetEnter = result.calls.findIndex((call) => call[1] === 'send-keys' && call[3] === 'enter');
@@ -135,7 +135,7 @@ test('legacy model-only change after reset sends only the reset', () => {
 });
 
 test('legacy OpenCode model-only invocation uses its keybound reset', () => {
-  const result = submit(['test-pane', instruction, 'GPT-6.1 Sol'], { kind: 'opencode', before: 'opencode.txt' });
+  const result = submit(['test-pane', instruction, 'GPT-6.2 Sol'], { kind: 'opencode', before: 'opencode.txt' });
   assert.equal(result.status, 0, result.stderr);
   assert.deepEqual(mutatingCalls(result), [key('ctrl+x'), key('n'), ...sendInstruction]);
 });
@@ -143,15 +143,15 @@ test('legacy OpenCode model-only invocation uses its keybound reset', () => {
 for (const [name, args] of [
   ['no arguments', []],
   ['missing instruction', ['test-pane']],
-  ['empty pane', ['', instruction, 'GPT-5.6-Luna', 'medium']],
-  ['empty instruction', ['test-pane', '', 'GPT-5.6-Luna', 'medium']],
+  ['empty pane', ['', instruction, 'GPT-6.2-Sol', 'medium']],
+  ['empty instruction', ['test-pane', '', 'GPT-6.2-Sol', 'medium']],
   ['effort without model', ['test-pane', instruction, '', 'medium']],
-  ['empty effort', ['test-pane', instruction, 'GPT-5.6-Luna', '']],
-  ['multiline effort', ['test-pane', instruction, 'GPT-5.6-Luna', 'high\nmax']],
-  ['multiline model', ['test-pane', instruction, 'GPT-5.6-Luna\nOther', 'medium']],
-  ['too many arguments', ['test-pane', instruction, 'GPT-5.6-Luna', 'medium', 'extra']],
-  ['multiline instruction', ['test-pane', 'Review\nthen edit', 'GPT-5.6-Luna', 'medium']],
-  ['slash popup trigger', ['test-pane', 'Run /clear before work', 'GPT-5.6-Luna', 'medium']],
+  ['empty effort', ['test-pane', instruction, 'GPT-6.2-Sol', '']],
+  ['multiline effort', ['test-pane', instruction, 'GPT-6.2-Sol', 'high\nmax']],
+  ['multiline model', ['test-pane', instruction, 'GPT-6.2-Sol\nOther', 'medium']],
+  ['too many arguments', ['test-pane', instruction, 'GPT-6.2-Sol', 'medium', 'extra']],
+  ['multiline instruction', ['test-pane', 'Review\nthen edit', 'GPT-6.2-Sol', 'medium']],
+  ['slash popup trigger', ['test-pane', 'Run /clear before work', 'GPT-6.2-Sol', 'medium']],
 ]) {
   test(`${name} exits 2 without sending a key`, () => {
     const result = submit(args);
