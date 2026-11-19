@@ -5,8 +5,8 @@ YAML keys start with `orchestrator` when present, then `roles` (`planning-design
 
 | File | Composition and purpose |
 |---|---|
-| `fable.yaml` | `Fable 5.2` owner plans and decides; `any` coder; `GPT-6.2-Astra` and `Gemini 4 Neon` review. |
-| `neon-fable.yaml` | `Gemini 4 Neon` owner; `Fable 5.2` handles planning and decisions; `any` coder; `GPT-6.2-Astra` and `Gemini 4 Neon` review. |
+| `fable.yaml` | `Fable 5.2` owner plans and decides; `any` coder; `GPT-6.2-Astra` and `Gemini 4 Neon` review; `Gemini 4 Hydrogen` generalist. |
+| `neon-fable.yaml` | `Gemini 4 Neon` owner; `Fable 5.2` handles planning and decisions; `any` coder; `GPT-6.2-Astra` and `Gemini 4 Neon` review; `Gemini 4 Hydrogen` generalist. |
 | `solo.yaml` | `any` owner only. |
 
 `any` is filled in the task: name the profile, then the target, as in `solo Opus 5.5 max` or `neon-fable coder: codex`.

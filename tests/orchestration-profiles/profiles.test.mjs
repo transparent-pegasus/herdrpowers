@@ -32,8 +32,15 @@ test('every shipped profile orders owner, then roles from planning through decis
     assert.equal(roles[0], 'planning-design', name);
     assert.equal(roles[1], 'decision-maker', name);
     assert.equal(roles.at(-1), 'generalist', name);
-    assert.match(source, /^  generalist: orchestrator$/m, name);
   }
+});
+
+test('fable and neon-fable give generalist work to Gemini 4 Hydrogen while solo keeps it with the owner', () => {
+  for (const name of ['fable.yaml', 'neon-fable.yaml']) {
+    const source = readFileSync(join(profiles, name), 'utf8');
+    assert.match(source, /^  generalist:\n    agy:\n      effort: XHigh\n      model: Gemini 4 Hydrogen$/m, name);
+  }
+  assert.match(readFileSync(join(profiles, 'solo.yaml'), 'utf8'), /^  generalist: orchestrator$/m);
 });
 
 test('neon-fable delegates planning and decisions to Fable while the task names its coder', () => {

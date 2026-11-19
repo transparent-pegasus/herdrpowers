@@ -19,7 +19,10 @@ roles:
     - agy:
         model: Gemini 4 Neon
         effort: XHigh
-  generalist: orchestrator
+  generalist:
+    agy:
+      effort: XHigh
+      model: Gemini 4 Hydrogen
 assignments:
   plan-and-design:
     mode: delegate
