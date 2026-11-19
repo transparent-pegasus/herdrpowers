@@ -1,21 +1,24 @@
 orchestrator:
-  codex:
-    model: GPT-6.2-Sol
-    effort: max
+  agy:
+    model: Gemini 4 Neon
+    effort: XHigh
 roles:
   planning-design:
-    codex:
-      model: GPT-6.2-Astra
+    claude:
+      model: Fable 5.2
       effort: max
   decision-maker:
-    codex:
-      model: GPT-6.2-Astra
+    claude:
+      model: Fable 5.2
       effort: max
-  coder: orchestrator
+  coder: any
   reviewers:
     - codex:
         model: GPT-6.2-Astra
         effort: max
+    - agy:
+        model: Gemini 4 Neon
+        effort: XHigh
   generalist: orchestrator
 assignments:
   plan-and-design:

@@ -1,7 +1,4 @@
-orchestrator:
-  codex:
-    model: GPT-6.2-Sol
-    effort: max
+orchestrator: any
 roles:
   planning-design: orchestrator
   decision-maker: orchestrator
