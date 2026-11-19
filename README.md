@@ -88,16 +88,18 @@ Repository settings stay outside the plugin and survive updates:
   review settings, the selected `profile`, `allow_agent_lifecycle`, and
   `reviewer_usage_limit`.
 - `.herdrpowers/profiles/`: presets for role targets, models/effort, and
-  optional fallback, delegation, and assignment overrides. Init installs the six
+  optional fallback, delegation, and assignment overrides. Init installs the
   shipped ones without overwriting yours; their
   [README](.herdrpowers/profiles/README.md) explains the names.
 
 ```yaml
-profile: fable-sol-ultra      # or name one in the task; null selects none
+profile: fable                # or name one in the task; null selects none
 allow_agent_lifecycle: false  # true: the orchestrator may start and end agents in panes
 reviewer_usage_limit: skip    # wait: hold a review gate until a usage-limited reviewer resets
 ```
 
+A profile slot written `any` takes its target from the task, as in
+`solo Opus 5.5 max` or `neon-fable coder: codex`; parts left out stay open.
 A profile overrides only present keys. Omitted keys keep config/default
 values; maps merge per key and lists replace, including empty lists.
 Assignment overrides may change modes and review gates; lifecycle permission

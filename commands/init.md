@@ -93,7 +93,8 @@ only keys present in its file. Its `roles:` entries replace bindings;
 `fallbacks`, `delegation`, and `assignments` merge per key, including each
 task's fields. Missing keys retain config/default values, lists replace
 (including `[]`), and explicit assignment fields may change modes or gates.
-Lifecycle permission remains config-only.
+Lifecycle permission remains config-only. A profile slot written `any` takes
+its target from the task; a configured selection without one accepts any agent.
 Validate any selected name/file per the profiles reference; invalid or missing
 selection is an explicit error, not a reason to silently clear it.
 

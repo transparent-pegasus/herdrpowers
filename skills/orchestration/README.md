@@ -11,7 +11,7 @@ the effective owner, routes, review context, and configuration changes.
 - [`roles.yaml`](roles.yaml) — the pack's **shipped defaults**: the `roles:` list, the `fallbacks:` map of substitutes for exhausted agents, the `delegation:` block (`pane_scope`, `execution`), and the `assignments:` table giving every delegation task a role and a mode.
 - [`references/profiles.md`](references/profiles.md) — required before routing: selection/precedence, nested targets and migration, owner handoff, lifecycle permission, self-target execution, and fallback lookup.
 - [`references/routing.md`](references/routing.md) — task classification, workflow mapping, and the coding boundary.
-- [`../../.herdrpowers/profiles/`](../../.herdrpowers/profiles/) — six shipped profile templates, included in npm distribution and installed only when missing during init.
+- [`../../.herdrpowers/profiles/`](../../.herdrpowers/profiles/) — shipped profile templates, included in npm distribution and installed only when missing during init.
 - [`agents/openai.yaml`](agents/openai.yaml) — interface metadata for OpenAI-compatible agent runners.
 
 ## Configuration
@@ -25,7 +25,8 @@ Lists replace, including `[]`; empty maps change nothing. Invalid/missing
 selections error explicitly. Freeze configuration
 before routing; do not rewrite it during a run.
 
-Top-level `profile` selects no composition when absent/null/`none`.
+Top-level `profile` selects no composition when absent/null/`none`; the task
+fills a selected profile's `any` slots.
 Top-level `allow_agent_lifecycle` is a strict boolean, false by default,
 separate from profiles and delegation. Init writes canonical nested role
 targets and installs missing templates without overwriting local profiles or

@@ -8,18 +8,11 @@ import test from 'node:test';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const profiles = join(root, '.herdrpowers/profiles');
-const names = [
-  'fable-opus-ultra.yaml',
-  'fable-sol-ultra.yaml',
-  'opus-fable.yaml',
-  'opus-solo.yaml',
-  'sol-astra.yaml',
-  'sol-solo.yaml',
-];
+const names = ['fable.yaml', 'neon-fable.yaml', 'solo.yaml'];
 
 // A missing template breaks profile selection; a missing package entry breaks
 // installed users even if every file exists in a developer's checkout.
-test('the six named profile templates are available as files', () => {
+test('the named profile templates are available as files', () => {
   assert.ok(existsSync(profiles), 'missing shipped .herdrpowers/profiles directory');
   assert.deepEqual(readdirSync(profiles).filter((name) => name.endsWith('.yaml')).sort(), names);
   for (const name of names) assert.ok(statSync(join(profiles, name)).isFile(), `${name} must be a file`);
@@ -43,42 +36,17 @@ test('every shipped profile orders owner, then roles from planning through decis
   }
 });
 
-for (const [name, kind, owner, model] of [
-  ['sol-astra.yaml', 'codex', 'GPT-6.2-Sol', 'GPT-6.2-Astra'],
-  ['opus-fable.yaml', 'claude', 'Opus 5.5', 'Fable 5.2'],
-]) {
-  test(`${name} delegates planning, decisions, and review while keeping execution with its cheaper owner`, () => {
-    const source = readFileSync(join(profiles, name), 'utf8');
-    assert.equal(source, `orchestrator:
-  ${kind}:
-    model: ${owner}
-    effort: max
-roles:
-  planning-design:
-    ${kind}:
-      model: ${model}
-      effort: max
-  decision-maker:
-    ${kind}:
-      model: ${model}
-      effort: max
-  coder: orchestrator
-  reviewers:
-    - ${kind}:
-        model: ${model}
-        effort: max
-  generalist: orchestrator
-assignments:
-  plan-and-design:
-    mode: delegate
-  decision-making:
-    mode: delegate
-`);
-  });
-}
+test('neon-fable delegates planning and decisions to Fable while the task names its coder', () => {
+  const source = readFileSync(join(profiles, 'neon-fable.yaml'), 'utf8');
+  for (const role of ['planning-design', 'decision-maker']) {
+    assert.match(source, new RegExp(`^  ${role}:\\n    claude:\\n      model: Fable 5.2\\n      effort: max$`, 'm'), role);
+  }
+  assert.match(source, /^  coder: any$/m);
+  assert.ok(source.endsWith('assignments:\n  plan-and-design:\n    mode: delegate\n  decision-making:\n    mode: delegate\n'));
+});
 
-test('ultra and solo profiles keep planning and decisions with their selected owner', () => {
-  for (const name of names.filter((name) => /-(ultra|solo)\.yaml$/.test(name))) {
+test('fable and solo keep planning and decisions with their selected owner', () => {
+  for (const name of ['fable.yaml', 'solo.yaml']) {
     const source = readFileSync(join(profiles, name), 'utf8');
     assert.match(source, /^  planning-design: orchestrator$/m, name);
     assert.match(source, /^  decision-maker: orchestrator$/m, name);
@@ -92,17 +60,15 @@ test('the profile contract binds single-target roles orchestrator or none to the
   }
 });
 
-test('solo profiles bind coder and reviewers to the orchestrator alias', () => {
-  for (const name of ['opus-solo.yaml', 'sol-solo.yaml']) {
-    const source = readFileSync(join(profiles, name), 'utf8');
-    assert.match(source, /^  coder: orchestrator$/m, name);
-    assert.match(source, /^  reviewers: \[orchestrator\]$/m, name);
-  }
+test('solo binds coder and reviewers to the orchestrator alias', () => {
+  const source = readFileSync(join(profiles, 'solo.yaml'), 'utf8');
+  assert.match(source, /^  coder: orchestrator$/m);
+  assert.match(source, /^  reviewers: \[orchestrator\]$/m);
   const contract = readFileSync(join(root, 'skills/orchestration/references/profiles.md'), 'utf8');
   assert.match(contract, /\| `roles.reviewers` \|[^\n]*`\[orchestrator\]`, `\[\]`, null, or literal `none` binds it to the active owner/);
 });
 
-test('npm distribution includes the six orchestration profiles and their README, nothing else local', () => {
+test('npm distribution includes the orchestration profiles and their README, nothing else local', () => {
   const cache = mkdtempSync(join(tmpdir(), 'herdr-profile-pack-'));
   try {
     const result = spawnSync('npm', ['pack', '--dry-run', '--json', '--ignore-scripts'], {
@@ -120,6 +86,25 @@ test('npm distribution includes the six orchestration profiles and their README,
   } finally {
     rmSync(cache, { recursive: true, force: true });
   }
+});
+
+// `any` is filled per run; in a list it would break slot independence.
+test('profiles write any only for the owner or a single-target role, and the task fills it', () => {
+  for (const name of names) {
+    const source = readFileSync(join(profiles, name), 'utf8');
+    for (const [line] of source.matchAll(/^.*\bany\b.*$/gm)) {
+      assert.match(line, /^(orchestrator|  (planning-design|decision-maker|coder|generalist)): any$/, `${name}: ${line}`);
+    }
+  }
+  assert.match(readFileSync(join(profiles, 'solo.yaml'), 'utf8'), /^orchestrator: any$/m);
+  assert.match(readFileSync(join(profiles, 'fable.yaml'), 'utf8'), /^  coder: any$/m);
+  const contract = readFileSync(join(root, 'skills/orchestration/references/profiles.md'), 'utf8');
+  for (const key of ['orchestrator', 'roles.planning-design', 'roles.decision-maker', 'roles.coder', 'roles.generalist']) {
+    assert.match(contract, new RegExp(`^\\| \`${key}\` \\|[^\\n]*\\| One nested target or \`any\` `, 'm'), key);
+  }
+  assert.doesNotMatch(contract.match(/^\| `roles.reviewers` \|.*$/m)[0], /`any`/);
+  assert.match(contract, /^## `any` slots$/m);
+  for (const example of ['`solo Opus 5.5 max`', '`neon-fable coder: codex`']) assert.ok(contract.includes(example), example);
 });
 
 test('shipped roles use direct values under roles with a description comment per key', () => {

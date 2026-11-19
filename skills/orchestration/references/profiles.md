@@ -26,11 +26,12 @@ the directory holding `skills/`, three levels above this file.
    `skip`; omission uses the shipped value. Any other value, or the key nested
    under `delegation` or inside a profile, is an error.
 
-   A profile the user names in the task itself ("run this with `sol-astra`"),
+   A profile the user names in the task itself ("run this with `fable`"),
    or an explicit request to use none, selects the profile for that run
    and takes precedence over the configured `profile`. Validate it the same
-   way and leave the configuration file unchanged. This covers selection
-   only: lifecycle permission comes from configuration alone, never from chat.
+   way and leave the configuration file unchanged. The task may also fill the
+   selected profile's `any` slots, below. This covers selection and those
+   fills only: lifecycle permission comes from configuration alone, never from chat.
 3. For a selected name, read `<repo-root>/.herdrpowers/profiles/<name>.yaml`
    first; only if that file is absent, read the shipped
    `<pack>/.herdrpowers/profiles/<name>.yaml`. An invalid local file is an error,
@@ -42,8 +43,9 @@ the directory holding `skills/`, three levels above this file.
    including `[]`. Omitted keys retain the resolved config/default value.
    Do not use truthiness or fill missing keys from another profile. Role
    bindings alone do not change assignments; explicit `assignments`, `delegation`,
-   and `fallbacks` entries override their corresponding values. Resolve owner
-   aliases and gate enablement after this overlay.
+   and `fallbacks` entries override their corresponding values. Apply the
+   task's `any` fills with this overlay. Resolve owner aliases and gate
+   enablement after it.
 5. Reconcile the reception pane with the selected owner as described below,
    then freeze the selected file, effective targets, assignments, scope,
    execution strategy, and lifecycle permission for the run. Do not rewrite
@@ -65,7 +67,7 @@ them in the canonical form.
 
 Profiles allow top-level `orchestrator`, `roles`, `fallbacks`, `delegation`,
 and `assignments`. Each is optional; any other top-level key is an error.
-The six shipped YAML assets are the source of truth for preset values and
+The shipped YAML assets are the source of truth for preset values and
 reviewer order. Keep preset keys ordered: `orchestrator` when present, then
 `roles` with `planning-design` first, `decision-maker` next, and `generalist`
 last, then override maps.
@@ -74,13 +76,13 @@ with a deprecation notice; a role set both ways is an error.
 
 | Profile key | When absent | When present |
 |---|---|---|
-| `orchestrator` | Keep the legacy owner, the pane receiving the user's task | One nested target selects the active owner; null, `none`, and lists are invalid |
-| `roles.planning-design` | Keep the resolved binding | One nested target replaces that binding; bare `orchestrator`, null, `[]`, or literal `none` binds it to the active owner |
-| `roles.decision-maker` | Keep the resolved binding | One nested target replaces that binding; bare `orchestrator`, null, `[]`, or literal `none` binds it to the active owner |
-| `roles.coder` | Keep the resolved binding | One nested target replaces that binding; bare `orchestrator`, null, `[]`, or literal `none` binds it to the active owner, with no separate coder |
+| `orchestrator` | Keep the legacy owner, the pane receiving the user's task | One nested target or `any` selects the active owner; null, `none`, and lists are invalid |
+| `roles.planning-design` | Keep the resolved binding | One nested target or `any` replaces that binding; bare `orchestrator`, null, `[]`, or literal `none` binds it to the active owner |
+| `roles.decision-maker` | Keep the resolved binding | One nested target or `any` replaces that binding; bare `orchestrator`, null, `[]`, or literal `none` binds it to the active owner |
+| `roles.coder` | Keep the resolved binding | One nested target or `any` replaces that binding; bare `orchestrator`, null, `[]`, or literal `none` binds it to the active owner, with no separate coder |
 | `roles.reviewers` | Keep the resolved binding | A nonempty list of nested targets replaces that binding in order; `[orchestrator]`, `[]`, null, or literal `none` binds it to the active owner, with no external reviewers |
-| `roles.generalist` | Keep the resolved binding | One nested target replaces that binding; bare `orchestrator`, null, `[]`, or literal `none` binds it to the active owner |
-| `roles.<custom>` | Keep the resolved binding, if any | A target, `orchestrator`, or list, as in config; adds the role when config lacks it |
+| `roles.generalist` | Keep the resolved binding | One nested target or `any` replaces that binding; bare `orchestrator`, null, `[]`, or literal `none` binds it to the active owner |
+| `roles.<custom>` | Keep the resolved binding, if any | A target, `orchestrator`, or list, as in config, or `any` for one target; adds the role when config lacks it |
 | `fallbacks` | Keep the resolved fallback map | Override each present string key's entire substitute list, including `[]`; keep omitted entries |
 | `delegation` | Keep the resolved delegation settings | Override each present `pane_scope` or `execution`; keep omitted settings |
 | `assignments` | Keep the resolved task assignments | Override each present task's `role`, `mode`, or review `enabled` field; keep omitted tasks and fields |
@@ -141,7 +143,7 @@ Do not rewrite configuration during a run. `orchestrator@model` and nested
 settings for that alias are invalid: select an owner through the profile.
 Fallbacks retain their existing string syntax, described below.
 
-Herdr targets must match kind and every requested model/effort constraint.
+Herdr targets must match every requested kind, model, and effort constraint.
 Preserve the original strings in configuration, handoffs, helper arguments,
 and reports. Compare model text case-insensitively against the live footer;
 compare effort as case-insensitive semantic tokens, with `Extra High` and
@@ -157,6 +159,30 @@ cannot prove a match. An unrecognized CLI layout needs observed footer
 evidence and helper support before it can verify that constraint. Routing
 selects a matching agent; it never changes an existing agent's model/effort.
 
+## `any` slots
+
+A profile may write the bare literal `any` for `orchestrator` or for a role
+that takes one target. It is never an agent kind; list entries, override
+maps, and config reject it. The run's task fills each slot: `slot: value`
+(`neon-fable coder: codex`), or, right after the name of a profile with one
+`any` slot, the bare value (`solo Opus 5.5 max`).
+
+A value is an optional agent kind (as `herdr pane list` reports it under
+`agent`), then an optional model, then an optional effort; effort requires
+model, and a role slot also takes `orchestrator`. Keep the exact strings and
+ask the user when the split is ambiguous. What the value omits stays open:
+`codex` accepts any codex model and effort, and `Opus 5.5 max` accepts an
+agent of any kind whose live footer verifies `Opus 5.5` at `max`. An unfilled
+slot accepts every agent. A bare value for a profile with several `any`
+slots, or a value for a slot the profile does not write `any`, is an error:
+ask the user before routing; chat never overrides a pinned slot.
+
+A slot without a kind takes any in-scope agent pane whose footer verifies
+the model and effort it names. It cannot be started, even with lifecycle
+permission, and has no fallback key; a value with a kind follows the normal
+start and lookup rules. An `any` role slot is a separate worker, like a
+concrete target, unless filled with `orchestrator`. Fills freeze with the run.
+
 ## Reception and owner handoff
 
 Without a selected profile, the reception pane remains the owner and legacy
@@ -164,8 +190,8 @@ routing/review independence applies. With a profile, check whether the
 reception pane matches the selected owner target, including requested model
 and effort — like any other target, by its `agent` kind and
 `pane-model.sh "$HERDR_PANE_ID" MODEL [EFFORT]`. A pane whose footer shows no
-such evidence does not match. If the profile omitted `orchestrator`, keep the
-reception owner.
+such evidence does not match. If the profile omitted `orchestrator`, or left
+it `any` without a fill, keep the reception owner.
 
 **A mismatch always requires the reception-role question**, even if an exact
 owner is already idle, a shell is available, or lifecycle permission is true:
@@ -202,8 +228,9 @@ Neither fallback nor lifecycle permission waives the reception-role question.
 Send an explicit **orchestrator handoff**, containing:
 
 - The original user instruction, constraints, and current task state.
-- Absolute repository/worktree paths, selected profile name/path, frozen
-  effective targets, assignments/gates, scope/strategy, and lifecycle policy.
+- Absolute repository/worktree paths, selected profile name/path and its
+  `any` fills, frozen effective targets, assignments/gates, scope/strategy,
+  and lifecycle policy.
 - The primary and effective owner targets, any fallback key/substitute used,
   and lost constraints. Keep the profile file unchanged; owner aliases bind
   to the verified effective owner.
@@ -336,10 +363,11 @@ Init never selects a profile merely because it installed one. Runtime
 resolution can use a shipped profile before init; a missing selected custom
 profile is still an explicit error.
 
-The final run report names the selected profile or no selection, effective
-owner and reception role, target/model/effort evidence, transport for each
-task/review/decision, self-review versus independent review, fallbacks and lost
-constraints, unavailable routes, lifecycle actions and task-owned agents
-left running, test writer, changed assignments, and disabled/forced gates.
+The final run report names the selected profile and its `any` fills, or no
+selection, effective owner and reception role, target/model/effort evidence,
+transport for each task/review/decision, self-review versus independent
+review, fallbacks and lost constraints, unavailable routes, lifecycle
+actions and task-owned agents left running, test writer, changed
+assignments, and disabled/forced gates.
 Do not confuse an empty reviewer composition, a disabled gate, and an
 unavailable mandatory subagent: each produces a different record.

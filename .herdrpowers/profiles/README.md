@@ -1,20 +1,17 @@
 # Profiles
 
-Names put the owner first. `ultra` means two external reviewers; `solo` means no separate coder.
+Names put the owner first. `solo` means one agent does everything.
 YAML keys start with `orchestrator` when present, then `roles` (`planning-design` first, `decision-maker` next, `generalist` last), then override maps such as `assignments`.
 
 | File | Composition and purpose |
 |---|---|
-| `fable-sol-ultra.yaml` | `Fable 5.2` owner, `GPT-6.2-Sol` coder, two external reviewers. Largest composition. |
-| `fable-opus-ultra.yaml` | `Fable 5.2` owner, separate `Opus 5.5` coder, two external reviewers. Largest composition. |
-| `sol-astra.yaml` | `GPT-6.2-Sol` owner executes; `GPT-6.2-Astra` handles planning, decisions, and reviews. Conserves Codex tokens. |
-| `opus-fable.yaml` | `Opus 5.5` owner executes; `Fable 5.2` handles planning, decisions, and reviews. Conserves Claude tokens. |
-| `sol-solo.yaml` | `GPT-6.2-Sol` only. |
-| `opus-solo.yaml` | `Opus 5.5` only. |
+| `fable.yaml` | `Fable 5.2` owner plans and decides; `any` coder; `GPT-6.2-Astra` and `Gemini 4 Neon` review. |
+| `neon-fable.yaml` | `Gemini 4 Neon` owner; `Fable 5.2` handles planning and decisions; `any` coder; `GPT-6.2-Astra` and `Gemini 4 Neon` review. |
+| `solo.yaml` | `any` owner only. |
 
-For the two largest compositions, choose the coder from whichever subscription has the larger token allowance.
-The two smaller compositions keep execution on the cheaper owner and delegate planning, decisions, and reviews to the upper model.
-They override `assignments.plan-and-design.mode` and `assignments.decision-making.mode` to `delegate`; other assignment fields retain config/default values.
+`any` is filled in the task: name the profile, then the target, as in `solo Opus 5.5 max` or `neon-fable coder: codex`.
+For `fable` and `neon-fable`, name the coder from whichever subscription has the larger token allowance.
+`neon-fable` overrides `assignments.plan-and-design.mode` and `assignments.decision-making.mode` to `delegate`; other assignment fields retain config/default values.
 Use `solo` for tasks that need neither complex decisions nor coding.
 
 - Select a profile by setting `profile` in `.herdrpowers/config.yaml` to the filename without its extension.
@@ -32,6 +29,11 @@ Use `solo` for tasks that need neither complex decisions nor coding.
   Use the form `roles: {coder: {codex: {model: GPT-6.2-Sol, effort: max}}}`.
   Settings are nested. `model` and `effort` are optional nonempty strings; `effort` requires `model`.
   Do not write new `kind@model` targets except in fallback strings.
+- Bare `any` may stand for `orchestrator` or a one-target role, not a list entry, fallback, or config value.
+  Fill it as `slot: value` (`coder: codex`); right after the name of a profile with one `any` slot, the bare value is enough.
+  A value is an optional kind, then optional model and effort. Omitted parts stay open: `codex` means any codex model and effort.
+  A value without a kind matches any kind whose footer shows that model and effort, but is never started or replaced by a fallback.
+  An unfilled slot accepts any agent; unfilled `solo` keeps the receiving pane as owner. A value for a slot not written `any` is an error.
 - `model` and `effort` must match the pane's footer. Do not infer them from provider names.
   Context usage and a plan's `Max` label are not evidence of reasoning effort. Do not silently change template strings.
 - `claude` does not show model or effort in its footer by default. Without a statusLine, a `claude` target always fails to match.

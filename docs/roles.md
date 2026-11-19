@@ -34,7 +34,9 @@ each task's fields; omitted keys retain config/default values. Empty maps
 change nothing; fallback lists replace, including `[]`. Role bindings alone
 leave modes and gates intact; explicit assignment fields can override them.
 Preserve custom roles and omitted bindings. A concrete coder matching the owner
-is still a separate worker.
+is still a separate worker. A profile may write `any` for `orchestrator` or a
+one-target role; the task fills it, as in `solo Opus 5.5 max` or
+`neon-fable coder: codex`, and parts left out stay open.
 
 A mismatched reception pane always asks **unused or relay** before owner handoff
 or startup, even if a matching owner exists. The explicit handoff transfers
@@ -141,7 +143,7 @@ Handles brainstorming, design documents, and implementation plans through the re
 
 ### Decision-Maker
 
-Handles judgment calls across the cycle through the resolved `decision-making` assignment: plan resolution and finding disposition, reviewer disagreement adjudication, mid-execution plan/conflict rulings and five-round breaker adjudication, and final integration synthesis decisions. Its judgment is final: reviewers advise, the `decision-maker` decides. By default (`decision-maker: orchestrator`, `mode: orchestrator`), the active owner decides directly; compositions such as `opus-fable` or `sol-astra` bind `decision-maker` to the upper model (`assignments.decision-making.mode: delegate`) so an executing orchestrator routes judgment calls there instead of deciding itself.
+Handles judgment calls across the cycle through the resolved `decision-making` assignment: plan resolution and finding disposition, reviewer disagreement adjudication, mid-execution plan/conflict rulings and five-round breaker adjudication, and final integration synthesis decisions. Its judgment is final: reviewers advise, the `decision-maker` decides. By default (`decision-maker: orchestrator`, `mode: orchestrator`), the active owner decides directly; compositions such as `neon-fable` bind `decision-maker` to another model (`assignments.decision-making.mode: delegate`) so an executing orchestrator routes judgment calls there instead of deciding itself.
 
 ### Reviewers
 

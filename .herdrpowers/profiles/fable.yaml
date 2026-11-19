@@ -5,15 +5,12 @@ orchestrator:
 roles:
   planning-design: orchestrator
   decision-maker: orchestrator
-  coder:
-    codex:
-      model: GPT-6.2-Sol
-      effort: max
+  coder: any
   reviewers:
     - codex:
         model: GPT-6.2-Astra
         effort: max
     - agy:
-        model: Gemini 4 Argon
-        effort: High
+        model: Gemini 4 Neon
+        effort: XHigh
   generalist: orchestrator
