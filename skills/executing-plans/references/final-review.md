@@ -25,22 +25,24 @@ subagent at the active owner's judgment. No-profile orchestrator-mode review
 still requires a fresh subagent. Use its
 [review-brief.md](../../requesting-code-review/review-brief.md) with the
 package path. In `[PLAN_OR_REQUIREMENTS]`, give the plan and spec paths,
-the plan's Review Focus section verbatim if it has one (the input classes
+the user's requirements for this task verbatim and in the order given (the
+reviewer returns a verdict on each), the plan's Review Focus section verbatim if it has one (the input classes
 and failure modes the plan's tests do not exercise — the reviewer checks
 each deliberately), and a pointer to the ledger's `Ruling:` lines so it can
 weigh the calls you made. Record the actual reviewer and transport; owner-session
 self-review is not independent. Missing mandatory subagent capability means
 an unavailable gate, never inline substitution or a passed review.
 
-**Legacy no-profile delegated-review fallback:** when no reviewer can take it
-(typically outside herdr: no pane of the
-gate's agent types in scope, and no substitute): read review-brief.md and
-perform that review yourself against the package, as a separate pass after
-the last task's ledger line. Write `Final review: self-review (no reviewer
-available)` to the ledger, and say so in your final message: a self-review
-by the author is not an independent review, and your human partner decides
-whether that is enough before merge. With a selected profile, fallback to an
-owner target must still obey its mode; `delegate` requires a fresh subagent.
+**No reviewer available:** an unavailable reviewer slot (no pane of its
+agent type in scope, no substitute) takes `orchestration`'s subagent fallback
+while `delegation.subagent_fallback` is true: a fresh subagent of your own
+kind gets review-brief.md and the package. When nothing can take the review
+(typically outside herdr with the fallback off or no subagent capability),
+the gate holds: do not review the package yourself in its place. Write
+`Final review: held (no reviewer available)` to the ledger, say so in your
+final message, and stop before the integration decision; your human partner
+decides how to proceed. With a selected profile, fallback to an owner target
+must still obey its mode; `delegate` requires a fresh subagent.
 
 Route finding triage and re-grading through `decision-making`
 (`decision-maker`) before acting on any of them. The reviewer's severity

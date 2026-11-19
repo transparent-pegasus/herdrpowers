@@ -11,7 +11,7 @@ The builder check is the `plan-review` gate. Resolve it through `orchestration` 
 ```bash
 INSTRUCTION="Work in /abs/path/to/repo — confirm you are there before anything else. Read-only task: make no edits and do not mutate the working tree, index, HEAD, or branch state. Read /abs/path/to/builder-check-brief.md; it is your complete contract and names the design document. Write your questions to /abs/path/to/builder-check-1.md and reply with how many you found and that path. Execute this request yourself, directly; re-delegating to other panes or orchestrating is prohibited. End your reply with BLDCHK immediately followed by _<4-hex>."
 bash "$COMPOSER_SUBMIT" "$PANE" "$INSTRUCTION"
-herdr pane wait-output "$PANE" --match "BLDCHK_<4-hex>" --timeout 900000
+herdr pane wait-output "$PANE" --match "BLDCHK_<4-hex>" --timeout 540000   # one stretch, under the tool timeout: repeat per using-herdr-sibling-panes/references/task-contract.md
 ```
 
 ## 2. The builder-check contract (write to the brief file)

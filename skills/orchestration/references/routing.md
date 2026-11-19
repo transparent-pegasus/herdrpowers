@@ -11,7 +11,7 @@ active owner, per-key profile overlay, and separate lifecycle policy.
 Freeze them for the run. Routing then names the task and reads its assignment.
 
 1. **Name the task.** Classify the work against the task list in [SKILL.md](../SKILL.md#delegation-tasks-and-their-assignments): design work is `plan-and-design`; judgment calls — plan resolution and finding disposition, reviewer disagreement adjudication, mid-execution rulings and breaker adjudication, and final synthesis decisions — are `decision-making`; coding splits into `complex-coding` and `simple-coding` at the boundary below; lookups, moves, log gathering, and lint/format runs are `chores`; running verification commands is `verification`. When a piece of work spans tasks, use the heavier one (`plan-and-design` > `decision-making` > `complex-coding` > `simple-coding` > `chores`).
-2. **Read its assignment.** Take `role` and `mode` from resolved `assignments:` after the profile overlay. `delegate` to a separate target uses a matching idle in-scope pane and reset-backed submission. With a selected profile, `delegate` resolved to the active owner requires a fresh in-process subagent, including empty-reviewer reviews; lack of that capability is a reported inability, never inline delegation. `orchestrator` uses the active owner: profile-selected self-review may be same-session or use an optional subagent; no-profile reviews still require a fresh subagent. `implementer` continues in the task's existing session. Follow the profile routing table for self-targets; do not substitute a different route.
+2. **Read its assignment.** Take `role` and `mode` from resolved `assignments:` after the profile overlay. `delegate` to a separate target uses a matching idle in-scope pane and reset-backed submission; when no worker can be found, see "Subagent fallback" below. With a selected profile, `delegate` resolved to the active owner requires a fresh in-process subagent, including empty-reviewer reviews; lack of that capability is a reported inability, never inline delegation. `orchestrator` uses the active owner: profile-selected self-review may be same-session or use an optional subagent; no-profile reviews still require a fresh subagent. `implementer` continues in the task's existing session. Follow the profile routing table for self-targets; do not substitute a different route.
 
 Every worker receives the [delegation contract](../SKILL.md#delegation-contract)
 and executes without re-delegation. Owner handoff uses the separate contract
@@ -33,7 +33,49 @@ The active owner retains orchestration, transport, ledger bookkeeping, worktrees
 
 Tabs usually separate projects; a reset-backed submit in another tab can discard that project's session. Respect the configured `delegation.pane_scope` filter even when a matching agent exists outside it.
 
-An out-of-scope pane is neither a candidate nor a fallback and does not count toward availability. When no in-scope target exists, wait, use allowed fallbacks, or report degradation. Never widen scope mid-run. `using-herdr-sibling-panes` applies the filter — see "Delegation scope" there for the exact `herdr pane list` query.
+An out-of-scope pane is neither a candidate nor a fallback and does not count toward availability. When no in-scope target exists, wait, use allowed fallbacks, take the subagent fallback, or report degradation. Never widen scope mid-run. `using-herdr-sibling-panes` applies the filter — see "Delegation scope" there for the exact `herdr pane list` query.
+
+## Subagent fallback
+
+Applies when the resolved `delegation.subagent_fallback` is `true` and a
+separate worker target — a work task's role target, or one slot of a review —
+is **unavailable**: no live in-scope agent matches it (a busy match is waited
+for, never replaced), lifecycle permission did not start one, and its fallback
+lookup left no usable substitute. An explicit empty fallback list rules out
+pane substitutes only; set `subagent_fallback: false` to rule out this step.
+
+1. Spawn a **fresh in-process subagent of the active owner's own agent kind** — the owner's native subagent facility, such as Claude Code's agent tool for a Claude owner. It works in the same repository or worktree as the pane would have.
+2. Give it the same self-contained brief a pane would get: the delegation contract, edit policy, exact scope, report file, and the no-re-delegation clause. A test author still gets the requirements alone, never the implementation. It never starts, ends, or messages panes.
+3. It carries none of the target's kind, model, or effort. The owner may choose a model its runtime offers, but never presents the subagent as the configured target.
+4. **Reviews:** one subagent covers all unavailable slots of one review — subagents of one kind add a fresh context, not another model. Its fresh context makes it an independent-context review; report it as a subagent fallback, beside the slots that ran in panes.
+5. **Work:** treat its result like any delegated result — a claim to verify, then integrate.
+
+The report names, per delegation, the unavailable target, the subagent
+fallback, and the lost constraints. The step does not apply to exhausted
+targets (usage limits, two markerless delegations; those keep their fallback
+and `reviewer_usage_limit` rules), to owner selection or handoff, or to tasks
+whose resolved mode already runs at the owner. If the runtime cannot spawn a
+subagent, the target stays unavailable and the usual degradation applies: a
+review gate with no reviewer left holds, and the owner's own review never
+stands in for it.
+
+## Reviews in `mode: orchestrator`
+
+**With a selected profile**, `mode: orchestrator` permits review in the active
+owner's own session, or an optional fresh subagent at its judgment. Name
+same-session self-review honestly; it is not independent review. Conversely,
+`mode: delegate` resolved to that owner mandates a fresh subagent, including
+when the profile has no external reviewers. Follow [profiles.md](profiles.md).
+
+**Without a profile**, a review in `mode: orchestrator` runs in a fresh
+in-process subagent with the same self-contained brief a reset pane would get
+(scope, diff/paths, standards, report path); it reads the code, not the story
+of how it was written. If no subagent can be spawned, report the degraded
+review — never call an inline self-review independent. A list role spawns one
+subagent per entry; the distinct-types rule does not apply to these owner
+subagents. Name a review that ran in a spawned subagent as such, next to the
+panes that ran the delegated ones. Work tasks in `mode: orchestrator` still
+run inline.
 
 ## Builder check
 
@@ -59,6 +101,28 @@ continuing sessions must not review their own work as a gate. Profile-selected
 owner-session self-review is allowed only by the modes in profiles.md and is
 reported as self-review, not independent review. `delegate` self-targets still
 require fresh subagents; disabled gates remain off.
+
+## Execution strategy
+
+`delegation.execution` sets what `/full_cycle` and `/strict_full_cycle`
+attempt: `parallel` extracts independent tracks and runs them per
+`/execute_parallel`; `serial` runs tasks per `/execute`. Read the resolved
+value.
+
+It sets what is attempted, not what is forced. A plan whose extraction leaves fewer than two independent tracks, or a session with only one usable pane, runs serially either way — that is degradation, and the final report says so. `/execute` and `/execute_parallel` are explicit choices by the user and ignore this key.
+
+Under `parallel`, plans are written with tracks declared up front (see `writing-plans`), so extraction confirms a partition the plan already states rather than inventing one after the fact.
+
+## Exhaustion and fallback
+
+Read before choosing a substitute for an exhausted target. Exhaustion
+detection belongs to `using-herdr-sibling-panes` failure handling.
+
+1. Read the fallback rules in the profiles reference. A nested target becomes `kind@model`; consult bare kind only if that exact key is absent. A matched `[]` is authoritative. Take the first usable in-scope substitute, subject to distinct review slots. Substitutes retain string syntax and have no effort constraint; discard the primary effort.
+2. Re-delegate the same self-contained instruction to the substitute. Do not rewrite the task to suit it.
+3. A usage-limited reviewer with no substitute follows `reviewer_usage_limit` (`using-herdr-sibling-panes` failure handling): `wait` holds the gate until the limit resets; `skip` passes on the remaining reviewers and holds only when none is left. Neither lets the owner's own review stand in.
+4. Otherwise, if no substitute can run, report degradation: without a profile, safe work may run in the owner as before. With a profile, a task resolving back to the owner obeys its mode — `delegate` still requires a fresh subagent. If that route cannot run, report inability rather than disguising inline work as delegation. The subagent fallback covers unavailable targets, not exhausted ones.
+5. Remember the exhausted target, including its pinned model, for the rest of the task; do not mark other models of that kind exhausted.
 
 ## Complex coding boundary
 

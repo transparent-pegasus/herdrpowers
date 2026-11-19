@@ -9,7 +9,7 @@ Resolve transport through `orchestration` and its [profiles contract](../orchest
 ```bash
 INSTRUCTION="Work in /abs/path/to/worktree — confirm you are there before anything else. Review-only task: make no edits and do not mutate the working tree, index, HEAD, or branch state. Read /abs/path/to/review-brief.md for your review contract and the diff package path. Write your review to /abs/path/to/review.md and reply with the verdict and that path. Execute this request yourself, directly; re-delegating to other panes or orchestrating is prohibited. End your reply with REVIEW_OK immediately followed by _<4-hex>."
 bash "$COMPOSER_SUBMIT" "$PANE" "$INSTRUCTION"
-herdr pane wait-output "$PANE" --match "REVIEW_OK_<4-hex>" --timeout 900000
+herdr pane wait-output "$PANE" --match "REVIEW_OK_<4-hex>" --timeout 540000   # one stretch, under the tool timeout: repeat per using-herdr-sibling-panes/references/task-contract.md
 ```
 
 ## 2. The review contract (write to the brief file)
@@ -101,6 +101,10 @@ herdr pane wait-output "$PANE" --match "REVIEW_OK_<4-hex>" --timeout 900000
     ## What to Check
 
     **Plan alignment:**
+    - For each user requirement listed above, in order: met, partial, unmet,
+      or superseded by a later requirement, with file and line evidence. A
+      later requirement wins where two conflict. Report these verdicts before
+      code findings.
     - Does the implementation match the plan / requirements?
     - Are deviations justified improvements, or problematic departures?
     - Is all planned functionality present?
@@ -149,6 +153,10 @@ herdr pane wait-output "$PANE" --match "REVIEW_OK_<4-hex>" --timeout 900000
     say so.
 
     ## Output Format
+
+    ### Requirement verdicts
+    [Each user requirement listed above, in order: met / partial / unmet /
+    superseded by a later requirement, with file:line evidence.]
 
     ### Strengths
     [What's well done? Be specific.]
@@ -199,17 +207,21 @@ herdr pane wait-output "$PANE" --match "REVIEW_OK_<4-hex>" --timeout 900000
 **Placeholders:**
 - **worktree path** — REQUIRED, absolute; the pane does not inherit the orchestrator's cwd
 - `[DESCRIPTION]` — brief summary of what was built
-- `[PLAN_OR_REQUIREMENTS]` — what it should do (plan file path, task text, or requirements)
+- `[PLAN_OR_REQUIREMENTS]` — what it should do (plan file path, task text, or requirements), with the user's requirements for this task listed verbatim, in the order given
 - `[BASE_SHA]` — starting commit
 - `[HEAD_SHA]` — ending commit
 - `[DIFF_FILE]` — the path printed by `bash pane-driven-development/scripts/review-package PLAN_FILE BASE HEAD` (`-` for PLAN_FILE in plan-less flows)
 - **review output file + completion marker** — REQUIRED
 
-**Reviewer returns:** Strengths, Issues (Critical / Important / Minor), Recommendations, Declined to judge, Assessment
+**Reviewer returns:** Requirement verdicts, Strengths, Issues (Critical / Important / Minor), Recommendations, Declined to judge, Assessment
 
 ## Example Output
 
 ```
+### Requirement verdicts
+1. "Index past conversations from the CLI" — met (index-conversations:1-31)
+2. "Let me cap concurrency" — partial: the flag exists but is undocumented (index-conversations:12)
+
 ### Strengths
 - Clean database schema with proper migrations (db.ts:15-42)
 - Comprehensive test coverage (18 tests, all edge cases)

@@ -112,7 +112,8 @@ delegation per task; a list means one delegation per entry.
 
 Write new role targets as one-key mappings, e.g.
 `{codex: {model: GPT-6.2-Sol, effort: max}}`. `model` and `effort` are optional
-nonempty strings; effort requires model. A kind-only target uses `{kind: {}}`.
+nonempty strings; effort requires model, and `effort: any` lets the active
+owner pick the effort per task. A kind-only target uses `{kind: {}}`.
 Keep the bare `orchestrator` alias for roles that use it. Read legacy bare
 kinds and `kind@model`; normalize non-fallback pins with a deprecation notice
 and write nested targets. Read legacy `agent:`/`agents:` sub-keys and write
@@ -177,17 +178,19 @@ Rules to state while proposing:
 - The existing fix-loop escalation applies to separate targets. Profile self-targets continue to obey their resolved mode, including mandatory fresh subagents for `delegate`.
 
 5. Propose Delegation Defaults
-Present the two `delegation:` keys with the shipped defaults read out of `skills/orchestration/roles.yaml`, and what changing each one costs.
+Present the three `delegation:` keys with the shipped defaults read out of `skills/orchestration/roles.yaml`, and what changing each one costs.
 
 | Key | Values | Meaning |
 |---|---|---|
 | `pane_scope` | `tab` / `workspace` / `session` | Which panes may receive work, relative to the orchestrator: its tab, its workspace, or the session; owner handoff stays in scope too |
 | `execution` | `parallel` / `serial` | What `/full_cycle` and `/strict_full_cycle` attempt for implementation — extract the plan's independent tracks and run them concurrently, or run tasks one at a time |
+| `subagent_fallback` | `true` / `false` | Whether a separate target that is unavailable — no live in-scope agent, none started, no usable fallback substitute — runs in a fresh subagent of the active owner's own kind, or degrades without one |
 
 Rules to state while proposing:
 - Widening `pane_scope` past `tab` means a workflow may reset an agent session in another tab — usually another repository, with its own user mid-task. Each delegation resets the target session, so that work is gone. Widen it only when the user runs one project across several tabs on purpose.
 - A narrow `pane_scope` reduces the panes available for reviews and parallel tracks. That is honest degradation, named in every report — not a silent loss.
 - `execution: parallel` shapes plans too: plans get a `## Tracks` table with owned files per track, and `/full_cycle` runs that partition in per-track worktrees off a coordination branch. It attempts parallelism; a plan with one track, or a session with one usable pane, still runs serially.
+- `subagent_fallback: true` keeps work moving when a role's pane is not open, at the cost of the target's kind, model, and effort: the subagent is the owner's own kind, and the report names what it lost. One subagent covers all unavailable slots of one review. `false` keeps the earlier outcome: safe work degrades into the owner, and a review gate with no reviewer left holds. Exhausted targets keep their fallback and `reviewer_usage_limit` rules either way.
 - `/execute` and `/execute_parallel` are the user's explicit choice and ignore `execution`. `/strict_full_cycle` overrides `enabled` only — it never widens the scope or switches the strategy.
 - `allow_agent_lifecycle` is not a delegation key, and it is enforced: `agent-lifecycle.sh` starts or ends nothing unless the value is the literal `true`, whatever a chat message says. False prohibits start/exit/restart, including recovery, fallback, and owner startup. With true, the active owner starts each selected target that has no live in-scope match — before any fallback substitute — in an idle shell pane the user left in scope, verifies its live model/effort, and ends the idle agents it started before the final report. It never creates or closes panes, interrupts working agents, or answers a startup dialog. Say what true costs: agents appear and disappear in the user's panes without a prompt each time.
 - `reviewer_usage_limit` decides what a review gate does when a reviewer hits a usage limit and no fallback substitute can take its review. `wait` holds the gate until that limit resets; a weekly limit can hold it for days. `skip` passes the gate on the remaining reviewers, names the skipped one in the report, and holds only when none is left. Neither lets the owner's own review stand in. It is config-only.
@@ -261,6 +264,7 @@ fallbacks: # string key -> ordered string substitutes, without effort
 delegation:
   pane_scope: <tab|workspace|session> # tab = the orchestrator's own tab only
   execution: <parallel|serial> # /full_cycle and /strict_full_cycle strategy
+  subagent_fallback: <true|false> # an unavailable target runs in a subagent of the owner's kind
 
 # --- delegation tasks: each assigned a role from the list above ---
 # mode: delegate (fresh worker; profile self-target requires a subagent) |
@@ -346,7 +350,7 @@ Re-read every written file and confirm:
 - profiles contain only optional top-level `orchestrator`, `roles`, `fallbacks`, `delegation`, and `assignments` (pre-1.22 top-level role keys are reported as deprecated, not rewritten); validate their entries per the profiles reference, preserving omitted keys, original strings, and reviewer order;
 - all missing shipped templates were installed, every pre-existing profile file is byte-identical, and repeat init preserved the chosen profile, assignments, gate enablement, delegation, permission, and limit policy;
 - the shipped profiles README was installed only if absent; any pre-existing local README is byte-identical;
-- `delegation.pane_scope` is one of `tab`, `workspace`, `session`, and `delegation.execution` is one of `parallel`, `serial`;
+- `delegation.pane_scope` is one of `tab`, `workspace`, `session`, `delegation.execution` is one of `parallel`, `serial`, and `delegation.subagent_fallback` is a YAML boolean;
 - every delegation task named in `skills/orchestration/roles.yaml` appears under `assignments:` with a `role` that exists in `roles:` and a valid `mode`, and every review task there also has `enabled` — count them from that file rather than from a number written here, which goes stale;
 - no work task carries `enabled: false` — that is the wrong knob; `mode: orchestrator` is how a work task stops being delegated;
 - `.herdrpowers/config.yaml` is not git-ignored (`git check-ignore -v .herdrpowers/config.yaml` must find no matching rule);

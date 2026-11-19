@@ -33,9 +33,22 @@ if (resource === 'pane' && action === 'get' && pane === 'test-pane' && rest.leng
   if (gone) state.exited = true;
   save();
   const shell = Number(process.env.HERDR_TEST_SHELL_PID);
+  const agent = Number(process.env.HERDR_TEST_FOREGROUND_PID);
+  // HERDR_TEST_AFTER_RESET models a reset restarting the agent's helper
+  // processes inside its own group: `reordered` lists a helper first, and
+  // `unreadable` returns one reading with no foreground process at all.
+  const afterReset = state.reset && !state.exited ? process.env.HERDR_TEST_AFTER_RESET : '';
+  let foreground = state.exited ? [{ pid: shell }] : [{ pid: agent }];
+  if (afterReset === 'reordered') foreground = [{ pid: agent + 1 }, { pid: agent }];
+  if (afterReset === 'unreadable' && !state.unreadableServed) {
+    state.unreadableServed = true;
+    save();
+    foreground = [];
+  }
   reply({ process_info: {
-    foreground_processes: [{ pid: state.exited ? shell : Number(process.env.HERDR_TEST_FOREGROUND_PID) }],
+    foreground_processes: foreground,
     shell_pid: shell,
+    foreground_process_group_id: state.exited ? shell : agent,
   } });
 } else if (resource === 'pane' && action === 'send-text' && pane === 'test-pane' && rest.length === 1) {
   state.composer = rest[0];
@@ -44,6 +57,11 @@ if (resource === 'pane' && action === 'get' && pane === 'test-pane' && rest.leng
 } else if (resource === 'pane' && action === 'send-keys' && pane === 'test-pane' && rest.length === 1) {
   switch (rest[0]) {
     case 'ctrl+u': state.composer = ''; break;
+    // ctrl+c quits some agents; it may only ever reach a shell prompt.
+    case 'ctrl+c':
+      if (!state.exited) unexpected();
+      state.composer = '';
+      break;
     case 'esc': break;
     case 'ctrl+x': state.leader = true; break;
     case 'n':

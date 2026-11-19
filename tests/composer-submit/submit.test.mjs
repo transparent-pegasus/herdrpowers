@@ -25,8 +25,8 @@ for (const scenario of [
   { name: 'missing effort evidence', model: 'GPT-6.2-Sol', effort: 'max', before: 'codex-no-effort.txt' },
   { name: 'stale header and transcript max', model: 'GPT-6.2-Sol', effort: 'max', before: 'codex-stale-effort.txt' },
   { name: 'High versus xhigh', model: 'Grok 4.7', effort: 'High', kind: 'grok', before: 'grok.txt' },
-  { name: 'Cursor bare Max', model: 'Muse Spark', effort: 'max', kind: 'cursor', before: 'cursor.txt' },
-  { name: 'Cursor plan Max with labeled High', model: 'Grok 4.7', effort: 'max', kind: 'cursor', before: 'cursor-reasoning-high.txt' },
+  { name: 'Cursor Max requested as High', model: 'Muse Spark', effort: 'high', kind: 'cursor', before: 'cursor.txt' },
+  { name: 'Cursor with two effort labels', model: 'Grok 4.7', effort: 'xhigh', kind: 'cursor', before: 'cursor-synthetic-two-efforts.txt' },
 ]) {
   test(`${scenario.name} blocks submission before the first key`, () => {
     const result = submit(['test-pane', instruction, scenario.model, scenario.effort], scenario);
@@ -40,8 +40,8 @@ for (const scenario of [
   { name: 'effort changes', model: 'GPT-6.2-Sol', effort: 'medium', after: 'codex-xhigh.txt' },
   { name: 'effort disappears', model: 'GPT-6.2-Sol', effort: 'medium', after: 'codex-no-effort.txt' },
   { name: 'model changes', model: 'GPT-6.2-Sol', effort: 'medium', after: 'codex-other-model.txt' },
-  { name: 'Cursor High becomes Extra High', model: 'Grok 4.7', effort: 'High', kind: 'cursor',
-    before: 'cursor-reasoning-high.txt', after: 'cursor-reasoning-extra-high.txt' },
+  { name: 'Cursor Extra High becomes Max', model: 'Grok 4.7', effort: 'xhigh', kind: 'cursor',
+    before: 'cursor-extra-high.txt', after: 'cursor-synthetic-fast.txt' },
 ]) {
   test(`${scenario.name} after reset blocks the instruction with exit 5`, () => {
     const result = submit(['test-pane', instruction, scenario.model, scenario.effort], scenario);
@@ -57,8 +57,9 @@ for (const scenario of [
 for (const scenario of [
   { name: 'case-insensitive model substring and medium', model: 'gPt-6.2', effort: 'MeDiUm' },
   { name: 'Extra High alias of observed xhigh', model: 'gRoK 4.7', effort: 'Extra High', kind: 'grok', before: 'grok.txt' },
-  { name: 'xhigh alias of labeled Cursor Extra High', model: 'Grok 4.7', effort: 'XHIGH', kind: 'cursor', before: 'cursor-reasoning-extra-high.txt' },
-  { name: 'labeled Cursor Max', model: 'Grok 4.7', effort: 'max', kind: 'cursor', before: 'cursor-reasoning-max.txt' },
+  { name: 'xhigh alias of observed Cursor Extra High', model: 'Grok 4.7', effort: 'XHIGH', kind: 'cursor', before: 'cursor-extra-high.txt' },
+  { name: 'Cursor trailing Max', model: 'Muse Spark', effort: 'max', kind: 'cursor', before: 'cursor.txt' },
+  { name: 'effort any left to the orchestrator', model: 'GPT-6.2-Sol', effort: 'any' },
 ]) {
   test(`${scenario.name} resets then submits exactly once`, () => {
     const result = submit(['test-pane', instruction, scenario.model, scenario.effort], scenario);
@@ -108,7 +109,7 @@ test('an agent that exits during the reset gets no instruction', () => {
   const result = submit(['test-pane', instruction], { kind: 'muse', agentExits: 'reset' });
   assert.equal(result.status, 2, result.stderr);
   assert.match(result.stderr, /left the foreground after the session reset/);
-  assert.deepEqual(mutatingCalls(result), [...clear, key('ctrl+u')], 'the reset, then the shell line is discarded');
+  assert.deepEqual(mutatingCalls(result), [...clear, key('ctrl+c')], 'the reset, then the shell line is discarded');
 });
 
 test('an agent that exits before Enter never gets Enter in its shell', () => {
@@ -116,8 +117,20 @@ test('an agent that exits before Enter never gets Enter in its shell', () => {
   assert.equal(result.status, 2, result.stderr);
   assert.match(result.stderr, /left the foreground before Enter/);
   assert.deepEqual(mutatingCalls(result),
-    [...clear, key('ctrl+u'), text(instruction), key('esc'), key('ctrl+u')], 'no Enter after the instruction text');
+    [...clear, key('ctrl+u'), text(instruction), key('esc'), key('ctrl+c')],
+    'no Enter after the instruction text, and ctrl+c, not ctrl+u, discards the shell line after esc');
 });
+
+// A Claude Code reset restarts its MCP servers and hooks inside the agent's own
+// process group. A reading taken then may list a helper first, or nothing at
+// all; neither is an exit, so the instruction still goes through.
+for (const afterReset of ['reordered', 'unreadable']) {
+  test(`a reset whose process reading is ${afterReset} still submits once`, () => {
+    const result = submit(['test-pane', instruction], { kind: 'claude', before: 'claude.txt', afterReset });
+    assert.equal(result.status, 0, result.stderr);
+    assert.deepEqual(mutatingCalls(result), [...clear, ...sendInstruction]);
+  });
+}
 
 test('legacy model-only mismatch is rejected before any key', () => {
   const result = submit(['test-pane', instruction, 'GPT-6.2-Astra']);

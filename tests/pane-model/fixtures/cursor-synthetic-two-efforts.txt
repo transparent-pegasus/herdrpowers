@@ -1,0 +1,14 @@
+SYNTHETIC: observed 2026.11.19 screen with a hypothetical trailing MAX badge after the effort.
+
+
+  Cursor Agent
+  v2026.11.19-f005e9d
+  Tip: Type ? in the prompt
+  bar to show in-app hints.
+
+
+ ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+  → Plan, search, build
+    anything
+ ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
+  Grok 4.7 256K Extra High MAX

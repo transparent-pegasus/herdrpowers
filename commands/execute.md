@@ -20,7 +20,7 @@ Do not edit workflow files unless the user's current request explicitly asks to 
 
 ## Orchestration
 
-Read `orchestration`, its [profiles contract](../skills/orchestration/references/profiles.md), and `using-herdr-sibling-panes` before routing work. Resolve repo config over shipped roles, then only keys present in the selected profile. Freeze the active owner, targets, assignments, gates, scope, strategy, and lifecycle policy. Profile assignment overrides resolve before routing; a resolved disabled gate is skipped and named in the report.
+Read `orchestration`, its [profiles contract](../skills/orchestration/references/profiles.md), and `using-herdr-sibling-panes` before routing work. Resolve repo config over shipped roles, then only keys present in the selected profile. Freeze the active owner, targets, assignments, gates, scope, strategy, subagent fallback, and lifecycle policy. Profile assignment overrides resolve before routing; a resolved disabled gate is skipped and named in the report.
 
 Routing comes from `assignments:`, not from this file, and the resolved YAML is the source of truth for every default — read each task's `role` and `mode` there rather than recalling one. This workflow touches `decision-making`, `complex-coding` / `simple-coding`, `test-authoring`, `fix-round-test-authoring`, `review-fixes`, `chores`, `verification`, `documentation-impact-review`, `task-review`, `fix-round-re-review`, and `final-branch-review`. A review task whose effective role binds to a list runs once per entry.
 - Plan revisions follow `plan-and-design`; mid-execution rulings, review-finding triage and disagreements, and final integration synthesis decisions follow `decision-making` (`decision-maker`). The active owner keeps orchestration and coordination.
@@ -28,7 +28,7 @@ Routing comes from `assignments:`, not from this file, and the resolved YAML is 
 
 **Every delegation** states the absolute worktree path (and requires the pane to confirm it is there first), the exact scope, the edit policy, the report-file path under `<REPORT_DIRECTORY>`, a unique completion marker, and the prohibition on re-delegating. Read results from the report file, not from pane scrollback, and re-run the decisive command rather than trusting a "verified" claim.
 
-**Degrade honestly.** Without a profile, unavailable pane routing may fall back to `executing-plans`, naming lost delegation/independence. With a profile, preserve modes: a route resolving to the owner in `delegate` still requires a fresh subagent. If it cannot spawn, report inability, never inline substitution or a passed gate. Wait for busy matching agents; never interrupt them.
+**Degrade honestly.** An unavailable separate target takes `orchestration`'s subagent fallback while `delegation.subagent_fallback` is true, naming the lost constraints. Without a profile, when that cannot run either, unavailable pane routing may fall back to `executing-plans`, naming lost delegation/independence. A review gate with no reviewer left holds rather than passing on your own review. With a profile, preserve modes: a route resolving to the owner in `delegate` still requires a fresh subagent. If it cannot spawn, report inability, never inline substitution or a passed gate. Wait for busy matching agents; never interrupt them.
 
 ## Execution Steps
 

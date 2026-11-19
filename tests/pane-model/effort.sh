@@ -30,10 +30,15 @@ grok='Grok 4.7 (xhigh) · always-approve · 1.3K / 500K (0%) · ctrl+o transcrip
 cursor='Muse Spark 1.3 1M Max'
 agy='Gemini 3.8 Flash (High) | 5h: 100% | 7d: 100%'
 opencode='Build · GPT-6.2 Sol OpenAI · max'
-cursor_high='Grok 4.7 1M Max · Reasoning: High'
-cursor_extra_high='Grok 4.7 1M Max · Reasoning: Extra High'
-cursor_max='Grok 4.7 1M Max · Reasoning: Max'
-cursor_unknown='Grok 4.7 1M Max · Reasoning: Unknown'
+cursor_xhigh='Grok 4.7 256K Extra High'
+cursor_fast='Grok 4.7 256K Max Fast'
+cursor_plain='Composer 2.5'
+cursor_badge='Grok 4.7 256K Extra High MAX'
+cursor_unknown='Grok 4.7 256K High Turbo'
+cursor_status='Claude Fable 5.2 300K Max | 5h: 43% | 7d: 28%'
+cursor_max_mode='Grok 4.7 256K Extra High · MAX'
+cursor_right='Grok 4.7 256K Extra High                 Run Everything'
+cursor_effort_name='GPT-5.1 Codex Max High'
 codex_xhigh='GPT-6.2-Sol xhigh · weekly 99% left'
 grok_high='Grok 4.7 (high) · always-approve · 1.3K / 500K (0%) · ctrl+o transcript'
 agy_extra_high='Gemini 3.8 Flash (Extra High) | 5h: 100% | 7d: 100%'
@@ -58,20 +63,32 @@ check 'Extra High does not match observed Antigravity High' 1 "$agy" agy.txt --k
 check 'High does not match synthetic Antigravity Extra High' 1 "$agy_extra_high" agy-extra-high.txt --kind agy 'Gemini 3.8 Flash' High
 check 'xhigh aliases synthetic Antigravity Extra High' 0 "$agy_extra_high" agy-extra-high.txt --kind agy 'Gemini 3.8 Flash' xhigh
 
-# Bare Max is plan/context evidence. Only an explicit reasoning label makes it
-# usable as Cursor effort; do not mine other words in the same footer.
-check 'Cursor bare Max is not reasoning evidence' 1 "$cursor" cursor.txt --kind cursor 'Muse Spark' max
-check 'Cursor bare Max does not affect legacy model-only matching' 0 "$cursor" cursor.txt --kind cursor 'muse spark'
-check 'Cursor labeled High matches' 0 "$cursor_high" cursor-reasoning-high.txt --kind cursor 'grok 4.7' high
-check 'Cursor labeled High cannot borrow context Max' 1 "$cursor_high" cursor-reasoning-high.txt --kind cursor 'Grok 4.7' max
-check 'Cursor labeled High cannot borrow transcript Extra High' 1 "$cursor_high" cursor-reasoning-high.txt --kind cursor 'Grok 4.7' 'Extra High'
-check 'Cursor labeled Extra High matches itself' 0 "$cursor_extra_high" cursor-reasoning-extra-high.txt --kind cursor 'Grok 4.7' 'extra HIGH'
-check 'Cursor labeled Extra High aliases xhigh' 0 "$cursor_extra_high" cursor-reasoning-extra-high.txt --kind cursor 'Grok 4.7' xhigh
-check 'Cursor labeled Extra High is not High' 1 "$cursor_extra_high" cursor-reasoning-extra-high.txt --kind cursor 'Grok 4.7' High
-check 'Cursor labeled Extra High cannot borrow context Max' 1 "$cursor_extra_high" cursor-reasoning-extra-high.txt --kind cursor 'Grok 4.7' max
-check 'Cursor labeled Max is positive reasoning evidence' 0 "$cursor_max" cursor-reasoning-max.txt --kind cursor 'Grok 4.7' MAX
-check 'Cursor labeled Max does not satisfy High' 1 "$cursor_max" cursor-reasoning-max.txt --kind cursor 'Grok 4.7' High
-check 'Cursor unknown reasoning cannot borrow context Max' 1 "$cursor_unknown" cursor-unknown-reasoning.txt --kind cursor 'Grok 4.7' max
+# Cursor's footer is the model's display name: the base name, then one label
+# per set parameter (context, effort, Fast, No Thinking). Max Mode is not one.
+check 'Cursor observed Extra High aliases xhigh' 0 "$cursor_xhigh" cursor-extra-high.txt --kind cursor 'Grok 4.7' xhigh
+check 'Cursor observed Extra High matches itself' 0 "$cursor_xhigh" cursor-extra-high.txt --kind cursor 'grok 4.7' 'extra HIGH'
+check 'Cursor observed Extra High is not High' 1 "$cursor_xhigh" cursor-extra-high.txt --kind cursor 'Grok 4.7' High
+check 'Cursor context size is not effort' 1 "$cursor_xhigh" cursor-extra-high.txt --kind cursor 'Grok 4.7' 256K
+check 'Cursor effort words cannot be claimed as the model' 1 "$cursor_xhigh" cursor-extra-high.txt --kind cursor 'Grok 4.7 256K Extra High' xhigh
+check 'Cursor observed trailing Max is its effort' 0 "$cursor" cursor.txt --kind cursor 'Muse Spark' MAX
+check 'Cursor trailing Max does not satisfy High' 1 "$cursor" cursor.txt --kind cursor 'Muse Spark' High
+check 'Cursor model-only matching is unchanged' 0 "$cursor" cursor.txt --kind cursor 'muse spark'
+check 'Cursor Fast after Max still reads Max' 0 "$cursor_fast" cursor-synthetic-fast.txt --kind cursor 'Grok 4.7' max
+check 'Cursor model without an effort parameter fails closed' 1 "$cursor_plain" cursor-synthetic-no-effort.txt --kind cursor 'Composer 2.5' max
+check 'Cursor two effort labels fail closed' 1 "$cursor_badge" cursor-synthetic-two-efforts.txt --kind cursor 'Grok 4.7' xhigh
+check 'Cursor unknown trailing label fails closed' 1 "$cursor_unknown" cursor-synthetic-unknown-label.txt --kind cursor 'Grok 4.7' high
+check 'Cursor statusLine fields after the name are ignored' 0 "$cursor_status" cursor-synthetic-statusline.txt --kind cursor 'Claude Fable 5.2' max
+check 'Cursor Max Mode marker is not an effort' 0 "$cursor_max_mode" cursor-synthetic-max-mode.txt --kind cursor 'Grok 4.7' xhigh
+check 'Cursor Max Mode marker does not satisfy max' 1 "$cursor_max_mode" cursor-synthetic-max-mode.txt --kind cursor 'Grok 4.7' max
+check 'Cursor right-aligned footer label is ignored' 0 "$cursor_right" cursor-synthetic-right-label.txt --kind cursor 'Grok 4.7' xhigh
+check 'Cursor effort word inside the requested model stays model' 0 "$cursor_effort_name" cursor-synthetic-name-ends-in-effort.txt --kind cursor 'Codex Max' high
+check 'Cursor effort word inside the requested model is not its effort' 1 "$cursor_effort_name" cursor-synthetic-name-ends-in-effort.txt --kind cursor 'GPT-5.1 Codex Max' max
+
+# Effort `any` leaves the choice to the orchestrator: no effort is verified,
+# but the model still is.
+check 'effort any accepts the observed effort' 0 "$codex" codex.txt --kind codex 'GPT-6.2-Sol' any
+check 'effort any accepts a footer without effort' 0 "$cursor_plain" cursor-synthetic-no-effort.txt --kind cursor 'Composer 2.5' ANY
+check 'effort any still requires the model' 1 "$codex" codex.txt --kind codex 'GPT-6.2-Astra' any
 
 # Header, transcript, composer content, and an older footer cannot satisfy a
 # request when the last composer's footer differs or omits effort.

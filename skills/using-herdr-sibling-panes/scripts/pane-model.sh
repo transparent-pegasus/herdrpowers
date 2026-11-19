@@ -10,7 +10,8 @@ set -euo pipefail
 #        pane-model.sh --kind <agent-kind> [<model> [<effort>]] < screen-text
 #
 # exit 0  model line printed — and, with <model>, it contains <model>,
-#         compared case-insensitively, and any requested effort matches exactly
+#         compared case-insensitively, and any requested effort matches exactly.
+#         Effort `any` requests no effort: the orchestrator picks it per task.
 # exit 1  no model line, model mismatch, or missing/mismatched effort evidence
 # exit 2  bad usage, unknown pane, or the pane runs no agent
 # exit 3  no model-line rule for this agent kind
@@ -128,7 +129,6 @@ def canonical_effort(value):
 
 def footer_effort():
     # Restrict effort to its footer field, excluding usage/context/help.
-    # Cursor's explicit labels are synthetic acceptance inputs, not UI evidence.
     token = r"extra high|xhigh|none|minimal|low|medium|high|max|ultra"
     if kind in ("claude", "codex"):
         primary = found.split("·", 1)[0].strip()
@@ -137,16 +137,23 @@ def footer_effort():
         primary = re.split(r"[·|]", found, maxsplit=1)[0].strip()
         match = re.fullmatch(rf"(.+?)\s+\(({token})\)", primary, re.IGNORECASE)
     elif kind == "cursor":
-        fields = [field.strip() for field in found.split("·")]
-        if model.casefold() not in fields[0].casefold():
+        # cursor-agent shows the selected model's display name: the base name,
+        # then one label per set parameter (context `256K`, effort `Extra High`,
+        # `Fast`, `No Thinking`), as its format-param-summary builds it
+        # (2026.11.19). Max Mode (` · MAX`) and right-aligned footer labels sit
+        # outside the name. Peel labels off its end, never into the requested
+        # model; exactly one must be an effort.
+        name = re.split(r"[·|]|\s{2,}", found.strip(), maxsplit=1)[0].strip()
+        floor = name.casefold().rfind(model.casefold())
+        if floor < 0:
             return None
+        floor += len(model)
+        label = re.compile(rf"\s+({token}|fast|no thinking|\d+(?:\.\d+)?[km])$", re.IGNORECASE)
         efforts = set()
-        for field in fields[1:]:
-            labeled = re.fullmatch(r"(?:Reasoning|Effort)\s*:\s*(.*)", field, re.IGNORECASE)
-            if labeled:
-                if not re.fullmatch(token, labeled[1], re.IGNORECASE):
-                    return None
-                efforts.add(canonical_effort(labeled[1]))
+        while (word := label.search(name)) and word.start() >= floor:
+            if re.fullmatch(token, word[1], re.IGNORECASE):
+                efforts.add(canonical_effort(word[1]))
+            name = name[:word.start()]
         return efforts.pop() if len(efforts) == 1 else None
     elif kind == "muse":
         fields = [field.strip() for field in found.split("·")]
@@ -165,7 +172,7 @@ def footer_effort():
     return None
 
 
-if effort:
+if effort and canonical_effort(effort) != "any":
     observed = footer_effort()
     if observed is None or observed != canonical_effort(effort):
         print(

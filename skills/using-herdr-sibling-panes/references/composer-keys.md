@@ -4,6 +4,21 @@ This reference belongs to `using-herdr-sibling-panes`. Script paths are relative
 skill directory (the parent of `references/`), not this directory or the
 target repository. Resolve them before invoking a script.
 
+### Why agent composers need the helper
+
+Agent CLIs take input through a composer — a stateful input box with slash-command autocomplete, follow-up suggestions, and message queueing. Composers cannot be driven reliably with `herdr pane run`, regardless of which agent runs in the pane:
+
+* **Keys consumed by UI.** Slash-command and autocomplete popups swallow the single Enter that `pane run` sends, leaving the text sitting in the composer.
+* **Autocomplete is a lie.** A composer can *render* the highlighted completion (`/clear`) while its buffer still holds what was actually typed (`/cl`). Submitting then sends the partial text to the model as a chat message. Always write a slash command in full, in a single `send-text` call.
+* **Any bare `/word` is a slash trigger, not just a real command.** An incidental `/word` mid-sentence (`... the /run integration step ...`) opens the popup *during the paste*, and `esc` + `enter` then submits a corrupted or truncated string instead of the instruction. Observed on cursor-agent 3× in a row: the pane goes idle with no completion marker and no work done, and `pane read` shows a garbled fragment starting mid-word, sometimes prefixed `$ ` or ending `exit 1` — the remainder ran as a shell command. Rewording (`/run` → `hourly-pipeline`) fixed it immediately on the same panes. Absolute paths (`/abs/path/to/worktree`) have not triggered it. The helper rejects bare slash tokens with exit `2` before submitting; reword the instruction rather than retrying it.
+* **Retained state and races.** A composer can keep the previous prompt or queued follow-ups after completion, and text insertion and key handling are asynchronous, so back-to-back CLI calls can race even with the right keys. Later delegation text then concatenates onto stale input.
+
+**Width is a precondition.** Cursor's composer has been measured ignoring Enter in narrow panes, while Codex still submitted at widths down to 4 columns. Raising the settle seconds does not compensate. The observed boundary is not monotonic — 22 columns passed while 24 failed — and remains unexplained, so the default 40-column floor is conservative, not a measured cliff. Before touching the composer, the helper reads the foreground process's terminal width. Below `HERDR_COMPOSER_MIN_COLS` (default `40`), it temporarily widens the pane with `herdr pane zoom`; if the pane remains below the floor, it refuses with exit `4` and names the measured width and floor. On exit, including every failure path, it puts the tab's zoom back the way it found it — unzoomed, or zoomed on whichever pane held it before. The model/effort check before keys runs after this step, because a narrow pane may not draw its footer at all, and it waits out the redraw after a zoom.
+
+**Zoom is one slot per tab, so submissions into one tab serialize.** `herdr pane zoom --on` against an already-zoomed tab *moves* the zoom onto the target pane while reporting `zoom_changed: false`, so a helper that trusted that flag would disclaim cleanup and leak the zoom — and every later submission would then see the leaked zoom and leak it again. The helper reads the tab's real zoom state instead, and holds a per-tab `flock` across measure → zoom → Enter so two concurrent delegations into the same tab cannot trade the slot and resize each other's composer mid-paste. Parallel delegation is unaffected apart from a few seconds of submission ordering; the delegated work still runs concurrently.
+
+**The agent must still hold the terminal.** Before every Enter and while a reset settles, the helper checks that the agent's process group still owns the pane's foreground and that the shell has not taken it back. It compares the group, not the first listed process: a reset restarts the agent's helper processes (MCP servers, hooks), and a reading taken mid-change is re-read before it counts. Only the shell holding the terminal ends the submission at once (exit `2`). The helper then discards the shell's line with `ctrl+c`: right after an `esc`, zsh and bash read `esc` + `ctrl+u` as one meta key and keep the line.
+
 ### Verified keys
 
 Verified 2026-07-25 against codex 0.145.0, cursor-agent 2026.07.23-e383d2b, and grok 0.2.112 with `scripts/probe-composer.sh`, re-verified 2026-08-24 against grok 1.0.5, and re-verified 2026-10-09 against codex 0.162.0 on herdr 0.9.3. All three agree, so the helper uses one sequence. On 2026-10-09, herdr 0.9.3, claude (Claude Code 2.1.295), cursor-agent 2026.10.01-e373342, and agy (Antigravity CLI 1.3.2) also passed every probe step with it. grok 1.0.50 takes the same keys, but herdr reports it `idle` for the whole of a task — its detection rule reads the terminal title, which stays `grok` — so the helper's start check exits `3` after a submission that did run. opencode 1.18.35, verified 2026-10-09 on herdr 0.9.3, differs in the rows that name it:
@@ -57,6 +72,25 @@ New target settings are nested, for example
 The fourth argument is optional, requires a non-empty model, and is checked by
 `pane-model.sh` before any key and again after reset. All script paths resolve
 against the skill directory. Model-only and unconstrained calls remain supported.
+Effort `any` (any case) verifies the model only; the active owner chooses the
+effort and passes the chosen token when it wants that verified too.
+
+`pane-model.sh` finds the composer by its anchor, then the model line:
+
+| kind | composer anchor | model line | observed |
+| --- | --- | --- | --- |
+| `claude` | `❯` | first text line after the composer's closing border | Claude Code 2.1.295 |
+| `muse` | `❯` | first text line after the composer's closing border | Muse Code 1.4.14 startup |
+| `codex` | `›` | first text line after the blank line below the composer | codex 0.162.0 |
+| `cursor` | `→` | first text line after the composer's closing border | cursor-agent 2026.10.01-e373342, 2026.11.19-f005e9d |
+| `agy` | `>` | first text line after the composer's closing border | Antigravity CLI 1.3.2 |
+| `grok` | `❯` | first text line after the composer line | grok 1.0.50 |
+| `opencode` | `┃` | the last `┃` line, inside the composer box | opencode 1.18.35 |
+
+Unknown kind exits `3`; no footer, a model picker, or a mismatch exits `1`;
+bad arguments exit `2`. The footer stays on stdout for a model/effort
+mismatch. A grok header retained `Model · Grok 4.6` after a switch to
+Grok 4.7; only its footer changed, which is why only the footer counts.
 
 Observed renderer captures establish these effort field positions within the
 footer already selected by the CLI's composer rule:
@@ -69,7 +103,7 @@ footer already selected by the CLI's composer rule:
 | grok | `Grok 4.7 (xhigh) · always-approve · …` | parenthesized effort on the first segment |
 | opencode | `Build · GPT-6.2 Sol OpenAI · max` | third segment, after the model/provider segment |
 | muse | `muse-wonder-1.0 · max · /tmp/… · Auto-review` | exact second dot-separated field; model is the first field |
-| cursor | `Muse Spark 1.3 1M Max` | no verified reasoning-effort field; bare `Max` is ambiguous |
+| cursor | `Grok 4.7 256K Extra High` | the effort label in the parameter labels appended to the model name (see below) |
 
 Effort uses exact case-insensitive tokens. `Extra High` and `xhigh` canonicalize
 to the same token; `high` does not. The requested model must occur in the model
@@ -79,12 +113,25 @@ unrecognized effort is a mismatch; the observed footer still goes to stdout.
 Synthetic fixture variations can exercise tokens and casing in these established
 positions, but must be labeled synthetic, not presented as observed CLI output.
 
-**Cursor labeled-field acceptance.** The parser also accepts isolated,
-dot-separated `Reasoning:` or `Effort:` fields after Cursor's model field.
-These are synthetic acceptance inputs, not observed current UI output. The
-entire value must be a known effort token; multiple labeled fields must agree
-after alias normalization. Unknown values and conflicting fields fail closed.
-A live layout without an explicit effort field cannot meet an effort constraint.
+**Cursor's effort is a label on the model name.** cursor-agent's footer is
+the selected model's display name: the base name, then one label per set
+parameter in the order the model defines them — a context size (`256K`), the
+effort (`Extra High`, `Max`), `Fast` when that is on, `No Thinking` when
+thinking is off. cursor-agent 2026.11.19 builds it in its
+`format-param-summary` module from each enum option's display label; Max Mode
+is a separate flag (`max_mode` in its statusLine input), never part of the
+name. A live pane on `Grok 4.7` with context `256k`, `reasoning_effort` `xhigh`,
+and `fast` off showed `Grok 4.7 256K Extra High`; earlier captures show
+`Muse Spark 1.3 1M Max` (2026.10.01) and `Claude Fable 5.2 300K Max`
+(2026.11.05), where `Max` is the effort label too. The parser takes the name
+up to the first `·` or `|` field (Max Mode shows as ` · MAX`, a statusLine
+adds `| 5h: …`) or wide gap (right-aligned footer labels), peels labels off
+its end but never into the requested model, and needs exactly one effort
+among them. A model without an effort parameter (`Composer 2.5`), two effort
+labels, or an unknown label after the effort fails closed, and naming
+`Grok 4.7 256K Extra High` as the model never verifies an effort. Request the
+whole base name: if only part of it is requested, a trailing word of the name
+that is also an effort word (a hypothetical `Codex Max`) reads as the effort.
 
 **Muse renderer support and readiness.** Muse Code 1.4.14 was observed on
 2026-11-06 in a disposable PTY, with a normal provider, before an expired login

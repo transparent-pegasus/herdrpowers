@@ -221,7 +221,7 @@ for (const [name, settings, startScreen] of [
   ['another model', ['GPT-6.2-Astra', 'medium'], 'codex.txt'],
   ['another effort', ['GPT-6.2-Sol', 'max'], 'codex.txt'],
   ['a Claude footer without a statusLine', ['Opus 5.5', 'medium'], 'claude-no-statusline.txt'],
-  ['Cursor\'s bare Max', ['Muse Spark', 'max'], 'cursor.txt'],
+  ['another CLI\'s footer', ['Muse Spark', 'max'], 'cursor.txt'],
 ]) {
   test(`start exits 5 on ${name}: launch arguments are not evidence`, () => {
     const result = lifecycle([...startCodex, ...settings, '--', '--model', 'whatever'],

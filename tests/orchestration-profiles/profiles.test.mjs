@@ -35,10 +35,10 @@ test('every shipped profile orders owner, then roles from planning through decis
   }
 });
 
-test('fable and neon-fable give generalist work to Gemini 4 Hydrogen while solo keeps it with the owner', () => {
+test('fable and neon-fable give generalist work to Gemini 4 Hydrogen at an owner-chosen effort while solo keeps it with the owner', () => {
   for (const name of ['fable.yaml', 'neon-fable.yaml']) {
     const source = readFileSync(join(profiles, name), 'utf8');
-    assert.match(source, /^  generalist:\n    agy:\n      effort: XHigh\n      model: Gemini 4 Hydrogen$/m, name);
+    assert.match(source, /^  generalist:\n    agy:\n      model: Gemini 4 Hydrogen\n      effort: any$/m, name);
   }
   assert.match(readFileSync(join(profiles, 'solo.yaml'), 'utf8'), /^  generalist: orchestrator$/m);
 });
@@ -100,6 +100,8 @@ test('profiles write any only for the owner or a single-target role, and the tas
   for (const name of names) {
     const source = readFileSync(join(profiles, name), 'utf8');
     for (const [line] of source.matchAll(/^.*\bany\b.*$/gm)) {
+      // Effort `any` is a setting of one target, not an `any` slot.
+      if (/^ +effort: any$/.test(line)) continue;
       assert.match(line, /^(orchestrator|  (planning-design|decision-maker|coder|generalist)): any$/, `${name}: ${line}`);
     }
   }
@@ -112,6 +114,24 @@ test('profiles write any only for the owner or a single-target role, and the tas
   assert.doesNotMatch(contract.match(/^\| `roles.reviewers` \|.*$/m)[0], /`any`/);
   assert.match(contract, /^## `any` slots$/m);
   for (const example of ['`solo Opus 5.5 max`', '`neon-fable coder: codex`']) assert.ok(contract.includes(example), example);
+});
+
+test('effort any leaves the effort to the owner and still verifies the model', () => {
+  const contract = readFileSync(join(root, 'skills/orchestration/references/profiles.md'), 'utf8');
+  assert.match(contract, /Effort\n`any` \(any case\) fixes no effort: the active owner picks it/);
+  assert.match(readFileSync(join(root, 'skills/orchestration/SKILL.md'), 'utf8'), /effort `any` leaves the effort to the active owner/);
+  assert.match(readFileSync(join(root, 'skills/using-herdr-sibling-panes/scripts/pane-model.sh'), 'utf8'), /canonical_effort\(effort\) != "any"/);
+});
+
+test('an unavailable target falls back to a subagent of the owner kind by default', () => {
+  const source = readFileSync(join(root, 'skills/orchestration/roles.yaml'), 'utf8');
+  const delegation = source.slice(source.indexOf('\ndelegation:\n'), source.indexOf('\nassignments:'));
+  assert.match(delegation, /^  subagent_fallback: true$/m);
+  assert.match(readFileSync(join(root, 'skills/orchestration/references/routing.md'), 'utf8'), /^## Subagent fallback$/m);
+  assert.match(readFileSync(join(root, 'skills/orchestration/SKILL.md'), 'utf8'), /^## Unavailable targets and the subagent fallback$/m);
+  for (const path of ['commands/init.md', 'docs/roles.md', 'skills/orchestration/references/profiles.md']) {
+    assert.match(readFileSync(join(root, path), 'utf8'), /subagent_fallback/, path);
+  }
 });
 
 test('shipped roles use direct values under roles with a description comment per key', () => {

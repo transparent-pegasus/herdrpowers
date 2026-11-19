@@ -1,0 +1,14 @@
+SYNTHETIC: observed 2026.11.19 screen for a hypothetical model whose name ends in an effort word.
+
+
+  Cursor Agent
+  v2026.11.19-f005e9d
+  Tip: Type ? in the prompt
+  bar to show in-app hints.
+
+
+ ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+  → Plan, search, build
+    anything
+ ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
+  GPT-5.1 Codex Max High

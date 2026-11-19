@@ -285,10 +285,12 @@ document with their answers, then hand it over with a short list of the
 calls you made so they can check those while reading. That's the only
 round of questions the check produces.
 
-Without a profile, when the gate is on but no delegated pane can take it — `HERDR_ENV` unset, or no
-in-scope pane of the role or its fallbacks — read the document as that
-builder yourself and tell the user the check was not independent, as
-`orchestration` has the plan review do. A mandatory subagent you cannot spawn
+When the gate is on but no delegated pane can take it — `HERDR_ENV` unset, or no
+in-scope pane of the role or its fallbacks — the check takes `orchestration`'s
+subagent fallback while `delegation.subagent_fallback` is true. With no reader
+left at all, the gate holds: do not read it as the builder yourself; tell the
+user the check could not run and let them decide, as `orchestration` has the
+plan review do. A mandatory subagent you cannot spawn
 means the check is unavailable: report that instead of reading it inline or
 claiming the gate passed. Profile owner-session self-review is a permitted
 route, not unavailable delegation. When the gate is disabled, skip the check and tell

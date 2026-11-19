@@ -9,9 +9,9 @@ Read the canonical [profiles contract](../skills/orchestration/references/profil
 
 Both share one schema — a **role list**, a fallback map, and a **role assigned to every delegation task**:
 
-- `roles:` — each role key's value is its binding: one target, `orchestrator`, or a list. New targets use nested settings, e.g. `{codex: {model: GPT-6.2-Sol, effort: max}}`; effort requires model. Bare `orchestrator` dynamically aliases the active owner. Legacy bare kinds remain readable; `agent:`/`agents:` sub-keys, the old `reviewer` key, and non-fallback `kind@model` are migration input normalized with a deprecation notice, and init writes nested targets.
+- `roles:` — each role key's value is its binding: one target, `orchestrator`, or a list. New targets use nested settings, e.g. `{codex: {model: GPT-6.2-Sol, effort: max}}`; effort requires model, and `effort: any` lets the active owner pick the effort per task and report it. Bare `orchestrator` dynamically aliases the active owner. Legacy bare kinds remain readable; `agent:`/`agents:` sub-keys, the old `reviewer` key, and non-fallback `kind@model` are migration input normalized with a deprecation notice, and init writes nested targets.
 - `fallbacks:` — exact string keys and ordered string substitutes (`kind` or `kind@model`), without effort constraints.
-- `delegation:` — defaults applying to every task: `pane_scope` and `execution` (see [Delegation Scope and Execution Strategy](#delegation-scope-and-execution-strategy)).
+- `delegation:` — defaults applying to every task: `pane_scope`, `execution`, and `subagent_fallback` (see [Delegation Scope and Execution Strategy](#delegation-scope-and-execution-strategy)).
 - `assignments:` — every delegation task, each with the role that performs it and where it runs.
 - `profile` — optional composition name; missing/null/literal `none` selects none.
 - `allow_agent_lifecycle` — separate top-level strict boolean, false by default.
@@ -102,7 +102,7 @@ One workflow overrides this column: `/strict_full_cycle` ignores `enabled` and r
 
 A role bound to a list runs **one delegation per entry**; a single target runs one. A one-entry list is deliberate; a config empty role list disables its tasks unless a present profile role key overrides it. Explicit empty profile reviewers instead select the owner, and an enabled delegated review still requires a fresh subagent.
 
-Separate list targets need different kinds or distinct pinned models of one kind (case-insensitive, neither containing the other); effort alone is not another independent slot. Run available slots, wait for busy matching agents, and name reduced sets. Missing mandatory self-target subagent capability is inability, never inline substitution or a passed review.
+Separate list targets need different kinds or distinct pinned models of one kind (case-insensitive, neither containing the other); effort alone is not another independent slot. Run available slots, wait for busy matching agents, and name reduced sets; unavailable slots take the subagent fallback. With no reviewer left at all, the gate holds — nothing that depends on it is integrated — and resumes when a reviewer returns; the owner's own review never stands in. Missing mandatory self-target subagent capability is inability, never inline substitution or a passed review.
 
 ### What no assignment changes
 
@@ -111,11 +111,11 @@ Separate list targets need different kinds or distinct pinned models of one kind
 - **Separate targets and no-profile `review-fixes` keep rounds 4-5 escalation.** Profile self-targets retain their resolved mode, including mandatory fresh subagents for `delegate`; the five-round cap stays fixed.
 - **The report names the test writer and transport**, whatever test-authoring assignments resolve to. Disabled gates remain off (except strict mode's enabled-only override).
 
-**Every assignment the repo config or profile changed away from the shipped default, and every disabled review, is named in the final report**, alongside any role that fell back and any review that degraded for lack of panes — so nobody later mistakes an unreviewed branch for a reviewed one. Configuration is input: it is read once before the first delegation and never written from inside a run.
+**Every assignment the repo config or profile changed away from the shipped default, and every disabled review, is named in the final report**, alongside any role that fell back, any subagent fallback, and any review that degraded for lack of panes — so nobody later mistakes an unreviewed branch for a reviewed one. Configuration is input: it is read once before the first delegation and never written from inside a run.
 
 ## Delegation Scope and Execution Strategy
 
-Two keys under `delegation:` apply to every task, ahead of any role or assignment.
+Three keys under `delegation:` apply to every task, ahead of any role or assignment.
 
 **`pane_scope`** — which panes may receive a delegation at all, relative to the orchestrator pane:
 
@@ -130,6 +130,8 @@ Cross-tab delegation is off by default because a tab is how a herdr user separat
 **`execution`** — what `/full_cycle` and `/strict_full_cycle` attempt for implementation: `parallel` (the shipped default) extracts the plan's independent tracks and runs them concurrently in per-track worktrees off a coordination branch, per `/execute_parallel`; `serial` runs tasks one at a time, per `/execute`. It sets what is attempted, not what is forced — a plan with one track, or a session with one usable pane, still runs serially, and the report says how much parallelism was actually achieved. `/execute` and `/execute_parallel` are explicit user choices and ignore the key.
 
 Under `parallel`, plans are written for it: `writing-plans` emits a `## Tracks` table with each track's goal, tasks, owned files, and dependencies, and tags every task with its track. Execution validates and runs that partition instead of re-deriving one from a document that never had ownership boundaries in mind. A single-track plan is a valid answer, stated as one `main` track with the reason the work does not partition.
+
+**`subagent_fallback`** — what happens when a separate target is *unavailable*: no live in-scope agent matches it, lifecycle permission started none, and its fallback lookup left no usable substitute. `true` (the shipped default) runs the delegation in a fresh in-process subagent of the active owner's own agent kind, with the same self-contained brief and no re-delegation; it carries none of the target's kind, model, or effort, and the report names it with those lost constraints. One subagent covers all unavailable slots of one review. An explicit empty fallback list rules out pane substitutes only. `false` degrades without a subagent: safe work runs in the owner, and a review gate with no reviewer left holds. Exhausted targets — usage limits, two markerless delegations — keep their fallback and `reviewer_usage_limit` rules, and owner selection never uses this step.
 
 ## The Roles
 
@@ -183,11 +185,11 @@ An agent target is exhausted when its output reports a usage limit, or two deleg
 
 For a nested target, look up the exact `kind@model` fallback key using its preserved spelling; only an absent key permits bare-kind lookup. A matched `[]` is authoritative. Substitutes keep string syntax and have no effort constraint: discard primary effort and report that loss. No fuzzy aliases or list concatenation. Re-submit the same self-contained task to the first usable substitute.
 
-Without a profile, safe inline degradation remains available for work. With a profile, a fallback to the owner obeys its mode: `delegate` requires a fresh subagent. Report unavailable mandatory capability instead of claiming inline delegation. Lifecycle permission still applies during fallback: with it, a target that is unavailable but not exhausted is started before its substitutes.
+The subagent fallback covers unavailable targets, not exhausted ones. Without a profile, safe inline degradation remains available for work. With a profile, a fallback to the owner obeys its mode: `delegate` requires a fresh subagent. Report unavailable mandatory capability instead of claiming inline delegation. Lifecycle permission still applies during fallback: with it, a target that is unavailable but not exhausted is started before its substitutes.
 
 A reviewer exhausted by a usage limit, with no substitute that can review, follows `reviewer_usage_limit`. `wait` holds the gate until the limit resets, then finishes that review. `skip` passes the gate on the remaining reviewers and reports the skipped one; with none left, it holds the gate like `wait`. The owner's own review never stands in. Claude Code keeps a limited request and resumes it by itself; Codex drops it, so the same brief is resubmitted after the reset time the pane shows.
 
-**Separate-target escalation selects a different eligible live target**, rather than changing an existing agent's model/effort. Apply it for lack-of-reasoning BLOCKED reports and rounds 4-5; profile self-target fixes retain their mode. Record the swap and lost constraints. All requested model/effort constraints need live footer evidence before keys and after reset; unknown effort fails closed, and Cursor's bare Max plan label is not reasoning evidence.
+**Separate-target escalation selects a different eligible live target**, rather than changing an existing agent's model/effort. Apply it for lack-of-reasoning BLOCKED reports and rounds 4-5; profile self-target fixes retain their mode. Record the swap and lost constraints. All requested model/effort constraints need live footer evidence before keys and after reset; unknown effort fails closed. Cursor's effort is the label its footer appends to the model name (`Grok 4.7 256K Extra High`), and `effort: any` verifies only the model.
 
 ## Delegating
 
@@ -196,7 +198,8 @@ A reviewer exhausted by a usage limit, with no substitute that can review, follo
 | Any agent inside herdr (`HERDR_ENV=1`) | `using-herdr-sibling-panes` → `scripts/composer-submit.sh`, then wait for the completion marker with `herdr pane wait-output`. |
 | Profile self-target `delegate` | Fresh in-process subagent with the same self-contained brief and no re-delegation; missing capability is inability. |
 | Profile owner-session modes | Inline/self-review permitted, optional subagent at active-owner judgment; report actual transport and independence. |
-| Outside herdr | Herdr transport unavailable; legacy no-profile work may degrade inline. Selected-profile modes remain binding. |
+| Unavailable separate target, `subagent_fallback: true` | Fresh in-process subagent of the active owner's own kind with the same brief and no re-delegation; report the lost kind/model/effort. |
+| Outside herdr | Herdr transport unavailable: unavailable targets take the subagent fallback while it is enabled; otherwise legacy no-profile work may degrade inline. Selected-profile modes remain binding. |
 
 Before an agent CLI is used as a delegation target for the first time — and again after that CLI is upgraded — run `bash skills/using-herdr-sibling-panes/scripts/probe-composer.sh "$PANE"` against one idle pane of that type. Composer key bindings differ per CLI and change across releases; any `FAIL` means that agent type is not delegatable yet.
 

@@ -13,7 +13,7 @@ Coordinates planning, implementation, testing, and review across agent panes.
 
 | | Superpowers | herdrpowers |
 |---|---|---|
-| worker | in-process subagent | idle sibling herdr pane; a profile without a separate coder or reviewer uses a fresh subagent |
+| worker | in-process subagent | idle sibling herdr pane; a profile without a separate coder or reviewer, or a role whose pane is not open, uses a fresh subagent |
 | task loop | `subagent-driven-development` | `pane-driven-development` |
 | parallel work | `dispatching-parallel-agents` | panes, bounded by idle panes and worktrees |
 | entry point | skills trigger themselves | `commands/` workflows, plus the same skills |
@@ -121,7 +121,10 @@ A profile overrides only present keys. Omitted keys keep config/default
 values; maps merge per key and lists replace, including empty lists.
 Assignment overrides may change modes and review gates; lifecycle permission
 remains config-only. Model and effort must match what each pane shows in its
-footer. With `allow_agent_lifecycle: true` the orchestrator starts the
+footer; `effort: any` leaves the effort to the orchestrator, which reports its
+choice. A role whose pane is not open, with no usable fallback, runs in a
+fresh subagent of the orchestrator's own kind unless
+`delegation.subagent_fallback` is `false`. With `allow_agent_lifecycle: true` the orchestrator starts the
 selected composition's missing agents in idle shell panes and ends the ones it
 started; with `false`, the default, it never starts or ends an agent. See
 [Roles](docs/roles.md) for the rules.

@@ -21,6 +21,9 @@ Rules:
    reviewers; other owner-session modes permit reported self-review and optional
    subagents at owner judgment. Missing mandatory capability is inability,
    never inline substitution or a passed review. No-profile independence stays.
+   An unavailable separate target runs in a fresh subagent of the owner's own
+   kind while `delegation.subagent_fallback` is true; a review gate with no
+   reviewer left holds.
 3. The resolved `test-authoring` assignment says which session writes tests —
    a fresh worker that never sees implementation, or the implementing session
    itself. Assertions come from the requirements, never from the code, the RED

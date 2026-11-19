@@ -46,8 +46,9 @@ timeouts, and never sit in one silent open-ended wait either. While you have
 local work — reading a report that already came back, packaging the next
 delegation, updating a ledger — do it; delegated panes finish on their own.
 When you are genuinely idle, replace one long `pane wait-output` with stretches of
-five to ten minutes, and between stretches check the report file and re-read
-`pane list` for every live delegation. That between-stretch check is not
+five to nine minutes — each shorter than your own tool's command timeout,
+often ten minutes, or the tool kills the wait first — and between stretches
+check the report file and re-read `pane list` for every live delegation. That between-stretch check is not
 optional: each stretch searches the snapshot as it stands, and an agent on the
 alternate screen redraws and drops rows, so a marker printed between stretches
 can be gone before the next one looks — the report file is what proves the work
@@ -55,6 +56,13 @@ finished. A pane back at `idle` or `done` with no marker and no report has
 already failed — diagnosing it now costs minutes instead of the rest of the
 session. The exception is agy and grok, which herdr can report `idle` while
 their work is still running; see **still running** under "Failure handling".
+
+**Never end your turn while a delegation is in flight.** A reply with no
+pending tool call ends the turn, and nothing wakes the orchestrator when a pane
+finishes: the marker prints, and the session sits idle until the user types
+again. Write status or questions to the user, then keep waiting in the same
+turn — the next bounded stretch, or a background wait the harness re-invokes
+you on. End the turn only for an answer that blocks all work.
 
 **A long brief can be pasted and never submitted, and the helper still exits `0`.** Composers split a large paste: an instruction beyond a few hundred characters can land in the composer as `[Pasted Content 1024 chars] #2 #3` and sit there unsent. The helper still returns `0`, because the pane flickers to `working` while the paste lands and passes the `started()` `working|blocked` check — so you wait on a delegation that never began. Observed 2026-08-22 at roughly 3000 characters. Put a long brief in a file under `<REPORT_DIRECTORY>` (or the worktree's scratch directory) and submit a single line pointing at it: `Read <absolute path> and carry out exactly what it says, starting by confirming the worktree it names.` And never take exit `0` as evidence of completion: a few minutes in, confirm real movement with `git status` in the worktree or the report file the brief named, and if nothing has changed, `pane read` the pane and look at the composer.
 

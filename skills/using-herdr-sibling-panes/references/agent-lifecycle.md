@@ -64,7 +64,9 @@ reuse a ledger an earlier task left behind.
    strings alone. They are an attempt, never evidence.
 3. Start it. `NAME` matches `[a-z][a-z0-9_-]{0,31}` and is unique among live
    agents; pass the resolved model and effort unchanged, and native arguments
-   after `--`. `RESOLVED_PANE_SCOPE` is the frozen effective scope:
+   after `--`. For effort `any`, choose the launch effort yourself and pass
+   that token to have it verified, or `any` to verify the model only.
+   `RESOLVED_PANE_SCOPE` is the frozen effective scope:
 
    ```bash
    LEDGER="<REPORT_DIRECTORY>/lifecycle-agents.tsv"
@@ -128,7 +130,7 @@ in the helper.
 | --- | --- | --- | --- |
 | `claude` | Claude Code 2.1.321 | `-- --model fable --effort max --settings '<statusLine JSON below>'` → `Fable 5.2 max` | `ctrl+c ctrl+c` (one `ctrl+d` does nothing) |
 | `codex` | codex-cli 0.167.0 | `-- -m gpt-6.2-astra -c 'model_reasoning_effort="max"'` → `GPT-6.2-Astra max` | `ctrl+c` |
-| `cursor` | cursor-agent 2026.11.05-86047df | no arguments → the account default, `Claude Fable 5.2 300K Max`; no effort field, so an effort constraint exits `5` | `ctrl+d` (two `ctrl+c` do nothing) |
+| `cursor` | cursor-agent 2026.11.05-86047df | no arguments → the account default, `Claude Fable 5.2 300K Max`: model `Claude Fable 5.2`, effort label `Max` under the current footer rule (that start was observed before the rule read Cursor effort) | `ctrl+d` (two `ctrl+c` do nothing) |
 | `opencode` | opencode 2.0.32 | no arguments, kind-only | `ctrl+c` |
 | `agy`, `muse`, `grok` | agy 1.4.12, Muse Code 1.4.14; grok not installed | not verified: both stopped at a login or trust screen before any composer | none — `stop` exits `3` |
 

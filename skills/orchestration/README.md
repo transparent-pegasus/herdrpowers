@@ -7,10 +7,10 @@ the effective owner, routes, review context, and configuration changes.
 
 ## Files
 
-- [`SKILL.md`](SKILL.md) — the skill: configuration resolution, delegation scope, execution strategy, the delegation-task tables, the complex-coding boundary, the review gates, exhaustion/fallback, and the delegation contract.
-- [`roles.yaml`](roles.yaml) — the pack's **shipped defaults**: the `roles:` list, the `fallbacks:` map of substitutes for exhausted agents, the `delegation:` block (`pane_scope`, `execution`), and the `assignments:` table giving every delegation task a role and a mode.
-- [`references/profiles.md`](references/profiles.md) — required before routing: selection/precedence, nested targets and migration, owner handoff, lifecycle permission, self-target execution, and fallback lookup.
-- [`references/routing.md`](references/routing.md) — task classification, workflow mapping, and the coding boundary.
+- [`SKILL.md`](SKILL.md) — the skill: configuration resolution, delegation scope, execution strategy, the delegation-task tables, the subagent fallback, the complex-coding boundary, the review gates, exhaustion/fallback, and the delegation contract.
+- [`roles.yaml`](roles.yaml) — the pack's **shipped defaults**: the `roles:` list, the `fallbacks:` map of substitutes for exhausted agents, the `delegation:` block (`pane_scope`, `execution`, `subagent_fallback`), and the `assignments:` table giving every delegation task a role and a mode.
+- [`references/profiles.md`](references/profiles.md) — required before routing: selection/precedence, nested targets and migration, `any` slots and effort `any`, owner handoff, lifecycle permission, self-target execution, and fallback lookup.
+- [`references/routing.md`](references/routing.md) — task classification, decision-making routing, the subagent fallback, orchestrator-mode reviews, workflow mapping, execution strategy, the exhaustion steps, and the coding boundary.
 - [`../../.herdrpowers/profiles/`](../../.herdrpowers/profiles/) — shipped profile templates, included in npm distribution and installed only when missing during init.
 - [`agents/openai.yaml`](agents/openai.yaml) — interface metadata for OpenAI-compatible agent runners.
 
@@ -37,8 +37,9 @@ selection. See [`commands/init.md`](../../commands/init.md).
 - Only applies to tasks that come directly from the user; a task that arrived as a delegation is executed in place, never re-delegated.
 - Delegation stays inside the orchestrator's own tab unless `delegation.pane_scope` widens it — a pane one tab over is usually another repository's, mid-session, and a submit resets that session. An agent type with no in-scope pane is unavailable, not exhausted.
 - Roles bind to agent types, not reserved panes — any idle in-scope pane of the right type can take any task.
-- A role bound to a list of agent types runs **one delegation per entry**; that, not the task name, is what makes a review a double review.
-- Nested targets preserve kind/model/effort strings; effort requires model, and matching uses verified live footer evidence before keys and after reset. Legacy bare kinds/owner aliases remain readable; old non-fallback `kind@model` pins are normalized with deprecation notices.
+- A role bound to a list of agent types runs **one delegation per entry**; that, not the task name, is what makes a review a double review. With no reviewer left at all, the gate holds rather than passing on the owner's own review.
+- A separate target whose pane is not open, and that no fallback replaces, goes to a fresh subagent of the owner's own kind while `delegation.subagent_fallback` is `true` (the default); the report names the lost constraints. Exhausted targets keep their fallback and `reviewer_usage_limit` rules.
+- Nested targets preserve kind/model/effort strings; effort requires model, and matching uses verified live footer evidence before keys and after reset. Effort `any` lets the owner pick the effort per task and report it; the helpers then verify only the model. Legacy bare kinds/owner aliases remain readable; old non-fallback `kind@model` pins are normalized with deprecation notices.
 - A selected owner must match the receiving pane or prompt for unused versus relay, then receive explicit authority and frozen settings. A relay retains no decision authority. Custom planning-design/decision-maker/generalist targets remain intact; their owner aliases follow the selected owner. Judgment calls and final synthesis follow `decision-making` (`roles.decision-maker`).
 - Separate review independence comes from reset. With a selected profile, a delegated owner target requires a fresh subagent, including solo tasks and empty reviewers; other owner-session modes may self-review and report that honestly. Without a profile, the legacy fresh-subagent rule for orchestrator-mode reviews remains.
 - Profile empty reviewers choose the owner rather than disable gates; empty coder means no separate coder. Omitted keys preserve roles, including config empty-role task disabling. Explicit profile assignment fields override config values; omitted fields retain them.

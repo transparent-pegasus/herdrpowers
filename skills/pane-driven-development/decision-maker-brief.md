@@ -6,8 +6,8 @@ Use this template whenever `assignments.decision-making` resolves to
 reviewer disagreement adjudication, `⚠️ Cannot verify` triage, five-round
 breaker adjudication, or final whole-branch synthesis decisions). Separate
 delegated targets use the Herdr submission below; profile self-target
-`delegate` uses a fresh subagent given this same contract and no-re-delegation
-rule. When `decision-making` resolves to `mode: orchestrator`, the active
+`delegate`, or a subagent fallback, uses a fresh subagent given this same
+contract and no-re-delegation rule. When `decision-making` resolves to `mode: orchestrator`, the active
 owner performs `decision-making` directly (or via optional subagent) and applies the same
 authority and ledger format.
 
@@ -23,7 +23,7 @@ PANE=w2:p19                                    # idle pane of the resolved decis
 INSTRUCTION="Work in /abs/path/to/worktree — confirm you are there before anything else. Read-only decision task: make no edits and do not mutate the working tree, index, HEAD, or branch state. Read /abs/path/to/decision-N-brief.md first; it holds the spec, plan, review/report inputs, and the exact decision questions. Write your rulings to /abs/path/to/decision-N-report.md and reply with your dispositions, ruling summaries, and that path. Execute this request yourself, directly; re-delegating to other panes or orchestrating is prohibited. End your reply with DECIDE_N immediately followed by _<4-hex>."
 COMPOSER_SUBMIT="$SKILL_DIR/scripts/composer-submit.sh"   # using-herdr-sibling-panes
 bash "$COMPOSER_SUBMIT" "$PANE" "$INSTRUCTION"
-herdr pane wait-output "$PANE" --match "DECIDE_N_<4-hex>" --timeout 900000
+herdr pane wait-output "$PANE" --match "DECIDE_N_<4-hex>" --timeout 540000   # one stretch, under the tool timeout: repeat per using-herdr-sibling-panes/references/task-contract.md
 ```
 
 The marker must not appear verbatim in the instruction — describe it as two
@@ -56,10 +56,13 @@ raise the five-round cap, enable or disable a review gate, or widen
 
 ### Authority and Inputs
 
-The spec/design document is the binding authority, the plan is its argument,
-and your judgment settles what neither answers. Read:
+The user's requirements are the binding authority — the spec/design document,
+then any later instruction from the user, a later requirement winning where
+two conflict. The plan is their argument, and your judgment settles what
+neither answers. Read:
 
 - **Spec / design document:** [SPEC_OR_DESIGN_PATH]
+- **Later user requirements, in the order given:** [REQUIREMENTS]
 - **Implementation plan:** [PLAN_PATH]
 - **Relevant reports / diff package / ledger rulings:** [INPUT_PATHS]
 - **Open findings / disagreements / conflict to decide:** [QUESTIONS_OR_FINDINGS]
@@ -107,6 +110,7 @@ the output file path, and the completion marker.
 
 - **worktree path** — REQUIRED, absolute; the pane does not inherit the orchestrator's cwd
 - `[SPEC_OR_DESIGN_PATH]` — spec or design document path (`None` if unreachable)
+- `[REQUIREMENTS]` — the user's instructions for this task that the spec does not record, verbatim, in the order given (`None` if there are none)
 - `[PLAN_PATH]` — plan file path (`None` in plan-less `/quick` flows)
 - `[INPUT_PATHS]` — review reports, implementer reports, diff package path, and relevant `Ruling:` / `minor (deferred)` lines from the ledger
 - `[QUESTIONS_OR_FINDINGS]` — exact disagreements, conflicts, `⚠️` items, open findings, or final-synthesis questions to rule on

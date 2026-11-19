@@ -46,7 +46,7 @@ Write the contract from [review-brief.md](review-brief.md) to a file. Separate t
 
 **Placeholders:**
 - `[DESCRIPTION]` - Brief summary of what you built
-- `[PLAN_OR_REQUIREMENTS]` - What it should do
+- `[PLAN_OR_REQUIREMENTS]` - What it should do, with the user's requirements for this task verbatim, in the order given
 - `[BASE_SHA]` / `[HEAD_SHA]` - The range under review
 - `[DIFF_FILE]` - The path `review-package` printed
 

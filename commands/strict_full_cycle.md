@@ -12,7 +12,7 @@ Run the `/full_cycle` workflow exactly as written: read `full_cycle.md` — the 
 
 Resolve configuration and the selected composition through `orchestration` and its [profiles contract](../skills/orchestration/references/profiles.md), then ignore `enabled` on every review task in the resolved result. Each counts as `enabled: true` for this run, including later gates. `/full_cycle`'s disabled-gate skip clauses therefore never fire here.
 
-Nothing else changes. Effective profile targets, `role`, `mode`, `fallbacks`, scope, strategy, and lifecycle policy still bind. Separate delegated reviews use reset-backed panes; profile self-target `delegate` requires fresh subagents, while other owner-session modes permit reported self-review and optional subagents. No-profile independence is preserved. Strict mode changes only `enabled`, never targets, modes, or lifecycle permission.
+Nothing else changes. Effective profile targets, `role`, `mode`, `fallbacks`, scope, strategy, subagent fallback, and lifecycle policy still bind. Separate delegated reviews use reset-backed panes; profile self-target `delegate` requires fresh subagents, while other owner-session modes permit reported self-review and optional subagents. No-profile independence is preserved. Strict mode changes only `enabled`, never targets, modes, or lifecycle permission.
 
 Never write the configuration file. `enabled: false` stays where the user put it; this run declines to honor it and says so in the report.
 

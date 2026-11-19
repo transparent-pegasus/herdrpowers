@@ -28,6 +28,7 @@ Use `solo` for tasks that need neither complex decisions nor coding.
 - Target keys are the agent kind names shown in `herdr pane list` under `agent` (`claude`, `codex`, etc.). Pane aliases such as `hp-coder` and pane IDs are invalid.
   Use the form `roles: {coder: {codex: {model: GPT-6.2-Sol, effort: max}}}`.
   Settings are nested. `model` and `effort` are optional nonempty strings; `effort` requires `model`.
+  `effort: any` fixes no effort: the owner picks one per task and reports it.
   Do not write new `kind@model` targets except in fallback strings.
 - Bare `any` may stand for `orchestrator` or a one-target role, not a list entry, fallback, or config value.
   Fill it as `slot: value` (`coder: codex`); right after the name of a profile with one `any` slot, the bare value is enough.
@@ -35,7 +36,8 @@ Use `solo` for tasks that need neither complex decisions nor coding.
   A value without a kind matches any kind whose footer shows that model and effort, but is never started or replaced by a fallback.
   An unfilled slot accepts any agent; unfilled `solo` keeps the receiving pane as owner. A value for a slot not written `any` is an error.
 - `model` and `effort` must match the pane's footer. Do not infer them from provider names.
-  Context usage and a plan's `Max` label are not evidence of reasoning effort. Do not silently change template strings.
+  Context usage is not evidence of reasoning effort. Cursor appends its effort label to the model name, before any `Fast` or `No Thinking`, as in `Grok 4.7 256K Extra High`.
+  Do not silently change template strings.
 - `claude` does not show model or effort in its footer by default. Without a statusLine, a `claude` target always fails to match.
   Add this to `~/.claude/settings.json` (`jq` required):
   `{"statusLine": {"type": "command", "command": "jq -r '\"\\(.model.display_name) \\(.effort.level // \"\")\"'"}}`
@@ -47,5 +49,6 @@ Use `solo` for tasks that need neither complex decisions nor coding.
 - If the reception pane does not match the owner, always ask whether it should be `unused` or a `relay` before handoff or startup.
 - Fallback strings may be overridden per key in a profile. They do not inherit the original target's `effort`.
   Preserve exact user strings. Do not merge distinct names through fuzzy matching or spelling repairs.
+- A role whose pane is not open goes to a fresh subagent of the owner's own kind while `delegation.subagent_fallback` is `true` (the default). A profile may override it.
 
 See the [composition, selection, and handoff contract](https://github.com/transparent-pegasus/herdrpowers/blob/main/skills/orchestration/references/profiles.md) for details.

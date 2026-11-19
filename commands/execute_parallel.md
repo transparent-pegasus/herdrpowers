@@ -20,7 +20,7 @@ Do not edit workflow files unless the user's current request explicitly asks to 
 
 ## Orchestration
 
-Read `orchestration`, its [profiles contract](../skills/orchestration/references/profiles.md), and `using-herdr-sibling-panes` before routing work. Resolve repo config over shipped roles, then only keys present in the selected profile. Freeze the active owner, targets, assignments, gates, scope, strategy, and lifecycle policy. Profile assignment overrides resolve before routing; a resolved disabled gate is skipped and named in the report.
+Read `orchestration`, its [profiles contract](../skills/orchestration/references/profiles.md), and `using-herdr-sibling-panes` before routing work. Resolve repo config over shipped roles, then only keys present in the selected profile. Freeze the active owner, targets, assignments, gates, scope, strategy, subagent fallback, and lifecycle policy. Profile assignment overrides resolve before routing; a resolved disabled gate is skipped and named in the report.
 
 Routing comes from `assignments:`, not from this file, and the resolved YAML is the source of truth for every default — read each task's `role` and `mode` there rather than recalling one. This workflow touches `decision-making`, implementation tracks (`complex-coding` / `simple-coding`), `test-authoring`, `fix-round-test-authoring`, `review-fixes`, `chores`, `verification`, `documentation-impact-review`, `task-review`, `fix-round-re-review`, and `final-branch-review`. A review task whose effective role binds to a list runs once per entry.
 - Track extraction and branch integration stay with the orchestrator; mid-execution rulings, review-finding triage and disagreements, and final synthesis decisions follow `decision-making` (`decision-maker`).
@@ -34,7 +34,7 @@ Do not compute a wave plan from those numbers. Take what is idle, start those tr
 
 **Every delegation** states its own track's absolute worktree path (and requires the pane to confirm it is there first), the owned files, the edit policy, the report-file path under `<REPORT_DIRECTORY>`, a unique completion marker, and the prohibition on re-delegating. Read results from report files, not from pane scrollback.
 
-**Degrade honestly.** If the resolved routes cannot run concurrently, continue with `/execute`, stating why and preserving all modes. Missing mandatory subagent capability is a reported inability, never inline delegation. No-profile unavailable Herdr transport retains its legacy inline fallback.
+**Degrade honestly.** If the resolved routes cannot run concurrently, continue with `/execute`, stating why and preserving all modes. Missing mandatory subagent capability is a reported inability, never inline delegation. An unavailable separate target takes `orchestration`'s subagent fallback while `delegation.subagent_fallback` is true; without it, no-profile unavailable Herdr transport retains its legacy inline fallback for work, and a review gate with no reviewer left holds.
 
 ## Execution Steps
 

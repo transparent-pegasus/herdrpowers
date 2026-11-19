@@ -48,7 +48,8 @@ the directory holding `skills/`, three levels above this file.
    enablement after it.
 5. Reconcile the reception pane with the selected owner as described below,
    then freeze the selected file, effective targets, assignments, scope,
-   execution strategy, and lifecycle permission for the run. Do not rewrite
+   execution strategy, subagent fallback, and lifecycle permission for the
+   run. Do not rewrite
    configuration or switch profiles to escape a missing agent or a gate.
 
 ## Role bindings
@@ -84,14 +85,15 @@ with a deprecation notice; a role set both ways is an error.
 | `roles.generalist` | Keep the resolved binding | One nested target or `any` replaces that binding; bare `orchestrator`, null, `[]`, or literal `none` binds it to the active owner |
 | `roles.<custom>` | Keep the resolved binding, if any | A target, `orchestrator`, or list, as in config, or `any` for one target; adds the role when config lacks it |
 | `fallbacks` | Keep the resolved fallback map | Override each present string key's entire substitute list, including `[]`; keep omitted entries |
-| `delegation` | Keep the resolved delegation settings | Override each present `pane_scope` or `execution`; keep omitted settings |
+| `delegation` | Keep the resolved delegation settings | Override each present `pane_scope`, `execution`, or `subagent_fallback`; keep omitted settings |
 | `assignments` | Keep the resolved task assignments | Override each present task's `role`, `mode`, or review `enabled` field; keep omitted tasks and fields |
 
 `roles` and the three override blocks must be maps; `{}` changes nothing, while null,
 scalars, and lists are errors. Their entries use the config schema: fallback
 values are lists of effort-free target strings; `pane_scope` is `tab`,
-`workspace`, or `session`; `execution` is `parallel` or `serial`; assignment
-roles must exist, modes are `delegate`, `orchestrator`, or `implementer`, and
+`workspace`, or `session`; `execution` is `parallel` or `serial`;
+`subagent_fallback` is a strict boolean; assignment roles must exist, modes
+are `delegate`, `orchestrator`, or `implementer`, and
 review `enabled` is a strict boolean. Report unknown settings, tasks, or
 assignment fields rather than silently ignoring them. Work tasks cannot be
 disabled. A profile cannot contain `profile`, `allow_agent_lifecycle`, or
@@ -130,7 +132,12 @@ roles:
 ```
 
 Settings may contain only `model` and `effort`, each an optional nonempty
-string. `{codex: {}}` constrains only kind. Effort requires model. Multiple
+string. `{codex: {}}` constrains only kind. Effort requires model. Effort
+`any` (any case) fixes no effort: the active owner picks it for each
+delegation — the matching pane whose footer effort suits the task, or the
+launch effort of an agent it starts under lifecycle permission — and reports
+the choice. Pass the chosen effort to the helpers to verify it, or `any` to
+verify only the model. Multiple
 kinds, a scalar instead of the settings mapping, an empty/malformed model or
 effort, or an unsupported scalar/collection where a target is required is an
 error, not an omitted constraint. New profiles always use nested targets.
@@ -148,8 +155,8 @@ Preserve the original strings in configuration, handoffs, helper arguments,
 and reports. Compare model text case-insensitively against the live footer;
 compare effort as case-insensitive semantic tokens, with `Extra High` and
 `xhigh` aliases. `High` does not match `Extra High`; `max` in transcript,
-context usage, or plan text is not reasoning evidence. Cursor's bare `Max`
-plan label does not establish reasoning effort.
+context usage, or plan text is not reasoning evidence. Cursor's effort is the
+effort label its footer appends to the model name (`Grok 4.7 256K Extra High`).
 
 Use `using-herdr-sibling-panes` and its `pane-model.sh PANE [MODEL [EFFORT]]`
 and `composer-submit.sh PANE INSTRUCTION [MODEL [EFFORT]]` contracts. Verify
@@ -170,7 +177,8 @@ maps, and config reject it. The run's task fills each slot: `slot: value`
 A value is an optional agent kind (as `herdr pane list` reports it under
 `agent`), then an optional model, then an optional effort; effort requires
 model, and a role slot also takes `orchestrator`. Keep the exact strings and
-ask the user when the split is ambiguous. What the value omits stays open:
+ask the user when the split is ambiguous. What the value omits stays open,
+and effort `any` leaves it to the owner, as above:
 `codex` accepts any codex model and effort, and `Opus 5.5 max` accepts an
 agent of any kind whose live footer verifies `Opus 5.5` at `max`. An unfilled
 slot accepts every agent. A bare value for a profile with several `any`
@@ -230,7 +238,7 @@ Send an explicit **orchestrator handoff**, containing:
 - The original user instruction, constraints, and current task state.
 - Absolute repository/worktree paths, selected profile name/path and its
   `any` fills, frozen effective targets, assignments/gates, scope/strategy,
-  and lifecycle policy.
+  subagent fallback, and lifecycle policy.
 - The primary and effective owner targets, any fallback key/substitute used,
   and lost constraints. Keep the profile file unchanged; owner aliases bind
   to the verified effective owner.
@@ -254,8 +262,9 @@ handoff/report, never in profile templates.
 
 The top-level boolean applies during owner handoff, normal routing, recovery,
 and fallback, with or without a profile. It governs Herdr agent processes;
-creation of the profile routing table's in-process task subagents is a
-separate routing operation and remains allowed when this boolean is false.
+creation of the profile routing table's in-process task subagents, and of
+subagent-fallback subagents, is a separate routing operation and remains
+allowed when this boolean is false.
 
 The value works at runtime, not only on paper: every start and end goes
 through `using-herdr-sibling-panes/scripts/agent-lifecycle.sh`, which reads
@@ -352,6 +361,12 @@ Record the loss of the primary effort constraint with the fallback result.
 The exact shipped map is in `roles.yaml`; profiles contain only intentional overrides,
 not copies of inherited entries.
 
+When an unavailable worker target is left with no usable substitute, the
+resolved `delegation.subagent_fallback` decides whether a fresh subagent of
+the active owner's own kind takes the work (see
+[routing.md](routing.md#subagent-fallback)). It never selects an owner: owner
+selection ends at the manual setup report under "Reception and owner handoff".
+
 ## Init and run record
 
 Follow `commands/init.md` to install only missing shipped templates and
@@ -367,7 +382,7 @@ The final run report names the selected profile and its `any` fills, or no
 selection, effective owner and reception role, target/model/effort evidence,
 transport for each task/review/decision, self-review versus independent
 review, fallbacks and lost constraints, unavailable routes, lifecycle
-actions and task-owned agents left running, test writer, changed
-assignments, and disabled/forced gates.
+actions and task-owned agents left running, subagent fallbacks, test writer,
+changed assignments, and disabled/forced gates.
 Do not confuse an empty reviewer composition, a disabled gate, and an
 unavailable mandatory subagent: each produces a different record.

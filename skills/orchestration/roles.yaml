@@ -32,7 +32,8 @@ reviewer_usage_limit: skip
 # a profile, or the owner resolved by the selected profile.
 #
 # Targets use one-key mappings: {kind: {model: <string>, effort: <string>}}.
-# Settings are optional; effort requires model. Preserve their spelling and
+# Settings are optional; effort requires model, and effort `any` lets the
+# active owner pick the effort per task. Preserve their spelling and
 # verify live footer evidence, not config or launch flags. Legacy bare kinds
 # and kind@model role entries remain readable; init writes nested targets
 # (with a deprecation notice for old non-fallback kind@model entries).
@@ -88,7 +89,8 @@ fallbacks:
 
 # ---------------------------------------------------------------------------
 # Delegation defaults that apply to every task and every workflow.
-# See "Delegation scope" and "Execution strategy" in SKILL.md.
+# See "Delegation scope", "Execution strategy", and "Unavailable targets and
+# the subagent fallback" in SKILL.md.
 # ---------------------------------------------------------------------------
 delegation:
   # Which panes may receive a delegation, relative to the orchestrator pane.
@@ -108,6 +110,16 @@ delegation:
   # Either way a plan with fewer than two independent tracks runs serially —
   # this key sets what is attempted, not what is forced.
   execution: parallel
+
+  # What happens when a separate target is unavailable — no live in-scope
+  # match, none started, and no usable fallback substitute.
+  #   true   run the delegation in a fresh in-process subagent of the active
+  #          owner's own agent kind, with the same brief; the report names it
+  #          and the target constraints it lost. The default.
+  #   false  degrade without a subagent: report it, run safe work in the owner, and
+  #          hold a review gate that has no reviewer left.
+  # A strict boolean. Exhausted targets keep their own rules.
+  subagent_fallback: true
 
 # ---------------------------------------------------------------------------
 # Delegation tasks, each assigned a role. This is the routing table: the skill

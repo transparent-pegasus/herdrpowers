@@ -5,7 +5,7 @@ This guide describes the 7-phase herdrpowers development cycle. The full cycle i
 Every phase routes work through `orchestration` and its [profiles contract](../skills/orchestration/references/profiles.md). Separate delegated targets use reset-backed Herdr panes. With a selected profile, self-target `delegate` requires fresh in-process subagents for work and reviews, even with empty reviewers; other owner-session modes permit inline work/self-review and optional subagents. Missing mandatory subagent capability is inability, never inline substitution or a passed gate. Without a profile, preserve legacy routing, independence, and unavailable-pane degradation. Workers never re-delegate.
 
 Resolve config over shipped roles, then only present profile keys.
-Freeze modes, gates, scope, and lifecycle policy. A mismatched reception pane
+Freeze modes, gates, scope, subagent fallback, and lifecycle policy. A mismatched reception pane
 always asks unused versus relay before explicit owner handoff or startup.
 Lifecycle false forbids start/exit/restart even in recovery. True lets the
 active owner start the selected composition's missing agents in idle in-scope

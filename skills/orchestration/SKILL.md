@@ -9,10 +9,10 @@ description: Use when handling a task received directly from the user in Herdr, 
 
 **Before resolving ownership, classifying work, or routing any task, read
 [references/profiles.md](references/profiles.md).** It owns profile selection,
-key-presence precedence, target validation/migration, owner handoff, lifecycle
-permission, and the profile-scoped self-target routes. Apply its conditional
-rules before the legacy no-profile rules below; no separate config engine is
-needed. Resolve once and freeze the run's settings.
+key-presence precedence, target validation/migration, `any` slots and efforts,
+owner handoff, lifecycle permission, and the profile-scoped self-target routes.
+Apply its conditional rules before the legacy no-profile rules below; no
+separate config engine is needed. Resolve once and freeze the run's settings.
 
 The base configuration answers "who does what, and which reviews run":
 
@@ -23,12 +23,12 @@ Read both at the start of every orchestrated task (the repo file may be absent).
 Then overlay only keys present in the selected profile, per the profiles reference.
 The base files share this schema:
 
-- **`roles:`** — each role key's binding: one target, `orchestrator`, or a list. Custom keys add roles. New targets use `{kind: {model: <string>, effort: <string>}}`; settings are optional, effort requires model. The bare `orchestrator` alias resolves to the active owner. Legacy bare kinds, `agent:`/`agents:` sub-keys, the old `reviewer` key, and non-fallback `kind@model` remain readable, with a deprecation notice for all but bare kinds; init writes nested targets. Validate and normalize per the profiles reference, not by silently ignoring invalid fields.
+- **`roles:`** — each role key's binding: one target, `orchestrator`, or a list. Custom keys add roles. New targets use `{kind: {model: <string>, effort: <string>}}`; settings are optional, effort requires model, and effort `any` leaves the effort to the active owner. The bare `orchestrator` alias resolves to the active owner. Legacy forms remain readable, with a deprecation notice for all but bare kinds; init writes nested targets. Validate and normalize per the profiles reference, never by silently ignoring invalid fields.
 - **`fallbacks:`** — agent → ordered substitutes, for when an agent cannot take work. Keys and substitutes may be pinned too.
-- **`delegation:`** — defaults that apply to every task: `pane_scope` (which panes are eligible at all) and `execution` (parallel or serial by default).
+- **`delegation:`** — defaults that apply to every task: `pane_scope` (which panes are eligible at all), `execution` (parallel or serial by default), and `subagent_fallback` (whether an unavailable target's work goes to a fresh subagent of the owner's own kind).
 - **`assignments:`** — every delegation task, each with the role that performs it.
 - **`profile`** — optional preset name; its present composition and routing entries override the base configuration. The task fills its `any` slots.
-- **`allow_agent_lifecycle`** — top-level strict boolean, separate from composition/delegation; defaults false. False starts and ends no agent. True lets the active owner start a resolved target that has no live match and end idle agents the task started, only through `agent-lifecycle.sh`, which enforces the value. Read the profiles reference before any startup, exit, or recovery action, including owner handoff and fallback.
+- **`allow_agent_lifecycle`** — top-level strict boolean, separate from composition/delegation; defaults false. False starts and ends no agent; true lets the active owner start unmatched targets and end idle task-started agents, only through `agent-lifecycle.sh`, which enforces the value. Read the profiles reference before any startup, exit, or recovery action, including owner handoff and fallback.
 - **`reviewer_usage_limit`** — top-level `wait` or `skip`, config-only: how a review gate treats a usage-limited reviewer with no substitute (see below).
 
 Merging is per key, not per file. Lists replace rather than concatenate.
@@ -66,18 +66,16 @@ Read [references/routing.md](references/routing.md#delegation-scope) for scope r
 
 `delegation.execution` sets what `/full_cycle` and `/strict_full_cycle` attempt:
 `parallel` extracts independent tracks and runs them per `/execute_parallel`;
-`serial` runs tasks per `/execute`. Read the resolved value.
-
-It sets what is attempted, not what is forced. A plan whose extraction leaves fewer than two independent tracks, or a session with only one usable pane, runs serially either way — that is degradation, and the final report says so. `/execute` and `/execute_parallel` are explicit choices by the user and ignore this key.
-
-Under `parallel`, plans are written with tracks declared up front (see `writing-plans`), so extraction confirms a partition the plan already states rather than inventing one after the fact.
+`serial` runs tasks per `/execute`. It sets what is attempted, not what is
+forced; read [references/routing.md](references/routing.md#execution-strategy)
+before writing the plan.
 
 ## Delegation tasks and their assignments
 
 `assignments:` is the routing table. **The resolved YAML is the source of truth for every route and every default** — read it, never recall a default from prose. The tables below name what each task covers; who performs it and where comes from the merged configuration, and the knobs are the same for all of them.
 
 - **`role`** — which role from `roles:` performs the task.
-- **`mode`** — where it runs: `delegate` uses a fresh reset-backed worker of that role; a selected-profile target resolving to the owner requires a fresh in-process subagent, including reviews with empty reviewers. `orchestrator` uses the active owner; profile-selected reviews may run in that session, while no-profile reviews require a fresh subagent (see below). `implementer` continues in the session already owning the task. Read the profile routing table before applying any self-target route.
+- **`mode`** — where it runs: `delegate` uses a fresh reset-backed worker of that role; a selected-profile target resolving to the owner requires a fresh in-process subagent, including reviews with empty reviewers. `orchestrator` uses the active owner; profile-selected reviews may run in that session, while no-profile reviews require a fresh subagent (see "Reviews in `mode: orchestrator`"). `implementer` continues in the session already owning the task. Read the profile routing table before applying any self-target route.
 - **`enabled`** — review tasks only. `false` removes the gate entirely. Work tasks are mandatory: to stop delegating one, set `mode: orchestrator` — never `enabled: false`.
 
 Resolve every task the workflow will touch before its first delegation, not when you reach it.
@@ -108,7 +106,7 @@ Resolve every task the workflow will touch before its first delegation, not when
 
 **`/strict_full_cycle` ignores `enabled` and runs every gate in this table**, naming each one it forced on in its report. It is the pack's only override of the resolved configuration, and it touches nothing but `enabled` — never a `role`, a `mode`, or an invariant.
 
-**Every assignment the repo config or profile changed away from `roles.yaml`, every non-default `delegation:` value, and every disabled review, is named in the final report**, next to any role that fell back and any review that degraded for lack of panes. The user configured it; the report says so, every run, so nobody later mistakes an unreviewed branch for a reviewed one, or a self-tested one for independently tested.
+**Every assignment the repo config or profile changed away from `roles.yaml`, every non-default `delegation:` value, and every disabled review, is named in the final report**, next to any role that fell back, any subagent fallback, and any review that degraded for lack of panes. The report says so every run, so nobody mistakes an unreviewed branch for a reviewed one, or a self-tested one for independently tested.
 
 ### Roles that bind to a list
 
@@ -121,31 +119,19 @@ an enabled review still runs and `delegate` still requires a fresh subagent.
 Three rules bind wherever a list role is used:
 
 - **Separate targets use different agent types, or one type on distinct pinned models.** Compare model strings case-insensitively, with neither containing the other; a bare kind beside that kind on a model is the same type twice. Nested and legacy targets follow the same rule. Different effort on one model does not create a second independent slot. Each slot takes its own pane; leave an invalid/duplicated slot unavailable and report the reduced set.
-- **Degrade, never block.** A target counts as available only if an in-scope matching live agent exists, even if busy; wrong model/effort does not count. Wait for busy matches, never interrupt them. With lifecycle true, start a slot that has no live match before counting it missing. Run the available slots and report missing ones. If none can run, follow "Exhaustion and fallback" and the mandatory profile self-target mode, stating any lost independence.
-- **Say which it was.** Full set, degraded set, or single — the report names it, every time.
+- **Degrade, never block — until nothing is left.** A target counts as available only if an in-scope matching live agent exists, even if busy; wrong model/effort does not count. Wait for busy matches, never interrupt them. With lifecycle true, start a slot that has no live match before counting it missing. Unavailable slots take the subagent fallback below; run the available slots and report missing ones, following "Exhaustion and fallback" and the mandatory profile self-target mode. With nothing left to run, the gate holds: integrate nothing that depends on it, report, and resume when a reviewer returns. The owner's own review never stands in for missing reviewers.
+- **Say which it was.** Full set, degraded set, subagent fallback, or single — the report names it, every time.
 
 Compare findings across the returned reviews, route disagreements and finding acceptance through `decision-making` (`decision-maker`), and only then act. Reviewers advise; the `decision-maker` decides.
 
 ### Reviews in `mode: orchestrator`
 
-**With a selected profile**, `mode: orchestrator` permits review in the active
-owner's own session, or an optional fresh subagent at its judgment. Name
-same-session self-review honestly; it is not independent review. Conversely,
-`mode: delegate` resolved to that owner mandates a fresh subagent, including
-when the profile has no external reviewers. Follow the profiles reference.
-
-**Without a profile**, a review in `mode: orchestrator` still requires a fresh
-in-process subagent. Give it the same self-contained review brief as a reset
-pane (scope, diff/paths, standards, report path). Its fresh context provides
-independence. The following legacy rules apply only without a profile:
-
-- **Never inline the gate.** If no subagent can be spawned, report the degraded review rather than claiming independent review of your own work.
-- **The brief is the same brief.** Self-contained, no reliance on the orchestrator's conversation context; the review reads the code, not the story of how it was written.
-- **Work tasks are not affected.** `mode: orchestrator` on a work task means the orchestrator does it inline, as before.
-- **The report names it.** A review that ran in a spawned subagent is named as such, next to which panes ran the delegated ones.
-
-Without a profile, a list-role orchestrator-mode review spawns one subagent
-per entry; the distinct-types rule does not apply to these owner subagents.
+With a selected profile, the active owner may review in its own session —
+reported as self-review, not independent review — or in an optional fresh
+subagent; `mode: delegate` resolved to that owner mandates a fresh subagent.
+Without a profile, the review runs in a fresh in-process subagent. Read
+[references/routing.md](references/routing.md#reviews-in-mode-orchestrator)
+before running one.
 
 ### What no assignment can change
 
@@ -156,18 +142,33 @@ per entry; the distinct-types rule does not apply to these owner subagents.
 
 ## Role assignments
 
-Panes are not reserved per role. Pick any idle matching target within scope;
-a pane may serve a different role after its prior task finishes. When no
-candidate is idle, wait, use allowed fallbacks, or report degradation under
-the resolved mode. Do not interrupt working panes or reach outside scope.
+Panes are not reserved per role: pick any idle matching target within scope,
+whatever it did last. Never interrupt working panes or reach outside scope.
 Apply lifecycle permission before any recovery/start/exit action: false
 starts nothing; true starts a target with no live in-scope match before any
 fallback, and ends the task-started agents when the run is done.
 
 Nested model/effort constraints must match live footer evidence before any
 key and after reset, per `using-herdr-sibling-panes`. Legacy pins still require
-their model. Routing never switches an existing agent's settings. Name the
-pane ID and verified footer for every constrained target.
+their model. With effort `any`, the active owner picks the effort for each
+delegation — among matching panes, or as a launch argument it starts under
+lifecycle permission — and reports what it chose. Routing never switches an
+existing agent's settings. Name the pane ID and verified footer for every
+constrained target.
+
+## Unavailable targets and the subagent fallback
+
+A target with no in-scope live match is **unavailable**, not exhausted. Wait
+for a busy match; start one when lifecycle permission is true; then try its
+fallbacks. When none of that yields a worker and the resolved
+`delegation.subagent_fallback` is `true`, run the delegation in a **fresh
+in-process subagent of the active owner's own agent kind**, with the same
+self-contained brief and the no-re-delegation clause. Read
+[references/routing.md](references/routing.md#subagent-fallback) before the
+first one. The subagent carries none of the target's kind, model, or effort:
+report it as a subagent fallback with those lost constraints. `false`, or a
+runtime that cannot spawn subagents, keeps the degradation in "Exhaustion and
+fallback" below.
 
 ## Orchestrator
 
@@ -177,7 +178,7 @@ reception pane always asks unused versus relay before handoff/startup, and
 the verified selected owner receives explicit authority and frozen settings.
 The active owner keeps orchestration and coordination, while judgment calls and final synthesis follow `decision-making` (`decision-maker`); a relay only relays.
 
-**No re-delegation.** If your task arrived as a delegated instruction from another pane (not from the user), this skill does not apply: execute the task yourself in your own pane and never delegate it onward, even if it looks routine. Re-delegation creates cascades where multiple panes contend for the same siblings and no one does the work.
+**No re-delegation.** If your task arrived as a delegated instruction from another pane (not from the user), this skill does not apply: execute it yourself and never delegate it onward. Re-delegation creates cascades where panes contend for the same siblings and no one does the work.
 
 Use `using-herdr-sibling-panes` for separate-target delegations and its bundled
 `composer-submit.sh`; wait for the result before integrating. Profile-selected
@@ -189,12 +190,8 @@ either transport may re-delegate. Do not use `pane run` for agent prompts.
 Before classifying or routing work, read the profiles reference above and
 [references/routing.md](references/routing.md). Name the delegation task,
 then read its resolved assignment; the same routing applies inside workflows.
-
-## Development-cycle routing
-
-Read the [workflow mapping](references/routing.md#development-cycle-routing)
-when entering a workflow. Review independence and the configuration above
-still bind every delegation.
+Read its [workflow mapping](references/routing.md#development-cycle-routing)
+when entering a workflow.
 
 ## Complex coding boundary
 
@@ -204,17 +201,17 @@ task name; the resolved assignment selects the role and mode.
 
 ## Plan/design review
 
-Runs when the `plan-review` gate is enabled, under "Roles that bind to a list" above — one review per agent type in the resolved role, with that section's different-types, degrade, and say-which-it-was rules.
+Runs when the `plan-review` gate is enabled, under "Roles that bind to a list" above.
 
 Draft where `plan-and-design` resolves, then route the enabled reviews by
 their resolved assignment and profile rules. Wait for all, compare findings,
 and route disagreements and plan resolution through `decision-making`.
 Reviewers advise; the `decision-maker` decides.
 
-Without a profile, each external review is reset-backed; if none of the listed
-types is available, the owner critically reviews the plan and reports no
-independent review. With a profile, self-target delegate reviews require fresh
-subagents; other owner-session modes permit reported self-review.
+Without a profile, each external review is reset-backed; unavailable slots take
+the subagent fallback, and with no reviewer left the gate holds rather than
+passing on the owner's own review. With a profile, self-target delegate reviews
+require fresh subagents; other owner-session modes permit reported self-review.
 
 For `brainstorming`'s builder check under `plan-review`, read [references/routing.md](references/routing.md#builder-check).
 
@@ -223,12 +220,13 @@ For `brainstorming`'s builder check under `plan-review`, read [references/routin
 An agent target is exhausted when `using-herdr-sibling-panes` reports a usage
 limit, or two delegations to different idle panes of that target return no
 marker and no completed work. Its failure handling owns detection. Exhaustion
-of one pinned model does not exhaust another model of that kind.
-
-1. Read the fallback rules in the profiles reference. A nested target becomes `kind@model`; consult bare kind only if that exact key is absent. A matched `[]` is authoritative. Take the first usable in-scope substitute, subject to distinct review slots. Substitutes retain string syntax and have no effort constraint; discard the primary effort.
-2. Re-delegate the same self-contained instruction to the substitute. Do not rewrite the task to suit it.
-3. If no substitute can run, report degradation: without a profile, safe work may run in the owner as before. With a profile, a task resolving back to the owner obeys its mode — `delegate` still requires a fresh subagent. If that route cannot run, report inability rather than disguising inline work as delegation. A usage-limited reviewer follows `reviewer_usage_limit` instead (`using-herdr-sibling-panes` failure handling).
-4. Remember the exhausted target, including its pinned model, for the rest of the task; do not mark other models of that kind exhausted.
+of one pinned model does not exhaust another model of that kind. Before
+choosing a substitute or degrading, read
+[references/routing.md](references/routing.md#exhaustion-and-fallback) for the
+steps. A matched `[]` is authoritative, substitutes carry no effort
+constraint, a usage-limited reviewer follows `reviewer_usage_limit`, and the
+owner's own review never stands in. The subagent fallback covers unavailable
+targets, not exhausted ones.
 
 Report which role fell back, to which target, why, and which constraints were
 lost. Fallback alone never authorizes startup. With lifecycle true, a target
@@ -244,8 +242,13 @@ Each delegated instruction must state:
 4. The expected output and completion signal.
 5. That the recipient must execute the task itself and must not re-delegate or orchestrate (e.g. "Execute this request yourself, directly. Re-delegating to other panes or orchestrating is prohibited.").
 
-Use the sibling-pane helper and settle points for separate targets; use the
-same self-contained brief/no-re-delegation contract for profile self-target
-subagents. Do not replace the helper with `pane run` or raw back-to-back keys,
-or send a redundant follow-up prompt. Owner handoff is a distinct transfer
-contract in the profiles reference, not an ordinary worker delegation.
+A review brief also lists the user's requirements for this task verbatim, in
+the order they were given, and asks for a verdict on each — met, partial,
+unmet, or superseded by a later requirement — with file and line evidence. A
+later requirement wins where two conflict; code findings come after.
+
+Use the sibling-pane helper and settle points for separate targets, and the
+same brief and no-re-delegation clause for every subagent. Never replace the
+helper with `pane run` or raw keys, or send a redundant follow-up prompt.
+Owner handoff is a separate transfer contract in the profiles reference, not
+a worker delegation.

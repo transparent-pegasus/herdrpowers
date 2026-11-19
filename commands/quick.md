@@ -22,14 +22,14 @@ Do not edit workflow files unless the user's current request explicitly asks to 
 
 `/quick` omits the separate plan and its review. Read `orchestration`, its [profiles contract](../skills/orchestration/references/profiles.md), and `using-herdr-sibling-panes` before routing the remaining work and gates.
 
-Resolve repo config over shipped roles, then only profile keys present. Freeze the owner, targets, modes, gates, scope, and lifecycle policy. Profile assignment overrides resolve before routing. A gate resolved to `enabled: false` is skipped and named in the report; empty profile reviewers instead select the owner.
+Resolve repo config over shipped roles, then only profile keys present. Freeze the owner, targets, modes, gates, scope, subagent fallback, and lifecycle policy. Profile assignment overrides resolve before routing. A gate resolved to `enabled: false` is skipped and named in the report; empty profile reviewers instead select the owner.
 
 Routing comes from `assignments:` and effective targets. Without a profile, retain the legacy small-scope inline implementation choice. With a profile, read `complex-coding` / `simple-coding` and preserve their modes; small scope cannot replace required delegation with inline work. `decision-making`, `test-authoring`, `chores`, `verification`, and review assignments follow their resolved routes. List roles run once per effective entry.
 - Separate delegated targets use reset-backed Herdr panes, even when a concrete target matches the owner's model. With a selected profile, self-target `delegate` requires a fresh in-process subagent for work and reviews, including empty reviewers; other owner-session modes permit inline work/self-review and optional subagents at the active owner's judgment. Report self-review honestly. Without a profile, keep legacy routing and fresh-subagent orchestrator-mode reviews. Workers never re-delegate.
 
 **Every delegation** states the worktree's absolute path (and requires the pane to confirm it is there first), the exact scope, the edit policy, the report-file path under `<REPORT_DIRECTORY>`, a unique completion marker, and the prohibition on re-delegating. Read results from the report file, not from pane scrollback.
 
-**Degrade honestly.** Without a profile, retain the legacy critical self-review fallback when no delegated reviewer is available and name the lost independence. With a profile, owner targets retain their mode: an unavailable required fresh subagent is reported as inability, never replaced by inline review or called passed. Wait for busy matching agents; never interrupt them.
+**Degrade honestly.** An unavailable separate target takes `orchestration`'s subagent fallback while `delegation.subagent_fallback` is true, and the report names the lost constraints. A review gate with no reviewer left holds rather than passing on your own review. With a profile, owner targets retain their mode: an unavailable required fresh subagent is reported as inability, never replaced by inline review or called passed. Wait for busy matching agents; never interrupt them.
 
 ## Execution Steps
 

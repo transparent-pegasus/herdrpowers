@@ -21,8 +21,8 @@ roles:
         effort: XHigh
   generalist:
     agy:
-      effort: XHigh
       model: Gemini 4 Hydrogen
+      effort: any
 assignments:
   plan-and-design:
     mode: delegate
