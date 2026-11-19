@@ -1,0 +1,28 @@
+{
+  "$schema": "https://antigravity.google/schemas/v1/plugin.json",
+  "name": "herdrpowers",
+  "displayName": "Herdrpowers",
+  "version": "1.28.0",
+  "description": "Development framework for herdr: structured skills and workflows with configurable profiles, model/effort targets, TDD, and explicit work and review routes.",
+  "author": {
+    "name": "transparent-pegasus",
+    "url": "https://github.com/transparent-pegasus"
+  },
+  "homepage": "https://github.com/transparent-pegasus/herdrpowers",
+  "repository": "https://github.com/transparent-pegasus/herdrpowers",
+  "license": "MIT",
+  "keywords": [
+    "herdr",
+    "orchestration",
+    "delegation",
+    "multi-agent",
+    "skills",
+    "workflows",
+    "tdd",
+    "code-review",
+    "planning",
+    "debugging",
+    "codegraph"
+  ],
+  "skills": "./.antigravity-plugin/commands/"
+}

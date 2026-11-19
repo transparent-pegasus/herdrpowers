@@ -54,6 +54,23 @@ opencode plugin add git+https://github.com/transparent-pegasus/herdrpowers.git
 Use `opencode2` if that is your binary's name.
 For OpenCode 1, see [OpenCode setup](docs/opencode.md).
 
+### Antigravity
+
+```bash
+agy plugin install https://github.com/transparent-pegasus/herdrpowers
+```
+
+Run the same command again to update. Antigravity plugins cannot ship
+commands, so each workflow comes as a skill, listed in the interactive CLI as
+`/herdrpowers:..:.antigravity-plugin:commands:<name>`. Typing
+`/herdrpowers:<name>` selects it, except `/herdrpowers:plan`, which selects
+`/herdrpowers:writing-plans`: pick `plan` from the menu instead.
+
+Install with `agy plugin install`, not `agy plugin import`. Importing
+herdrpowers from Claude Code converts it, drops `commands/`, and leaves the
+workflow skills pointing at files that no longer exist. Running the install
+command over an imported copy replaces it.
+
 ### Initialize your repository
 
 Run the [init workflow](commands/init.md) once per repository:

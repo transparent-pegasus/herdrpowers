@@ -1,6 +1,6 @@
 # Workflows
 
-Workflows tie roles and skills into end-to-end development procedures. They live in `commands/`, the default command directory of the Claude Code, Codex, and Cursor plugin conventions; the OpenCode plugin registers them at startup. Each file carries YAML frontmatter `description: ...` so supporting platforms expose it as a slash command.
+Workflows tie roles and skills into end-to-end development procedures. They live in `commands/`, the default command directory of the Claude Code, Codex, and Cursor plugin conventions; the OpenCode plugin registers them at startup, and Antigravity, whose plugins have no commands, loads one wrapper skill per workflow from `.antigravity-plugin/commands/` that reads the workflow file. Each file carries YAML frontmatter `description: ...` so supporting platforms expose it as a slash command.
 
 Every development workflow reads `orchestration` and its [profiles contract](../skills/orchestration/references/profiles.md), resolving repo config over shipped roles and then only present selected-profile keys. Separate delegated targets use reset-backed in-scope Herdr panes. Profile self-target `delegate` requires fresh subagents for work and reviews, even with empty reviewers; other owner-session modes permit inline work/self-review and optional subagents. Without a profile, legacy independence and unavailable-pane degradation remain. Workers never re-delegate. Scope, modes, gates, and lifecycle permission stay frozen.
 
@@ -87,6 +87,7 @@ All development workflows share the same guardrails:
 | Cursor | Native slash commands from the plugin's `commands/`. |
 | OpenCode 1.18.29+ / 2 | The plugin registers each workflow under the same namespaced name (`/herdrpowers:full_cycle`, `/herdrpowers:plan`, …), which also leaves OpenCode's own `/init` alone. V2 submits the workflow and any arguments in the current session, preserving attachments and the requested delivery mode. |
 | Codex | Plugin commands surface as skills — invoke them by name, or read `commands/<name>.md` directly. |
+| Antigravity CLI 1.5.12 | Each workflow is a wrapper skill, listed as `/herdrpowers:..:.antigravity-plugin:commands:<name>`. Typing `/herdrpowers:<name>` selects it, except `/herdrpowers:plan`, which selects `/herdrpowers:writing-plans`: pick `plan` from the menu instead. |
 | Aider / other tools | No native slash commands — read the workflow file directly (e.g. `commands/full_cycle.md`) and instruct the agent to follow it step-by-step. |
 
 > **See Also**: [Development Cycle Guide](./development_cycle.md) for a detailed walkthrough of each phase, and [Roles](./roles.md) for who does what.
